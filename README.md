@@ -1,1 +1,2 @@
 # RubyWordle
+# Hello world!
