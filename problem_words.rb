@@ -1,5 +1,6 @@
 #!/usr/bin/ruby -w
 
+# copied from https://github.com/charlesreid1/five-letter-words
 DICTIONARY_FILE_LARGE = "sgb-words.txt"
 DICTIONARY_FILE_SMALL = "sgb-words-small.txt"
 DICTIONARY_FILE = DICTIONARY_FILE_LARGE
