@@ -25,7 +25,11 @@ def play(d)
         max_print = 30
         d.each do |key, value|
           puts key
-          break if (max_print = max_print - 1) == 0
+          max_print = max_print - 1
+          if max_print <= 0
+            puts "skipping additional results..."
+            break
+          end
         end
       when "h"
         hint(d)
@@ -33,7 +37,6 @@ def play(d)
         return
       else # assume anything else is a guess
         word = choice
-        puts "word=#{word}"
         print "Enter the response (!?-): ==> "
         response = gets.chomp
         filter(d, word, response)
