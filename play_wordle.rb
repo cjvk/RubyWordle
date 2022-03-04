@@ -53,7 +53,6 @@ def hint(d)
   d.each do |word, line_num|
     character_dictionary.each do |c, num_so_far|
       if word[c]
-        # puts "found #{c} in #{word}"
         character_dictionary[c] = num_so_far + 1
       end
     end
