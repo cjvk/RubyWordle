@@ -63,7 +63,6 @@ def hint(d)
   top_n = 3
   top_n_dict = {}
   for i in 0...top_n
-    puts i
     next_largest = character_dictionary.max_by{|k,v| (v==num_remaining||top_n_dict.has_key?(k)) ? 0 : v}
     top_n_dict[next_largest[0]]=next_largest[1]
   end
