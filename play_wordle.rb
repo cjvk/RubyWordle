@@ -74,13 +74,17 @@ def check_for_problematic_patterns(d)
       pp_dict[key1] = 1
     end
   end
+  puts "Checking for problematic patterns..."
+  found = false
   pp_dict.each do |key, value|
     if value > 2
+      found = true
       puts ""
       puts "PROBLEMATIC PATTERN ALERT: found \"#{key}\" with #{value} matching words (print for details)"
       puts ""
     end
   end
+  puts "No problematic patterns found!" if found == false
 end
 
 def hint(d)
