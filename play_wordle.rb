@@ -34,6 +34,10 @@ def play(d)
             break
           end
         end
+      when "pa"
+        d.each do |key, value|
+          puts key
+        end
       when "h"
         hint(d)
       when "q"
