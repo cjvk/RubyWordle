@@ -126,19 +126,33 @@ def hint(d)
   end
 end
 
+def num_green_or_yellow(word, response, letter)
+  num_green_or_yellow = 0
+  for i in 0...5
+    if word[i] == letter && response[i] != "-"
+      num_green_or_yellow += 1
+    end
+  end
+  return num_green_or_yellow
+end
+
 def filter(d, word, response)
-  for i in 0..4
+  puts "d.size: #{d.size()}"
+  for i in 0...5
     letter = word[i]
     case response[i]
     when "!"
       d.delete_if { |key, value| key[i] != letter }
     when "?"
-      d.delete_if { |key, value| key[i] == letter || !key[letter] }
+      d.delete_if { |key, value| key[i] == letter || key.count(letter) < num_green_or_yellow(word, response, letter) }
     when "-"
-      d.delete_if { |key, value| key[letter] }
+      d.delete_if { |key, value| key[i] == letter || key.count(letter) != num_green_or_yellow(word, response, letter) }
     else
       raise "unrecognized response character"
     end
+    # puts "#{response[i]} detected, i=#{i}"
+    # puts "d.size: #{d.size()}"
+    # puts d
   end
 end
 
