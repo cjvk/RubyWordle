@@ -17,27 +17,17 @@ def play(d)
   puts "Welcome to wordle!"
   for guess in 1..6
     puts "You are on guess #{guess}/6. There are #{d.size} matching words remaining."
-    if guess >= 3
-      check_for_problematic_patterns(d)
-    end
+    check_for_problematic_patterns(d) if guess >= 3
     while true do
       print "Enter a guess, or (p)rint, (h)int, (q)uit: ==> "
       choice = gets.chomp
       case choice
       when "p"
         max_print = 30
-        d.each do |key, value|
-          puts key
-          max_print = max_print - 1
-          if max_print <= 0
-            puts "skipping additional results..."
-            break
-          end
-        end
+        d.each_with_index {|(key, _value), index| break if index >= max_print; puts key }
+        puts "skipping #{d.size-max_print} additional results..." if d.size > max_print
       when "pa"
-        d.each do |key, value|
-          puts key
-        end
+        d.each {|key, value| puts key}
       when "h"
         hint(d)
       when "q"
@@ -77,7 +67,9 @@ def check_for_problematic_patterns(d)
     pp_dict[key1] = 1 if !found
   end
   puts "Checking for problematic patterns..."
-  pp_dict.each {|key, value| puts "\nPROBLEMATIC PATTERN ALERT: found \"#{key}\" with #{value} matching words (print for details)\n\n" if value > 2}
+  pp_dict.each do |key, value|
+    puts "\nPROBLEMATIC PATTERN ALERT: found \"#{key}\" with #{value} matching words (print for details)\n\n" if value > 2
+  end
   puts "No problematic patterns found!" if pp_dict.values.max <= 2
 end
 
