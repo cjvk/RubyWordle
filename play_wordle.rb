@@ -109,7 +109,7 @@ def hint(d)
   top_n = 3
   # top_n_dict will contain the top N keys from character_dictionary, by count
   top_n_dict = {}
-  for i in 0...top_n
+  for _i in 0...top_n
     next_largest = character_dictionary.max_by{|k,v| (v==num_remaining||top_n_dict.has_key?(k)) ? 0 : v}
     top_n_dict[next_largest[0]]=next_largest[1]
   end
@@ -156,5 +156,15 @@ def filter(d, word, response)
   end
 end
 
+def run_tests
+  fail if num_green_or_yellow("abcde", "!----", "a") != 1
+  fail if num_green_or_yellow("aaaaa", "!?---", "a") != 2
+  fail if num_green_or_yellow("aaaaa", "??---", "a") != 2
+  fail if num_green_or_yellow("xaaxx", "!!--!", "c") != 0
+  fail if num_green_or_yellow("xaaxx", "?????", "x") != 3
+  fail if num_green_or_yellow("xaaxx", "?????", "a") != 2
+end
+
+run_tests
 d = populate_all_words
 play(d)
