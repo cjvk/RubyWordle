@@ -74,53 +74,35 @@ def check_for_problematic_patterns(d)
         pp_dict[key2] = value2 + 1
       end
     end
-    if !found
-      pp_dict[key1] = 1
-    end
+    pp_dict[key1] = 1 if !found
   end
   puts "Checking for problematic patterns..."
-  found = false
-  pp_dict.each do |key, value|
-    if value > 2
-      found = true
-      puts ""
-      puts "PROBLEMATIC PATTERN ALERT: found \"#{key}\" with #{value} matching words (print for details)"
-      puts ""
-    end
-  end
-  puts "No problematic patterns found!" if found == false
+  pp_dict.each {|key, value| puts "\nPROBLEMATIC PATTERN ALERT: found \"#{key}\" with #{value} matching words (print for details)\n\n" if value > 2}
+  puts "No problematic patterns found!" if pp_dict.values.max <= 2
 end
 
 def hint(d)
-  num_remaining = d.size
-  puts "remaining: #{num_remaining}"
-  # character_dictionary stores, for each letter, the number of remaining words with that letter
-  character_dictionary = {}
-  for c in 97..122
-    character_dictionary[c.chr] = 0
-  end
-  d.each do |word, line_num|
-    character_dictionary.each do |c, num_so_far|
-      if word[c]
-        character_dictionary[c] = num_so_far + 1
-      end
-    end
-  end
+  puts "remaining: #{d.size}"
+
+  # letter_usage stores, for each letter, the number of remaining words with that letter
+  letter_usage = {}
+  (97..122).each { |c| letter_usage[c.chr] = 0 }
+  d.each {|word, line_num| letter_usage.each {|c, num_so_far| letter_usage[c] = num_so_far + 1 if word[c] } }
+
+  # top_n_dict will contain the top N keys from letter_usage, by count
   top_n = 3
-  # top_n_dict will contain the top N keys from character_dictionary, by count
   top_n_dict = {}
   for _i in 0...top_n
-    next_largest = character_dictionary.max_by{|k,v| (v==num_remaining||top_n_dict.has_key?(k)) ? 0 : v}
+    next_largest = letter_usage.max_by{|k,v| (v==d.size||top_n_dict.has_key?(k)) ? 0 : v}
     top_n_dict[next_largest[0]]=next_largest[1]
   end
   puts top_n_dict
+
   # for all remaining words, they are a great guess if all of the "top N" characters are contained
   # and they are a "good" guess if all but one of the top N characters occur
   d.each do |word, line_num|
     count = 0
-    top_n_dict.each do |c, num_occurrences|
-      count = count + 1 if word[c]
-    end
+    top_n_dict.each {|c, num_occurrences| count = count + 1 if word[c]}
     puts "#{word} is a GREAT guess" if count == top_n
     puts "#{word} is a good guess" if count == (top_n - 1)
   end
@@ -128,11 +110,7 @@ end
 
 def num_green_or_yellow(word, response, letter)
   num_green_or_yellow = 0
-  for i in 0...5
-    if word[i] == letter && response[i] != "-"
-      num_green_or_yellow += 1
-    end
-  end
+  (0...5).each { |i| num_green_or_yellow += 1 if word[i] == letter && response[i] != "-" }
   return num_green_or_yellow
 end
 
@@ -150,9 +128,6 @@ def filter(d, word, response)
     else
       raise "unrecognized response character"
     end
-    # puts "#{response[i]} detected, i=#{i}"
-    # puts "d.size: #{d.size()}"
-    # puts d
   end
 end
 
