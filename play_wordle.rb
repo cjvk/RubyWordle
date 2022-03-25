@@ -33,10 +33,9 @@ def play(d)
       when "q"
         return
       else # assume anything else is a guess
-        word = choice
         print "Enter the response (!?-): ==> "
         response = gets.chomp
-        filter(d, word, response)
+        filter(d, choice, response)
         break
       end
     end
@@ -45,9 +44,7 @@ end
 
 def close(w1, w2)
   diff = 0
-  for i in 0...5
-    diff = diff + (w1[i]==w2[i] ? 0 : 1)
-  end
+  (0...5).each {|i| diff += (w1[i]==w2[i] ? 0 : 1)}
   diff == 1
 end
 
@@ -130,6 +127,15 @@ def run_tests
   fail if num_green_or_yellow("xaaxx", "!!--!", "c") != 0
   fail if num_green_or_yellow("xaaxx", "?????", "x") != 3
   fail if num_green_or_yellow("xaaxx", "?????", "a") != 2
+
+  fail if close("aaaaa", "bbbbb")
+  fail if close("aaaaa", "aaabb")
+  fail if close("abcde", "abcde")
+  fail unless close("abcde", "xbcde")
+  fail unless close("abcde", "axcde")
+  fail unless close("abcde", "abxde")
+  fail unless close("abcde", "abcxe")
+  fail unless close("abcde", "abcdx")
 end
 
 run_tests
