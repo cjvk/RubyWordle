@@ -22,3 +22,6 @@ comm -12 sgb-words-maybe-singulars.txt four_letter_words.txt | sed 's/\([a-z]\{4
 
 # filter out plurals
 comm -23 sgb-words-sorted.txt sgb-words-plurals-sorted.txt > sgb-words-without-plurals-sorted.txt
+
+# remove past-tense
+cat sgb-words-without-plurals-sorted.txt| grep -v '...ed' > sgb-words-without-plurals-without-past-tense-sorted.txt
