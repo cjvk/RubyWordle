@@ -10,6 +10,7 @@ def populate_all_words
   File.foreach(DICTIONARY_FILE).with_index do |line, line_num|
     d[line.chomp] = line_num
   end
+  d["pinot"] = "-1"
   d
 end
 
@@ -19,7 +20,7 @@ def play(d)
     puts "You are on guess #{guess}/6. There are #{d.size} matching words remaining."
     check_for_problematic_patterns(d) if guess >= 3
     while true do
-      print "Enter a guess, or (p)rint, (h)int, (q)uit: ==> "
+      print "Enter a guess, or (p)rint, (c)ount, (h)int, (q)uit: ==> "
       choice = gets.chomp
       case choice
       when "p"
@@ -32,6 +33,10 @@ def play(d)
         hint(d)
       when "q"
         return
+      when "c"
+        puts "There are #{d.size} matching words remaining."
+      when "penultimate"
+        penultimate(d)
       else # assume anything else is a guess
         print "Enter the response (!?-): ==> "
         response = gets.chomp
@@ -68,6 +73,98 @@ def check_for_problematic_patterns(d)
     puts "\nPROBLEMATIC PATTERN ALERT: found \"#{key}\" with #{value} matching words (print for details)\n\n" if value > 2
   end
   puts "No problematic patterns found!" if pp_dict.values.max <= 2
+end
+
+def penultimate(d)
+  puts "Choose a Twitter penultimate guess"
+  puts "4 greens (4g)"
+  puts "3 greens and 1 yellow (3g1y)"
+  puts "3 greens and 2 yellows (3g2y)"
+  puts "1 green and 4 yellows (1g4y)"
+  print "==> "
+  choice = gets.chomp
+  case choice
+  when "4g"
+    print "Enter the position of the gray (1-5): ==> "
+    gray = gets.chomp.to_i - 1
+    print "Enter the count: ==> "
+    count = gets.chomp.to_i
+    d.each_key do |key|
+      all_words = populate_all_words
+      for i in 0...5
+        if i == gray
+          all_words.delete_if { |key2, value2| key2[i] == key[i] }
+        else
+          all_words.delete_if { |key2, value2| key2[i] != key[i] }
+        end
+      end
+
+      if all_words.size < count
+        d.delete(key)
+      else
+        puts "keeping #{key}"
+        all_words.each_key {|key| puts key}
+      end
+    end
+  when "3g1y"
+    print "Enter the position of the yellow (1-5): ==> "
+    yellow = gets.chomp.to_i - 1
+    print "Enter the position of the gray (1-5): ==> "
+    gray = gets.chomp.to_i - 1
+    d.each_key do |key|
+      all_words = populate_all_words
+      for i in 0...5
+        if i == gray
+          all_words.delete_if { |key2, value2| key2[i] != key[yellow] }
+        elsif i == yellow
+          all_words.delete_if { |key2, value2| key2[i] == key[gray] }
+        else # green
+          all_words.delete_if { |key2, value2| key2[i] != key[i] }
+        end
+      end
+      if all_words.size == 0
+        d.delete(key)
+      else
+        puts "keeping #{key}"
+        all_words.each_key {|key| puts key}
+      end
+    end
+  when "1g4y"
+    print "Enter the position of the green (1-5): ==> "
+    green = gets.chomp.to_i - 1
+    d.each_key do |key|
+      all_words = populate_all_words
+      for i in 0...5
+        if i == green
+          all_words.delete_if { |key2, value2| key2[i] != key[i] }
+        else # yellow
+          all_words.delete_if { |key2, value2| key2[i] == key[i] || key2.count(key2[i]) != key.count(key2[i]) }
+        end
+      end
+      if all_words.size == 0
+        d.delete(key)
+      # else
+      #   puts "keeping #{key}"
+      end
+    end
+  when "3g2y"
+    print "Enter the positions of the two yellows (1-5): ==> "
+    yellows = gets.chomp
+    yellow1 = yellows[0].to_i - 1
+    yellow2 = yellows[1].to_i - 1
+    all_words = populate_all_words
+    d.each_key do |key|
+      switched_word = key.dup
+      switched_word[yellow1] = key[yellow2]
+      switched_word[yellow2] = key[yellow1]
+      puts "testing #{key} and #{switched_word}"
+      if key != switched_word and all_words.key?(switched_word)
+        puts "ALERT: found a possible word: #{key}"
+      else
+        d.delete(key)
+      end
+    end
+  end
 end
 
 def hint(d)
