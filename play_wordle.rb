@@ -11,6 +11,7 @@ def populate_all_words
     d[line.chomp] = line_num
   end
   d["pinot"] = "-1"
+  d["ramen"] = "-1"
   d
 end
 
