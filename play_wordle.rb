@@ -12,6 +12,8 @@ def populate_all_words
   end
   d["pinot"] = "-1"
   d["ramen"] = "-1"
+  d["beret"] = "-1"
+  d["apage"] = "-1"
   d
 end
 
@@ -81,6 +83,7 @@ def penultimate(d)
   puts "4 greens (4g)"
   puts "3 greens and 1 yellow (3g1y)"
   puts "3 greens and 2 yellows (3g2y)"
+  puts "2 greens and 3 yellows (2g3y)"
   puts "1 green and 4 yellows (1g4y)"
   print "==> "
   choice = gets.chomp
@@ -115,9 +118,9 @@ def penultimate(d)
     d.each_key do |key|
       all_words = populate_all_words
       for i in 0...5
-        if i == gray
-          all_words.delete_if { |key2, value2| key2[i] != key[yellow] }
-        elsif i == yellow
+        if i == yellow
+          all_words.delete_if { |key2, value2| key2[i] != key[gray] }
+        elsif i == gray
           all_words.delete_if { |key2, value2| key2[i] == key[gray] }
         else # green
           all_words.delete_if { |key2, value2| key2[i] != key[i] }
@@ -144,8 +147,30 @@ def penultimate(d)
       end
       if all_words.size == 0
         d.delete(key)
-      # else
-      #   puts "keeping #{key}"
+      else
+        puts "keeping #{key}"
+        all_words.each_key {|key| puts key}
+      end
+    end
+  when "2g3y"
+    print "Enter the positions of the two greens (1-5): ==> "
+    greens = gets.chomp
+    green1 = greens[0].to_i - 1
+    green2 = greens[1].to_i - 1
+    d.each_key do |key|
+      all_words = populate_all_words
+      for i in 0...5
+        if i == green1 or i == green2
+          all_words.delete_if { |key2, value2| key2[i] != key[i] }
+        else # yellow
+          all_words.delete_if { |key2, value2| key2[i] == key[i] || key2.count(key2[i]) != key.count(key2[i]) }
+        end
+      end
+      if all_words.size == 0
+        d.delete(key)
+      else
+        puts "keeping #{key}"
+        all_words.each_key {|key| puts key}
       end
     end
   when "3g2y"
