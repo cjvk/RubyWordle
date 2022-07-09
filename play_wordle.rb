@@ -5,6 +5,17 @@ DICTIONARY_FILE_LARGE = "sgb-words.txt"
 DICTIONARY_FILE_SMALL = "sgb-words-small.txt"
 DICTIONARY_FILE = DICTIONARY_FILE_LARGE
 
+# from https://gist.github.com/dracos/dd0668f281e685bad51479e5acaadb93
+VALID_WORDLE_WORDS_FILE = "valid-wordle-words.txt"
+
+def populate_valid_wordle_words
+  d = {}
+  File.foreach(VALID_WORDLE_WORDS_FILE).with_index do |line, line_num|
+    d[line.chomp] = line_num
+  end
+  d
+end
+
 def populate_all_words
   d = {}
   File.foreach(DICTIONARY_FILE).with_index do |line, line_num|
@@ -14,6 +25,10 @@ def populate_all_words
   d["ramen"] = "-1"
   d["beret"] = "-1"
   d["apage"] = "-1"
+  d["stear"] = "-1"
+  d["stean"] = "-1"
+  d["tased"] = "-1"
+  d["tsade"] = "-1"
   d
 end
 
@@ -85,6 +100,7 @@ def penultimate(d)
   puts "3 greens and 2 yellows (3g2y)"
   puts "2 greens and 3 yellows (2g3y)"
   puts "1 green and 4 yellows (1g4y)"
+  puts "0 greens and 5 yellows (0g5y)"
   print "==> "
   choice = gets.chomp
   case choice
@@ -94,7 +110,7 @@ def penultimate(d)
     print "Enter the count: ==> "
     count = gets.chomp.to_i
     d.each_key do |key|
-      all_words = populate_all_words
+      all_words = populate_valid_wordle_words
       for i in 0...5
         if i == gray
           all_words.delete_if { |key2, value2| key2[i] == key[i] }
@@ -116,7 +132,7 @@ def penultimate(d)
     print "Enter the position of the gray (1-5): ==> "
     gray = gets.chomp.to_i - 1
     d.each_key do |key|
-      all_words = populate_all_words
+      all_words = populate_valid_wordle_words
       for i in 0...5
         if i == yellow
           all_words.delete_if { |key2, value2| key2[i] != key[gray] }
@@ -137,7 +153,7 @@ def penultimate(d)
     print "Enter the position of the green (1-5): ==> "
     green = gets.chomp.to_i - 1
     d.each_key do |key|
-      all_words = populate_all_words
+      all_words = populate_valid_wordle_words
       for i in 0...5
         if i == green
           all_words.delete_if { |key2, value2| key2[i] != key[i] }
@@ -152,13 +168,27 @@ def penultimate(d)
         all_words.each_key {|key| puts key}
       end
     end
+  when "0g5y"
+    d.each_key do |key|
+      all_words = populate_valid_wordle_words
+      for i in 0...5
+        # all yellows
+        all_words.delete_if { |key2, value2| key2[i] == key[i] || key2.count(key2[i]) != key.count(key2[i]) }
+      end
+      if all_words.size == 0
+        d.delete(key)
+      else
+        puts "keeping #{key}"
+        all_words.each_key {|key| puts key}
+      end
+    end
   when "2g3y"
     print "Enter the positions of the two greens (1-5): ==> "
     greens = gets.chomp
     green1 = greens[0].to_i - 1
     green2 = greens[1].to_i - 1
     d.each_key do |key|
-      all_words = populate_all_words
+      all_words = populate_valid_wordle_words
       for i in 0...5
         if i == green1 or i == green2
           all_words.delete_if { |key2, value2| key2[i] != key[i] }
@@ -178,7 +208,7 @@ def penultimate(d)
     yellows = gets.chomp
     yellow1 = yellows[0].to_i - 1
     yellow2 = yellows[1].to_i - 1
-    all_words = populate_all_words
+    all_words = populate_valid_wordle_words
     d.each_key do |key|
       switched_word = key.dup
       switched_word[yellow1] = key[yellow2]
