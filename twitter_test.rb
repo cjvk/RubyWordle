@@ -153,6 +153,7 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
   # Answer.guess_array = ['wwwwy', 'ywwww', 'yywyw', 'wwwwy', 'yyyww', 'ggggg']
   # https://twitter.com/Thousandkoban/status/1553269881952681985
   answers = []
+  num_failures = 0
   for result in parsed_json['data']
     text = result['text']
     if is_probably_a_wordle_post?(text, wordle_number)
@@ -197,6 +198,9 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
 
       if num_guesses == "X" || num_guesses == "Unknown"
         puts "not a solution, skipping"
+        if num_guesses == "X"
+          num_failures += 1
+        end
         next
       end
 
@@ -260,6 +264,8 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
   stats.each do |key, value|
     puts "#{key} = #{value}"
   end
+  puts ""
+  puts "#{num_failures}/#{results} did not solve"
   puts "----------------------------------------"
   puts ""
 
@@ -315,7 +321,7 @@ def is_a_wordle_post_old?(text, wordle_number)
 end
 
 def is_probably_a_wordle_post?(text, wordle_number)
-  !! (text =~ /Wordle #{wordle_number} [123456]\/6/)
+  !! (text =~ /Wordle #{wordle_number} [123456X]\/6/)
 end
 
 # print_a_dad_joke
