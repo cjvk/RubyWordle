@@ -1,3 +1,6 @@
+# private files for this project
+twitter_auth_token
+
 *.gem
 *.rbc
 /.config

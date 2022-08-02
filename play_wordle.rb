@@ -1,5 +1,7 @@
 #!/usr/bin/ruby -w
 
+require_relative "twitter_test"
+
 # copied from https://github.com/charlesreid1/five-letter-words
 DICTIONARY_FILE_LARGE = "sgb-words.txt"
 DICTIONARY_FILE_SMALL = "sgb-words-small.txt"
@@ -55,6 +57,13 @@ def play(d)
         puts "There are #{d.size} matching words remaining."
       when "penultimate"
         penultimate(d)
+      when "twitter"
+        # puts "attempting to call Twitter..."
+        twitter
+      when "twitter2"
+        twitter(UrlSpecifier::WITH_HASHTAG)
+      when "dad"
+        print_a_dad_joke
       else # assume anything else is a guess
         print "Enter the response (!?-): ==> "
         response = gets.chomp
