@@ -80,20 +80,25 @@ class Answer
     end
     if num_with_color('g', penultimate) == 2 && num_with_color('y', penultimate) == 3
       name = '2g3y'
-      y1 = penultimate.index('y')
-      y2 = penultimate.index('y', y1+1)
-      y3 = penultimate.index('y', y2+1)
-      subname = "yellow#{y1+1}#{y2+1}#{y3+1}"
+      g1 = penultimate.index('g')
+      g2 = penultimate.index('g', g1+1)
+      subname = "green#{g1+1}#{g2+1}"
+      # y1 = penultimate.index('y')
+      # y2 = penultimate.index('y', y1+1)
+      # y3 = penultimate.index('y', y2+1)
+      # subname = "yellow#{y1+1}#{y2+1}#{y3+1}"
       create_or_increment("#{name}.#{subname}", stats)
       return true
     end
     if num_with_color('g', penultimate) == 1 && num_with_color('y', penultimate) == 4
       name = '1g4y'
-      y1 = penultimate.index('y')
-      y2 = penultimate.index('y', y1+1)
-      y3 = penultimate.index('y', y2+1)
-      y4 = penultimate.index('y', y3+1)
-      subname = "yellow#{y1+1}#{y2+1}#{y3+1}#{y4+1}"
+      g = penultimate.index('g')
+      subname = "green#{g+1}"
+      # y1 = penultimate.index('y')
+      # y2 = penultimate.index('y', y1+1)
+      # y3 = penultimate.index('y', y2+1)
+      # y4 = penultimate.index('y', y3+1)
+      # subname = "yellow#{y1+1}#{y2+1}#{y3+1}#{y4+1}"
       create_or_increment("#{name}.#{subname}", stats)
       return true
     end
@@ -238,6 +243,29 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
         next
       end
 
+      if guess_array[guess_array.length()-2] == 'ygwgg'
+        debug_print = false
+        # Suppose you find a result to dig further on
+        # https://www.bram.us/2017/11/22/accessing-a-tweet-using-only-its-id-and-without-the-twitter-api/
+        # above just redirects to this:
+        # https://twitter.com/anyuser/status/1554551230864560128
+        # which redirects to this:
+        # https://twitter.com/Vat_of_useless/status/1554551230864560128
+        #
+        # https://twitter.com/Vat_of_useless/status/1554551230864560128
+        # The answer was "coyly", and the penultimate guess was ygwgg.
+        # I asked what their second-to-last guess was, they said "lobby".
+        # I followed up with "wouldn't that be ygwwg", and now I'm blocked (!)
+        if debug_print
+          puts "-------- TEXT: BEGIN     --------"
+          puts text
+          puts "-------- TEXT: END       --------"
+          puts "-------- RESULT: BEGIN   --------"
+          puts result
+          puts "-------- RESULT: END     --------"
+        end
+      end
+
       answers.append(Answer.new(guess_array))
 
     end
@@ -269,6 +297,7 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
   puts "----------------------------------------"
   puts ""
 
+  stats
 end
 
 

@@ -62,8 +62,25 @@ def play(d)
         twitter
       when "twitter2"
         twitter(UrlSpecifier::WITH_HASHTAG)
+      when "twitter-filter"
+        stats_hash = twitter
+        filter_twitter(d, stats_hash)
+      when "twitter2-filter"
+        stats_hash = twitter(UrlSpecifier::WITH_HASHTAG)
+        filter_twitter(d, stats_hash)
       when "dad"
         print_a_dad_joke
+      when "help"
+        puts ""
+        puts "Usage"
+        puts "(p)rint, (c)ount, (h)int, (q)uit"
+        puts "pa              : print all"
+        puts "penultimate     : run penultimate-style analysis"
+        puts "twitter         : run Twitter analysis, with default URL (no hashtag)"
+        puts "twitter2        : run Twitter analysis, with hashtag URL"
+        puts "twitter-filter  : run Twitter analysis + filtering"
+        puts "twitter2-filter : run Twitter analysis w/ hashtag URL + filtering"
+        puts ""
       else # assume anything else is a guess
         print "Enter the response (!?-): ==> "
         response = gets.chomp
@@ -71,6 +88,13 @@ def play(d)
         break
       end
     end
+  end
+end
+
+def filter_twitter(d, stats_hash)
+  stats_hash.each do |key, _value|
+    key_array = key.split('.', 2)
+    penultimate_twitter(d, key_array[0], key_array[1])
   end
 end
 
@@ -102,22 +126,55 @@ def check_for_problematic_patterns(d)
   puts "No problematic patterns found!" if pp_dict.values.max <= 2
 end
 
-def penultimate(d)
-  puts "Choose a Twitter penultimate guess"
-  puts "4 greens (4g)"
-  puts "3 greens and 1 yellow (3g1y)"
-  puts "3 greens and 2 yellows (3g2y)"
-  puts "2 greens and 3 yellows (2g3y)"
-  puts "1 green and 4 yellows (1g4y)"
-  puts "0 greens and 5 yellows (0g5y)"
-  print "==> "
-  choice = gets.chomp
-  case choice
+def penultimate_twitter(d, pattern, subpattern)
+  puts "penultimate_twitter called, pattern=#{pattern}, subpattern=#{subpattern}"
+  case pattern
   when "4g"
-    print "Enter the position of the gray (1-5): ==> "
-    gray = gets.chomp.to_i - 1
-    print "Enter the count: ==> "
-    count = gets.chomp.to_i
+    # 4g.3.1 = 25
+    # 4g.3.2 = 8
+    # 4g.3.3 = 1
+    subpattern_array = subpattern.split('.')
+    if subpattern_array.length() != 2
+      puts "unexpected length (4g subpattern)"
+      return
+    end
+    gray = subpattern_array[0].to_i - 1
+    count = subpattern_array[1].to_i
+    Filter::filter_4g(d, gray, count)
+  when "3g1y"
+    # 3g1y.yellow3.white4 = 3
+    subpattern_array = subpattern.split('.')
+    if subpattern_array.length() != 2
+      puts "unexpected length (3g1y subpattern)"
+      return
+    end
+    yellow = subpattern_array[0][6].to_i - 1
+    gray = subpattern_array[1][5].to_i - 1
+    Filter::filter_3g1y(d, yellow, gray)
+  when "3g2y"
+    # 3g2y.yellow24
+    yellow1 = subpattern[6].to_i - 1
+    yellow2 = subpattern[7].to_i - 1
+    Filter::filter_3g2y(d, yellow1, yellow2)
+  when "2g3y"
+    # 2g3y.green24
+    green1 = subpattern[5].to_i - 1
+    green2 = subpattern[6].to_i - 1
+    Filter::filter_2g3y(d, green1, green2)
+  when "1g4y"
+    # 1g4y.green3
+    green = subpattern[5].to_i - 1
+    Filter::filter_1g4y(d, green)
+  when "0g5y"
+    # 0g5y.
+    Filter::filter_0g5y(d)
+  else
+    puts "#{pattern} not yet supported"
+  end
+end
+
+module Filter
+  def Filter::filter_4g(d, gray, count)
     d.each_key do |key|
       all_words = populate_valid_wordle_words
       for i in 0...5
@@ -135,11 +192,9 @@ def penultimate(d)
         all_words.each_key {|key| puts key}
       end
     end
-  when "3g1y"
-    print "Enter the position of the yellow (1-5): ==> "
-    yellow = gets.chomp.to_i - 1
-    print "Enter the position of the gray (1-5): ==> "
-    gray = gets.chomp.to_i - 1
+  end
+
+  def Filter::filter_3g1y(d, yellow, gray)
     d.each_key do |key|
       all_words = populate_valid_wordle_words
       for i in 0...5
@@ -158,44 +213,24 @@ def penultimate(d)
         all_words.each_key {|key| puts key}
       end
     end
-  when "1g4y"
-    print "Enter the position of the green (1-5): ==> "
-    green = gets.chomp.to_i - 1
+  end
+
+  def Filter::filter_3g2y(d, yellow1, yellow2)
+    all_words = populate_valid_wordle_words
     d.each_key do |key|
-      all_words = populate_valid_wordle_words
-      for i in 0...5
-        if i == green
-          all_words.delete_if { |key2, value2| key2[i] != key[i] }
-        else # yellow
-          all_words.delete_if { |key2, value2| key2[i] == key[i] || key2.count(key2[i]) != key.count(key2[i]) }
-        end
-      end
-      if all_words.size == 0
-        d.delete(key)
+      switched_word = key.dup
+      switched_word[yellow1] = key[yellow2]
+      switched_word[yellow2] = key[yellow1]
+      puts "testing #{key} and #{switched_word}"
+      if key != switched_word and all_words.key?(switched_word)
+        puts "ALERT: found a possible word: #{key}"
       else
-        puts "keeping #{key}"
-        all_words.each_key {|key| puts key}
+        d.delete(key)
       end
     end
-  when "0g5y"
-    d.each_key do |key|
-      all_words = populate_valid_wordle_words
-      for i in 0...5
-        # all yellows
-        all_words.delete_if { |key2, value2| key2[i] == key[i] || key2.count(key2[i]) != key.count(key2[i]) }
-      end
-      if all_words.size == 0
-        d.delete(key)
-      else
-        puts "keeping #{key}"
-        all_words.each_key {|key| puts key}
-      end
-    end
-  when "2g3y"
-    print "Enter the positions of the two greens (1-5): ==> "
-    greens = gets.chomp
-    green1 = greens[0].to_i - 1
-    green2 = greens[1].to_i - 1
+  end
+
+  def Filter::filter_2g3y(d, green1, green2)
     d.each_key do |key|
       all_words = populate_valid_wordle_words
       for i in 0...5
@@ -212,24 +247,87 @@ def penultimate(d)
         all_words.each_key {|key| puts key}
       end
     end
+  end
+
+  def Filter::filter_1g4y(d, green)
+    d.each_key do |key|
+      all_words = populate_valid_wordle_words
+      for i in 0...5
+        if i == green
+          all_words.delete_if { |key2, value2| key2[i] != key[i] }
+        else # yellow
+          all_words.delete_if { |key2, value2| key2[i] == key[i] || key2.count(key2[i]) != key.count(key2[i]) }
+        end
+      end
+      if all_words.size == 0
+        d.delete(key)
+      else
+        puts "keeping #{key}"
+        all_words.each_key {|key| puts key}
+      end
+    end
+  end
+
+  def Filter::filter_0g5y(d)
+    d.each_key do |key|
+      all_words = populate_valid_wordle_words
+      for i in 0...5
+        # all yellows
+        all_words.delete_if { |key2, value2| key2[i] == key[i] || key2.count(key2[i]) != key.count(key2[i]) }
+      end
+      if all_words.size == 0
+        d.delete(key)
+      else
+        puts "keeping #{key}"
+        all_words.each_key {|key| puts key}
+      end
+    end
+  end
+
+end
+
+def penultimate(d)
+  puts "Choose a Twitter penultimate guess"
+  puts "4 greens (4g)"
+  puts "3 greens and 1 yellow (3g1y)"
+  puts "3 greens and 2 yellows (3g2y)"
+  puts "2 greens and 3 yellows (2g3y)"
+  puts "1 green and 4 yellows (1g4y)"
+  puts "0 greens and 5 yellows (0g5y)"
+  print "==> "
+  choice = gets.chomp
+  case choice
+  when "4g"
+    print "Enter the position of the gray (1-5): ==> "
+    gray = gets.chomp.to_i - 1
+    print "Enter the count: ==> "
+    count = gets.chomp.to_i
+    Filter::filter_4g(d, gray, count)
+  when "3g1y"
+    print "Enter the position of the yellow (1-5): ==> "
+    yellow = gets.chomp.to_i - 1
+    print "Enter the position of the gray (1-5): ==> "
+    gray = gets.chomp.to_i - 1
+    Filter::filter_3g1y(d, yellow, gray)
   when "3g2y"
     print "Enter the positions of the two yellows (1-5): ==> "
     yellows = gets.chomp
     yellow1 = yellows[0].to_i - 1
     yellow2 = yellows[1].to_i - 1
-    all_words = populate_valid_wordle_words
-    d.each_key do |key|
-      switched_word = key.dup
-      switched_word[yellow1] = key[yellow2]
-      switched_word[yellow2] = key[yellow1]
-      puts "testing #{key} and #{switched_word}"
-      if key != switched_word and all_words.key?(switched_word)
-        puts "ALERT: found a possible word: #{key}"
-      else
-        d.delete(key)
-      end
-    end
+    Filter::filter_3g2y(d, yellow1, yellow2)
+  when "2g3y"
+    print "Enter the positions of the two greens (1-5): ==> "
+    greens = gets.chomp
+    green1 = greens[0].to_i - 1
+    green2 = greens[1].to_i - 1
+    Filter::filter_2g3y(d, green1, green2)
   end
+  when "1g4y"
+    print "Enter the position of the green (1-5): ==> "
+    green = gets.chomp.to_i - 1
+    Filter::filter_1g4y(d, green)
+  when "0g5y"
+    Filter::filter_0g5y(d)
 end
 
 def hint(d)
