@@ -188,8 +188,10 @@ module Filter
       if all_words.size < count
         d.delete(key)
       else
-        puts "keeping #{key}"
-        all_words.each_key {|key| puts key}
+        # print_string = "keeping #{key} ("
+        # all_words.each_key {|key| print_string += "#{key}, "}
+        # puts print_string[0..-3] + ')'
+        puts "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
       end
     end
   end
@@ -209,8 +211,10 @@ module Filter
       if all_words.size == 0
         d.delete(key)
       else
-        puts "keeping #{key}"
-        all_words.each_key {|key| puts key}
+        # print_string = "keeping #{key} ("
+        # all_words.each_key {|key| print_string += "#{key}, "}
+        # puts print_string[0..-3] + ')'
+        puts "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
       end
     end
   end
@@ -221,9 +225,9 @@ module Filter
       switched_word = key.dup
       switched_word[yellow1] = key[yellow2]
       switched_word[yellow2] = key[yellow1]
-      puts "testing #{key} and #{switched_word}"
+      # puts "testing #{key} and #{switched_word}"
       if key != switched_word and all_words.key?(switched_word)
-        puts "ALERT: found a possible word: #{key}"
+        puts "keeping #{key} (#{switched_word})"
       else
         d.delete(key)
       end
@@ -243,8 +247,10 @@ module Filter
       if all_words.size == 0
         d.delete(key)
       else
-        puts "keeping #{key}"
-        all_words.each_key {|key| puts key}
+        # print_string = "keeping #{key} ("
+        # all_words.each_key {|key| print_string += "#{key}, "}
+        # puts print_string[0..-3] + ')'
+        puts "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
       end
     end
   end
@@ -262,8 +268,10 @@ module Filter
       if all_words.size == 0
         d.delete(key)
       else
-        puts "keeping #{key}"
-        all_words.each_key {|key| puts key}
+        # print_string = "keeping #{key} ("
+        # all_words.each_key {|key| print_string += "#{key}, "}
+        # puts print_string[0..-3] + ')'
+        puts "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
       end
     end
   end
@@ -278,8 +286,10 @@ module Filter
       if all_words.size == 0
         d.delete(key)
       else
-        puts "keeping #{key}"
-        all_words.each_key {|key| puts key}
+        # print_string = "keeping #{key} ("
+        # all_words.each_key {|key| print_string += "#{key}, "}
+        # puts print_string[0..-3] + ')'
+        puts "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
       end
     end
   end

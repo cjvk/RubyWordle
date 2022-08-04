@@ -3,6 +3,7 @@
 # require 'twitter'
 require 'faraday'
 require 'json'
+require 'date'
 
 # standard (confirmed working)
 # e.g. https://twitter.com/mobanwar/status/1552908148696129536
@@ -29,6 +30,10 @@ DEBORAH_MODE_PATTERN = /[#{WHITE}#{BLUE}#{ORANGE}][#{WHITE}#{BLUE}#{ORANGE}][#{W
 # "Deborah-dark" mode
 # https://twitter.com/sandraschulze/status/1552673827766689792
 DEBORAH_DARK_MODE_PATTERN = /[#{BLACK}#{BLUE}#{ORANGE}][#{BLACK}#{BLUE}#{ORANGE}][#{BLACK}#{BLUE}#{ORANGE}][#{BLACK}#{BLUE}#{ORANGE}][#{BLACK}#{BLUE}#{ORANGE}]/
+
+ANY_WORDLE_SQUARE = /[#{GREEN}#{YELLOW}#{WHITE}#{BLACK}#{BLUE}#{ORANGE}]/
+ANY_WORDLE_SQUARE_PLUS_NEWLINE = /[#{GREEN}#{YELLOW}#{WHITE}#{BLACK}#{BLUE}#{ORANGE}\n]/
+NON_WORDLE_CHARACTERS = /[^#{GREEN}#{YELLOW}#{WHITE}#{BLACK}#{BLUE}#{ORANGE}\n]/
 
 def print_a_dad_joke
   url = 'https://icanhazdadjoke.com/'
@@ -130,8 +135,12 @@ module UrlSpecifier
 end
 
 def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
-  print "Enter Wordle number: ==> "
-  wordle_number = gets.chomp
+  # print "Enter Wordle number: ==> "
+  # wordle_number = gets.chomp
+  now = Date.today
+  wordle_day_0 = Date.civil(2021, 6, 19)
+  difference_in_days = (now - wordle_day_0).to_i
+  wordle_number = difference_in_days.to_s
   results = 100
 
   case url_specifier
@@ -161,26 +170,10 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
   num_failures = 0
   for result in parsed_json['data']
     text = result['text']
+    id = result['id']
+    debug_print_it = (id == '1555234404812857344') && false
     if is_probably_a_wordle_post?(text, wordle_number)
-      # determine mode
-      if text.include? "#{ORANGE}"
-        if text.include? "#{BLACK}"
-          mode = "Deborah-dark"
-        else
-          mode = "Deborah"
-        end
-      elsif text.include? "#{BLACK}"
-        mode = "Dark"
-      elsif text.include? "#{WHITE}"
-        mode = "Normal"
-      else
-        mode = "Unknown"
-      end
-
-      if mode == "Unknown"
-        puts "unknown mode, skipping"
-        next
-      end
+      puts "is probably a wordle post!" if debug_print_it
 
       # determine how many guesses they took
       if text.include? "Wordle #{wordle_number} 1/6"
@@ -202,12 +195,50 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
       end
 
       if num_guesses == "X" || num_guesses == "Unknown"
-        puts "not a solution, skipping"
+        # puts "not a solution, skipping"
         if num_guesses == "X"
           num_failures += 1
         end
         next
       end
+
+      # before determining mode, only determine based on the wordle answer
+      # some goofballs do Wordle in regular mode and Worldle in dark mode
+      # e.g. https://twitter.com/fire__girl/status/1555234404812857344
+      # so restrict only to looking at the wordle answer
+      wordle_begin_pattern = /Wordle #{wordle_number} [123456]\/6/
+      wordle_begin_index = text.index(wordle_begin_pattern)
+      wordle_begin_pattern_length = wordle_number.to_i < 1000 ? 14 : 15
+      # typically 2 newline characters
+      wordle_squares_begin = wordle_begin_index + wordle_begin_pattern_length + 2
+      puts "wordle_squares_begin = #{wordle_squares_begin}" if debug_print_it
+      first_non_wordle_character = text.index(NON_WORDLE_CHARACTERS, wordle_squares_begin)
+      puts "wordle_begin_index=#{wordle_begin_index}" if debug_print_it
+      puts "first_non_wordle_character=#{first_non_wordle_character}" if debug_print_it
+      if first_non_wordle_character != nil
+        text = text[wordle_begin_index..first_non_wordle_character - 1]
+      end
+
+      # determine mode
+      if text.include? "#{ORANGE}"
+        if text.include? "#{BLACK}"
+          mode = "Deborah-dark"
+        else
+          mode = "Deborah"
+        end
+      elsif text.include? "#{BLACK}"
+        mode = "Dark"
+      elsif text.include? "#{WHITE}"
+        mode = "Normal"
+      else
+        mode = "Unknown"
+      end
+
+      if mode == "Unknown"
+        # puts "unknown mode, skipping"
+        next
+      end
+      puts "mode = #{mode}" if debug_print_it
 
       current_index = 0
       guess_array = []
@@ -236,15 +267,11 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
       end
 
       if guess_array.length() != num_guesses
-        puts 'Alert: guess array not correct length!'
-        puts 'text: BEGIN'
-        puts text
-        puts 'text: END'
+        puts "Alert: guess array not correct length! (tweet id = #{id})"
         next
       end
 
-      if guess_array[guess_array.length()-2] == 'gggwg'
-        debug_print = false
+      if guess_array[guess_array.length()-1] == 'ggggy'
         # Suppose you find a result to dig further on
         # https://www.bram.us/2017/11/22/accessing-a-tweet-using-only-its-id-and-without-the-twitter-api/
         # above just redirects to this:
@@ -263,7 +290,7 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
         # Penultimate guess: gggwg
         # Same as above for https://twitter.com/katheryn_avila/status/1555210731603247104
         # Solved: Wordle considers "rhyne" to be a word
-        if debug_print
+        if false
           puts "-------- TEXT: BEGIN     --------"
           puts text
           puts "-------- TEXT: END       --------"
