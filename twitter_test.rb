@@ -243,7 +243,7 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
         next
       end
 
-      if guess_array[guess_array.length()-2] == 'ygwgg'
+      if guess_array[guess_array.length()-2] == 'gggwg'
         debug_print = false
         # Suppose you find a result to dig further on
         # https://www.bram.us/2017/11/22/accessing-a-tweet-using-only-its-id-and-without-the-twitter-api/
@@ -256,6 +256,13 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
         # The answer was "coyly", and the penultimate guess was ygwgg.
         # I asked what their second-to-last guess was, they said "lobby".
         # I followed up with "wouldn't that be ygwwg", and now I'm blocked (!)
+        # Follow-up: Appears to be no way for "yo?ly" to be a word
+        #
+        # https://twitter.com/NerizArielle/status/1555215699152211969
+        # Answer: "rhyme"
+        # Penultimate guess: gggwg
+        # Same as above for https://twitter.com/katheryn_avila/status/1555210731603247104
+        # Solved: Wordle considers "rhyne" to be a word
         if debug_print
           puts "-------- TEXT: BEGIN     --------"
           puts text
