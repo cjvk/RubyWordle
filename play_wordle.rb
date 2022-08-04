@@ -321,13 +321,13 @@ def penultimate(d)
     green1 = greens[0].to_i - 1
     green2 = greens[1].to_i - 1
     Filter::filter_2g3y(d, green1, green2)
-  end
   when "1g4y"
     print "Enter the position of the green (1-5): ==> "
     green = gets.chomp.to_i - 1
     Filter::filter_1g4y(d, green)
   when "0g5y"
     Filter::filter_0g5y(d)
+  end
 end
 
 def hint(d)
