@@ -267,7 +267,8 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
       end
 
       if guess_array.length() != num_guesses
-        puts "Alert: guess array not correct length! (tweet id = #{id})"
+        generic_tweet_url = "https://twitter.com/anyuser/status/#{id}"
+        puts "Alert: guess array not correct length! (#{generic_tweet_url})"
         next
       end
 
