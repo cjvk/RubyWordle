@@ -54,7 +54,7 @@ def play(d)
       when "q"
         return
       when "c"
-        puts "There are #{d.size} matching words remaining."
+        print_remaining_count(d)
       when "penultimate"
         penultimate(d)
       when "twitter"
@@ -65,9 +65,11 @@ def play(d)
       when "twitter-filter"
         stats_hash = twitter
         filter_twitter(d, stats_hash)
+        print_remaining_count(d)
       when "twitter2-filter"
         stats_hash = twitter(UrlSpecifier::WITH_HASHTAG)
         filter_twitter(d, stats_hash)
+        print_remaining_count(d)
       when "dad"
         print_a_dad_joke
       when "help"
@@ -81,20 +83,37 @@ def play(d)
         puts "twitter-filter  : run Twitter analysis + filtering"
         puts "twitter2-filter : run Twitter analysis w/ hashtag URL + filtering"
         puts ""
+      when ""
       else # assume anything else is a guess
-        print "Enter the response (!?-): ==> "
-        response = gets.chomp
-        filter(d, choice, response)
-        break
+        if choice.length == 5
+          print "Enter the response (!?-): ==> "
+          response = gets.chomp
+          filter(d, choice, response)
+          break
+        end
       end
     end
   end
 end
 
+def print_remaining_count(d)
+  if d.length == 1
+    puts "There is #{d.size} matching word remaining."
+  else
+    puts "There are #{d.size} matching words remaining."
+  end
+end
+
 def filter_twitter(d, stats_hash)
+  # first pass: '4g'
   stats_hash.each do |key, _value|
     key_array = key.split('.', 2)
-    penultimate_twitter(d, key_array[0], key_array[1])
+    penultimate_twitter(d, key_array[0], key_array[1]) if key_array[0] == '4g'
+  end
+  # second pass: everything else
+  stats_hash.each do |key, _value|
+    key_array = key.split('.', 2)
+    penultimate_twitter(d, key_array[0], key_array[1]) if key_array[0] != '4g'
   end
 end
 
