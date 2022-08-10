@@ -1,14 +1,14 @@
 #!/usr/bin/ruby -w
 
-require_relative "twitter_test"
+require_relative 'twitter_test'
 
 # copied from https://github.com/charlesreid1/five-letter-words
-DICTIONARY_FILE_LARGE = "sgb-words.txt"
-DICTIONARY_FILE_SMALL = "sgb-words-small.txt"
+DICTIONARY_FILE_LARGE = 'sgb-words.txt'
+DICTIONARY_FILE_SMALL = 'sgb-words-small.txt'
 DICTIONARY_FILE = DICTIONARY_FILE_LARGE
 
 # from https://gist.github.com/dracos/dd0668f281e685bad51479e5acaadb93
-VALID_WORDLE_WORDS_FILE = "valid-wordle-words.txt"
+VALID_WORDLE_WORDS_FILE = 'valid-wordle-words.txt'
 
 def populate_valid_wordle_words
   d = {}
@@ -23,78 +23,78 @@ def populate_all_words
   File.foreach(DICTIONARY_FILE).with_index do |line, line_num|
     d[line.chomp] = line_num
   end
-  d["pinot"] = "-1"
-  d["ramen"] = "-1"
-  d["beret"] = "-1"
-  d["apage"] = "-1"
-  d["stear"] = "-1"
-  d["stean"] = "-1"
-  d["tased"] = "-1"
-  d["tsade"] = "-1"
+  d['pinot'] = '-1'
+  d['ramen'] = '-1'
+  d['beret'] = '-1'
+  d['apage'] = '-1'
+  d['stear'] = '-1'
+  d['stean'] = '-1'
+  d['tased'] = '-1'
+  d['tsade'] = '-1'
   d
 end
 
 def play(d)
-  puts "Welcome to Wordle!"
+  puts 'Welcome to Wordle!'
   for guess in 1..6
     print "You are on guess #{guess}/6. "
     print_remaining_count(d)
     check_for_problematic_patterns(d) if guess >= 3
     while true do
-      print "Enter a guess, or (p)rint, (c)ount, (h)int, (q)uit: ==> "
+      print 'Enter a guess, or (p)rint, (c)ount, (h)int, (q)uit: ==> '
       choice = gets.chomp
       case choice
-      when "p"
+      when 'p'
         max_print = 30
         d.each_with_index {|(key, _value), index| break if index >= max_print; puts key }
         puts "skipping #{d.size-max_print} additional results..." if d.size > max_print
-      when "pa"
+      when 'pa'
         d.each {|key, value| puts key}
-      when "h"
+      when 'h'
         hint(d)
-      when "q"
+      when 'q'
         return
-      when "c"
+      when 'c'
         print_remaining_count(d)
-      when "penultimate"
+      when 'penultimate'
         penultimate(d)
-      when "twitter"
+      when 'twitter'
         twitter
-      when "twitter2"
+      when 'twitter2'
         twitter(UrlSpecifier::WITH_HASHTAG)
-      when "twitter-filter"
+      when 'twitter-filter'
         stats_hash = twitter
         filter_twitter(d, stats_hash)
         print_remaining_count(d)
-      when "twitter2-filter"
+      when 'twitter2-filter'
         stats_hash = twitter(UrlSpecifier::WITH_HASHTAG)
         filter_twitter(d, stats_hash)
         print_remaining_count(d)
-      when "dad"
+      when 'dad'
         print_a_dad_joke
-      when "help"
-        puts ""
-        puts ".----------------------------------------------."
-        puts "|                                              |"
-        puts "|                     Usage                    |"
-        puts "|                                              |"
-        puts "\\----------------------------------------------/"
-        puts "c               : count"
-        puts "p               : print"
-        puts "pa              : print all"
-        puts "h               : hint"
-        puts "q               : quit"
-        puts "dad             : print a dad joke"
-        puts "penultimate     : run penultimate-style analysis"
-        puts "twitter         : run Twitter analysis, with default URL (no hashtag)"
-        puts "twitter2        : run Twitter analysis, with hashtag URL"
-        puts "twitter-filter  : run Twitter analysis + filtering"
-        puts "twitter2-filter : run Twitter analysis w/ hashtag URL + filtering"
-        puts ""
-      when ""
+      when 'help'
+        puts ''
+        puts '.----------------------------------------------.'
+        puts '|                                              |'
+        puts '|                     Usage                    |'
+        puts '|                                              |'
+        puts '\----------------------------------------------/'
+        puts 'c               : count'
+        puts 'p               : print'
+        puts 'pa              : print all'
+        puts 'h               : hint'
+        puts 'q               : quit'
+        puts 'dad             : print a dad joke'
+        puts 'penultimate     : run penultimate-style analysis'
+        puts 'twitter         : run Twitter analysis, with default URL (no hashtag)'
+        puts 'twitter2        : run Twitter analysis, with hashtag URL'
+        puts 'twitter-filter  : run Twitter analysis + filtering'
+        puts 'twitter2-filter : run Twitter analysis w/ hashtag URL + filtering'
+        puts ''
+      when ''
       else # assume anything else is a guess
         if choice.length == 5
-          print "Enter the response (!?-): ==> "
+          print 'Enter the response (!?-): ==> '
           response = gets.chomp
           filter(d, choice, response)
           break
@@ -142,53 +142,53 @@ def check_for_problematic_patterns(d)
     end
     pp_dict[key1] = 1 if !found
   end
-  puts "Checking for problematic patterns..."
+  puts 'Checking for problematic patterns...'
   pp_dict.each do |key, value|
     puts "\nPROBLEMATIC PATTERN ALERT: found \"#{key}\" with #{value} matching words (print for details)\n\n" if value > 2
   end
-  puts "No problematic patterns found!" if pp_dict.values.max <= 2
+  puts 'No problematic patterns found!' if pp_dict.values.max <= 2
 end
 
 def penultimate_twitter(d, pattern, subpattern)
   puts "penultimate_twitter called, pattern=#{pattern}, subpattern=#{subpattern}"
   case pattern
-  when "4g"
+  when '4g'
     # 4g.3.1 = 25
     # 4g.3.2 = 8
     # 4g.3.3 = 1
     subpattern_array = subpattern.split('.')
     if subpattern_array.length() != 2
-      puts "unexpected length (4g subpattern)"
+      puts 'unexpected length (4g subpattern)'
       return
     end
     gray = subpattern_array[0].to_i - 1
     count = subpattern_array[1].to_i
     Filter::filter_4g(d, gray, count)
-  when "3g1y"
+  when '3g1y'
     # 3g1y.yellow3.white4 = 3
     subpattern_array = subpattern.split('.')
     if subpattern_array.length() != 2
-      puts "unexpected length (3g1y subpattern)"
+      puts 'unexpected length (3g1y subpattern)'
       return
     end
     yellow = subpattern_array[0][6].to_i - 1
     gray = subpattern_array[1][5].to_i - 1
     Filter::filter_3g1y(d, yellow, gray)
-  when "3g2y"
+  when '3g2y'
     # 3g2y.yellow24
     yellow1 = subpattern[6].to_i - 1
     yellow2 = subpattern[7].to_i - 1
     Filter::filter_3g2y(d, yellow1, yellow2)
-  when "2g3y"
+  when '2g3y'
     # 2g3y.green24
     green1 = subpattern[5].to_i - 1
     green2 = subpattern[6].to_i - 1
     Filter::filter_2g3y(d, green1, green2)
-  when "1g4y"
+  when '1g4y'
     # 1g4y.green3
     green = subpattern[5].to_i - 1
     Filter::filter_1g4y(d, green)
-  when "0g5y"
+  when '0g5y'
     # 0g5y.
     Filter::filter_0g5y(d)
   else
@@ -234,9 +234,6 @@ module Filter
       if all_words.size == 0
         d.delete(key)
       else
-        # print_string = "keeping #{key} ("
-        # all_words.each_key {|key| print_string += "#{key}, "}
-        # puts print_string[0..-3] + ')'
         puts "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
       end
     end
@@ -248,7 +245,6 @@ module Filter
       switched_word = key.dup
       switched_word[yellow1] = key[yellow2]
       switched_word[yellow2] = key[yellow1]
-      # puts "testing #{key} and #{switched_word}"
       if key != switched_word and all_words.key?(switched_word)
         puts "keeping #{key} (#{switched_word})"
       else
@@ -270,9 +266,6 @@ module Filter
       if all_words.size == 0
         d.delete(key)
       else
-        # print_string = "keeping #{key} ("
-        # all_words.each_key {|key| print_string += "#{key}, "}
-        # puts print_string[0..-3] + ')'
         puts "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
       end
     end
@@ -291,9 +284,6 @@ module Filter
       if all_words.size == 0
         d.delete(key)
       else
-        # print_string = "keeping #{key} ("
-        # all_words.each_key {|key| print_string += "#{key}, "}
-        # puts print_string[0..-3] + ')'
         puts "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
       end
     end
@@ -309,9 +299,6 @@ module Filter
       if all_words.size == 0
         d.delete(key)
       else
-        # print_string = "keeping #{key} ("
-        # all_words.each_key {|key| print_string += "#{key}, "}
-        # puts print_string[0..-3] + ')'
         puts "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
       end
     end
@@ -320,45 +307,45 @@ module Filter
 end
 
 def penultimate(d)
-  puts "Choose a Twitter penultimate guess"
-  puts "4 greens (4g)"
-  puts "3 greens and 1 yellow (3g1y)"
-  puts "3 greens and 2 yellows (3g2y)"
-  puts "2 greens and 3 yellows (2g3y)"
-  puts "1 green and 4 yellows (1g4y)"
-  puts "0 greens and 5 yellows (0g5y)"
-  print "==> "
+  puts 'Choose a Twitter penultimate guess'
+  puts '4 greens (4g)'
+  puts '3 greens and 1 yellow (3g1y)'
+  puts '3 greens and 2 yellows (3g2y)'
+  puts '2 greens and 3 yellows (2g3y)'
+  puts '1 green and 4 yellows (1g4y)'
+  puts '0 greens and 5 yellows (0g5y)'
+  print '==> '
   choice = gets.chomp
   case choice
-  when "4g"
-    print "Enter the position of the gray (1-5): ==> "
+  when '4g'
+    print 'Enter the position of the gray (1-5): ==> '
     gray = gets.chomp.to_i - 1
-    print "Enter the count: ==> "
+    print 'Enter the count: ==> '
     count = gets.chomp.to_i
     Filter::filter_4g(d, gray, count)
-  when "3g1y"
-    print "Enter the position of the yellow (1-5): ==> "
+  when '3g1y'
+    print 'Enter the position of the yellow (1-5): ==> '
     yellow = gets.chomp.to_i - 1
-    print "Enter the position of the gray (1-5): ==> "
+    print 'Enter the position of the gray (1-5): ==> '
     gray = gets.chomp.to_i - 1
     Filter::filter_3g1y(d, yellow, gray)
-  when "3g2y"
-    print "Enter the positions of the two yellows (1-5): ==> "
+  when '3g2y'
+    print 'Enter the positions of the two yellows (1-5): ==> '
     yellows = gets.chomp
     yellow1 = yellows[0].to_i - 1
     yellow2 = yellows[1].to_i - 1
     Filter::filter_3g2y(d, yellow1, yellow2)
-  when "2g3y"
-    print "Enter the positions of the two greens (1-5): ==> "
+  when '2g3y'
+    print 'Enter the positions of the two greens (1-5): ==> '
     greens = gets.chomp
     green1 = greens[0].to_i - 1
     green2 = greens[1].to_i - 1
     Filter::filter_2g3y(d, green1, green2)
-  when "1g4y"
-    print "Enter the position of the green (1-5): ==> "
+  when '1g4y'
+    print 'Enter the position of the green (1-5): ==> '
     green = gets.chomp.to_i - 1
     Filter::filter_1g4y(d, green)
-  when "0g5y"
+  when '0g5y'
     Filter::filter_0g5y(d)
   end
 end
@@ -392,7 +379,7 @@ end
 
 def num_green_or_yellow(word, response, letter)
   num_green_or_yellow = 0
-  (0...5).each { |i| num_green_or_yellow += 1 if word[i] == letter && response[i] != "-" }
+  (0...5).each { |i| num_green_or_yellow += 1 if word[i] == letter && response[i] != '-' }
   return num_green_or_yellow
 end
 
@@ -401,34 +388,34 @@ def filter(d, word, response)
   for i in 0...5
     letter = word[i]
     case response[i]
-    when "!"
+    when '!'
       d.delete_if { |key, value| key[i] != letter }
-    when "?"
+    when '?'
       d.delete_if { |key, value| key[i] == letter || key.count(letter) < num_green_or_yellow(word, response, letter) }
-    when "-"
+    when '-'
       d.delete_if { |key, value| key[i] == letter || key.count(letter) != num_green_or_yellow(word, response, letter) }
     else
-      raise "unrecognized response character"
+      raise 'unrecognized response character'
     end
   end
 end
 
 def run_tests
-  fail if num_green_or_yellow("abcde", "!----", "a") != 1
-  fail if num_green_or_yellow("aaaaa", "!?---", "a") != 2
-  fail if num_green_or_yellow("aaaaa", "??---", "a") != 2
-  fail if num_green_or_yellow("xaaxx", "!!--!", "c") != 0
-  fail if num_green_or_yellow("xaaxx", "?????", "x") != 3
-  fail if num_green_or_yellow("xaaxx", "?????", "a") != 2
+  fail if num_green_or_yellow('abcde', '!----', 'a') != 1
+  fail if num_green_or_yellow('aaaaa', '!?---', 'a') != 2
+  fail if num_green_or_yellow('aaaaa', '??---', 'a') != 2
+  fail if num_green_or_yellow('xaaxx', '!!--!', 'c') != 0
+  fail if num_green_or_yellow('xaaxx', '?????', 'x') != 3
+  fail if num_green_or_yellow('xaaxx', '?????', 'a') != 2
 
-  fail if close("aaaaa", "bbbbb")
-  fail if close("aaaaa", "aaabb")
-  fail if close("abcde", "abcde")
-  fail unless close("abcde", "xbcde")
-  fail unless close("abcde", "axcde")
-  fail unless close("abcde", "abxde")
-  fail unless close("abcde", "abcxe")
-  fail unless close("abcde", "abcdx")
+  fail if close('aaaaa', 'bbbbb')
+  fail if close('aaaaa', 'aaabb')
+  fail if close('abcde', 'abcde')
+  fail unless close('abcde', 'xbcde')
+  fail unless close('abcde', 'axcde')
+  fail unless close('abcde', 'abxde')
+  fail unless close('abcde', 'abcxe')
+  fail unless close('abcde', 'abcdx')
 end
 
 run_tests

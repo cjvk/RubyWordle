@@ -62,7 +62,7 @@ class Answer
       # count how many of these occurred
       count = 1
       (num_guesses-2).downto(1) { |i| count+= 1 if get_guess(i) == penultimate }
-      # puts "count = #{count}"
+      # puts 'count = #{count}'
       name = '4g'
       subname = "#{penultimate.index('w')+1}.#{count}"
       # subname = (penultimate.index('w') + 1).to_s
@@ -99,17 +99,12 @@ class Answer
       name = '1g4y'
       g = penultimate.index('g')
       subname = "green#{g+1}"
-      # y1 = penultimate.index('y')
-      # y2 = penultimate.index('y', y1+1)
-      # y3 = penultimate.index('y', y2+1)
-      # y4 = penultimate.index('y', y3+1)
-      # subname = "yellow#{y1+1}#{y2+1}#{y3+1}#{y4+1}"
       create_or_increment("#{name}.#{subname}", stats)
       return true
     end
     if num_with_color('y', penultimate) == 5
       name = '0g5y'
-      subname = ""
+      subname = ''
       create_or_increment("#{name}.#{subname}", stats)
       return true
     end
@@ -135,7 +130,7 @@ module UrlSpecifier
 end
 
 def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
-  # print "Enter Wordle number: ==> "
+  # print 'Enter Wordle number: ==> '
   # wordle_number = gets.chomp
   now = Date.today
   wordle_day_0 = Date.civil(2021, 6, 19)
@@ -150,11 +145,11 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
       url = "https://api.twitter.com/2/tweets/search/recent?query=%23wordle%20#{wordle_number}&tweet.fields=created_at&max_results=#{results}"
     else
       # shouldn't happen
-      url = ""
+      url = ''
   end
 
   # get the auth token
-  file = File.open("twitter_auth_token")
+  file = File.open('twitter_auth_token')
   file_data = file.read
   file.close
   auth_token = file_data.chomp
@@ -173,7 +168,7 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
     id = result['id']
     debug_print_it = (id == '1555234404812857344') && false
     if is_probably_a_wordle_post?(text, wordle_number)
-      puts "is probably a wordle post!" if debug_print_it
+      puts 'is probably a wordle post!' if debug_print_it
 
       # determine how many guesses they took
       if text.include? "Wordle #{wordle_number} 1/6"
@@ -189,14 +184,14 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
       elsif text.include? "Wordle #{wordle_number} 6/6"
         num_guesses = 6
       elsif text.include? "Wordle #{wordle_number} X/6"
-        num_guesses = "X"
+        num_guesses = 'X'
       else
-        num_guesses = "Unknown"
+        num_guesses = 'Unknown'
       end
 
-      if num_guesses == "X" || num_guesses == "Unknown"
-        # puts "not a solution, skipping"
-        if num_guesses == "X"
+      if num_guesses == 'X' || num_guesses == 'Unknown'
+        # puts 'not a solution, skipping'
+        if num_guesses == 'X'
           num_failures += 1
         end
         next
@@ -222,20 +217,20 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
       # determine mode
       if text.include? "#{ORANGE}"
         if text.include? "#{BLACK}"
-          mode = "Deborah-dark"
+          mode = 'Deborah-dark'
         else
-          mode = "Deborah"
+          mode = 'Deborah'
         end
       elsif text.include? "#{BLACK}"
-        mode = "Dark"
+        mode = 'Dark'
       elsif text.include? "#{WHITE}"
-        mode = "Normal"
+        mode = 'Normal'
       else
-        mode = "Unknown"
+        mode = 'Unknown'
       end
 
-      if mode == "Unknown"
-        # puts "unknown mode, skipping"
+      if mode == 'Unknown'
+        # puts 'unknown mode, skipping'
         next
       end
       puts "mode = #{mode}" if debug_print_it
@@ -244,13 +239,13 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
       guess_array = []
       for _ in 0...num_guesses
         case mode
-        when "Normal"
+        when 'Normal'
           pattern = NORMAL_MODE_PATTERN
-        when "Dark"
+        when 'Dark'
           pattern = DARK_MODE_PATTERN
-        when "Deborah"
+        when 'Deborah'
           pattern = DEBORAH_MODE_PATTERN
-        when "Deborah-dark"
+        when 'Deborah-dark'
           pattern = DEBORAH_DARK_MODE_PATTERN
         end
         matching_index = text.index(pattern, current_index)
@@ -292,12 +287,12 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
         # Same as above for https://twitter.com/katheryn_avila/status/1555210731603247104
         # Solved: Wordle considers "rhyne" to be a word
         if false
-          puts "-------- TEXT: BEGIN     --------"
+          puts '-------- TEXT: BEGIN     --------'
           puts text
-          puts "-------- TEXT: END       --------"
-          puts "-------- RESULT: BEGIN   --------"
+          puts '-------- TEXT: END       --------'
+          puts '-------- RESULT: BEGIN   --------'
           puts result
-          puts "-------- RESULT: END     --------"
+          puts '-------- RESULT: END     --------'
         end
       end
 
@@ -306,11 +301,11 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
     end
   end
 
-  puts ""
-  puts "/--------------------------------------\\"
+  puts ''
+  puts '/--------------------------------------\\'
   puts "|              Wordle #{wordle_number}              |"
-  puts "|            Twitter report            |"
-  puts "\\--------------------------------------/"
+  puts '|            Twitter report            |'
+  puts '\--------------------------------------/'
   puts "collected #{answers.length()} answers from #{results} Twitter results"
 
   stats = {}
@@ -325,7 +320,7 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
   stats = stats.sort.to_h
 
   puts "#{num_interesting}/#{answers.length()} are interesting"
-  puts ""
+  puts ''
   # first pass: '4g'
   stats.each do |key, value|
     key_array = key.split('.', 2)
@@ -336,10 +331,10 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
     key_array = key.split('.', 2)
     puts "#{key} = #{value}" if key_array[0] != '4g'
   end
-  puts ""
+  puts ''
   puts "#{num_failures}/#{results} did not solve"
-  puts "----------------------------------------"
-  puts ""
+  puts '----------------------------------------'
+  puts ''
 
   stats
 end
@@ -348,7 +343,7 @@ end
 
 def unicode_to_normalized_string(unicode_string, mode)
   case mode
-  when "Normal"
+  when 'Normal'
     case unicode_string
     when WHITE
       return 'w'
@@ -359,7 +354,7 @@ def unicode_to_normalized_string(unicode_string, mode)
     else
       return -1
     end
-  when "Dark"
+  when 'Dark'
     case unicode_string
     when BLACK
       return 'w'
@@ -368,7 +363,7 @@ def unicode_to_normalized_string(unicode_string, mode)
     when GREEN
       return 'g'
     end
-  when "Deborah"
+  when 'Deborah'
     case unicode_string
     when WHITE
       return 'w'
@@ -377,7 +372,7 @@ def unicode_to_normalized_string(unicode_string, mode)
     when ORANGE
       return 'g'
     end
-  when "Deborah-dark"
+  when 'Deborah-dark'
     case unicode_string
     when BLACK
       return 'w'
