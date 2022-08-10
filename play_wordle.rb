@@ -35,9 +35,10 @@ def populate_all_words
 end
 
 def play(d)
-  puts "Welcome to wordle!"
+  puts "Welcome to Wordle!"
   for guess in 1..6
-    puts "You are on guess #{guess}/6. There are #{d.size} matching words remaining."
+    print "You are on guess #{guess}/6. "
+    print_remaining_count(d)
     check_for_problematic_patterns(d) if guess >= 3
     while true do
       print "Enter a guess, or (p)rint, (c)ount, (h)int, (q)uit: ==> "
@@ -58,7 +59,6 @@ def play(d)
       when "penultimate"
         penultimate(d)
       when "twitter"
-        # puts "attempting to call Twitter..."
         twitter
       when "twitter2"
         twitter(UrlSpecifier::WITH_HASHTAG)
@@ -74,9 +74,17 @@ def play(d)
         print_a_dad_joke
       when "help"
         puts ""
-        puts "Usage"
-        puts "(p)rint, (c)ount, (h)int, (q)uit"
+        puts ".----------------------------------------------."
+        puts "|                                              |"
+        puts "|                     Usage                    |"
+        puts "|                                              |"
+        puts "\\----------------------------------------------/"
+        puts "c               : count"
+        puts "p               : print"
         puts "pa              : print all"
+        puts "h               : hint"
+        puts "q               : quit"
+        puts "dad             : print a dad joke"
         puts "penultimate     : run penultimate-style analysis"
         puts "twitter         : run Twitter analysis, with default URL (no hashtag)"
         puts "twitter2        : run Twitter analysis, with hashtag URL"
@@ -97,11 +105,7 @@ def play(d)
 end
 
 def print_remaining_count(d)
-  if d.length == 1
-    puts "There is #{d.size} matching word remaining."
-  else
-    puts "There are #{d.size} matching words remaining."
-  end
+  puts "There #{d.length==1?'is':'are'} #{d.size} matching word#{d.length==1?'':'s'} remaining."
 end
 
 def filter_twitter(d, stats_hash)
