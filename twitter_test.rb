@@ -307,7 +307,10 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
   end
 
   puts ""
-  puts "----------------------------------------"
+  puts "/--------------------------------------\\"
+  puts "|              Wordle #{wordle_number}              |"
+  puts "|            Twitter report            |"
+  puts "\\--------------------------------------/"
   puts "collected #{answers.length()} answers from #{results} Twitter results"
 
   stats = {}
@@ -323,9 +326,15 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
 
   puts "#{num_interesting}/#{answers.length()} are interesting"
   puts ""
-  puts "---- Twitter report: ----"
+  # first pass: '4g'
   stats.each do |key, value|
-    puts "#{key} = #{value}"
+    key_array = key.split('.', 2)
+    puts "#{key} = #{value}" if key_array[0] == '4g'
+  end
+  # second pass: everything else
+  stats.each do |key, value|
+    key_array = key.split('.', 2)
+    puts "#{key} = #{value}" if key_array[0] != '4g'
   end
   puts ""
   puts "#{num_failures}/#{results} did not solve"
