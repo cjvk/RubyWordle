@@ -23,14 +23,7 @@ def populate_all_words
   File.foreach(DICTIONARY_FILE).with_index do |line, line_num|
     d[line.chomp] = line_num
   end
-  d['pinot'] = '-1'
-  d['ramen'] = '-1'
-  d['beret'] = '-1'
-  d['apage'] = '-1'
-  d['stear'] = '-1'
-  d['stean'] = '-1'
-  d['tased'] = '-1'
-  d['tsade'] = '-1'
+  ['pinot', 'ramen', 'beret', 'apage', 'stear', 'stean', 'tased', 'tsade'].each { |word| d[word] = '-1' }
   d
 end
 
