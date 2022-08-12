@@ -59,10 +59,12 @@ def play(d)
         stats_hash = twitter
         filter_twitter(d, stats_hash)
         print_remaining_count(d)
+        absence_of_evidence(d, stats_hash)
       when 'twitter2-filter'
         stats_hash = twitter(UrlSpecifier::WITH_HASHTAG)
         filter_twitter(d, stats_hash)
         print_remaining_count(d)
+        absence_of_evidence(d, stats_hash)
       when 'dad'
         print_a_dad_joke
       when 'help'
@@ -99,6 +101,19 @@ end
 
 def print_remaining_count(d)
   puts "There #{d.length==1?'is':'are'} #{d.size} matching word#{d.length==1?'':'s'} remaining."
+end
+
+def absence_of_evidence(d, stats_hash)
+  # TODO consider making deductions based on lack of evidence?
+  print 'Would you like to make deductions based on absence of evidence? (y/n) ==> '
+  choice = gets.chomp
+  case choice
+  when 'y'
+    penultimate_twitter_absence_of_evidence(d, stats_hash)
+  when 'n'
+  else
+    puts "unrecognized input (#{choice}), skipping"
+  end
 end
 
 def filter_twitter(d, stats_hash)
@@ -140,6 +155,60 @@ def check_for_problematic_patterns(d)
     puts "\nPROBLEMATIC PATTERN ALERT: found \"#{key}\" with #{value} matching words (print for details)\n\n" if value > 2
   end
   puts 'No problematic patterns found!' if pp_dict.values.max <= 2
+end
+
+def penultimate_twitter_absence_of_evidence(d, stats_hash)
+  puts 'Absence of evidence is not evidence of absence!'
+  # 4g-based analysis
+  # sample entry in stash_hash: key=4g.3.1, value=7
+  # Translation: The 3rd letter was white one time, for seven people
+  # Plan
+  #   1. Normalize the knowledge in stats_hash
+  #   2. For remaining words in d, find how many matching words there are in valid-wordle-words.txt
+  #   3. Do a text-based comparison (for now)
+
+  # calculate the max 4g's seen per letter
+  # [1, 0, 1, 0, 0] means the first and third letters had 4g matches, and only 4g.1.1 and 4g.3.1
+  max_4gs_seen_on_twitter = [0, 0, 0, 0, 0]
+  stats_hash.each do |key, value|
+    key_array = key.split('.', 2)
+    if key_array[0] == '4g'
+      letter_position = key_array[1][0].to_i
+      num_incorrect_4gs = key_array[1][2].to_i
+      num_people = value
+      if num_incorrect_4gs > max_4gs_seen_on_twitter[letter_position-1]
+        max_4gs_seen_on_twitter[letter_position-1] = num_incorrect_4gs
+      end
+    end
+  end
+  puts "max 4gs seen on Twitter: #{max_4gs_seen_on_twitter}"
+
+  # puts '-------- stats_hash: begin'
+  # stats_hash.each do |key, value|
+  #   puts "key=#{key}, value=#{value}"
+  # end
+  # puts '-------- stats_hash: end'
+  new_d = {}
+  d.each do |key, _value|
+    # key=laved, all_4g_matches=[6, 2, 10, 0, 2]
+    matches = all_4g_matches(key)
+    difference = [0, 0, 0, 0, 0]
+    (0...5).each {|i| difference[i] = matches[i] - max_4gs_seen_on_twitter[i]}
+    # difference = matches - max_4gs_seen_on_twitter
+    # puts "key=#{key}, 4g_matches=#{matches}, difference=#{difference}"
+    new_d[key] = difference.sum
+  end
+  new_d = new_d.sort_by {|_key, value| value}.to_h
+  puts '-------- new-d: start'
+  max_print = 50
+  new_d.each_with_index {|(key, value), index| break if index >= max_print; puts "key=#{key}, value=#{value}" }
+  puts "skipping #{new_d.size-max_print} additional results..." if d.size > max_print
+  # new_d.each do |key, value|
+  #   puts "key=#{key}, value=#{value}"
+  #   total_printed += 1
+  #   break if total_printed == max_print
+  # end
+  puts '-------- new-d: end'
 end
 
 def penultimate_twitter(d, pattern, subpattern)
@@ -187,6 +256,25 @@ def penultimate_twitter(d, pattern, subpattern)
   else
     puts "#{pattern} not yet supported"
   end
+end
+
+def all_4g_matches(word)
+  return_array = [0, 0, 0, 0, 0]
+  alphabet = [
+    'a','b','c','d','e','f','g','h','i','j','k','l','m',
+    'n','o','p','q','r','s','t','u','v','w','x','y','z'
+  ]
+  all_words = populate_valid_wordle_words
+  (0...5).each do |i|
+    ith_sum = 0
+    temp_word = word.dup
+    alphabet.each do |letter|
+      temp_word[i] = letter
+      ith_sum += 1 if temp_word != word && all_words.key?(temp_word)
+    end
+    return_array[i] = ith_sum
+  end
+  return_array
 end
 
 module Filter
