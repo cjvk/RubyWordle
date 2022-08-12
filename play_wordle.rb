@@ -175,7 +175,7 @@ def penultimate_twitter_absence_of_evidence(d, stats_hash)
     if key_array[0] == '4g'
       letter_position = key_array[1][0].to_i
       num_incorrect_4gs = key_array[1][2].to_i
-      num_people = value
+      _num_people = value
       if num_incorrect_4gs > max_4gs_seen_on_twitter[letter_position-1]
         max_4gs_seen_on_twitter[letter_position-1] = num_incorrect_4gs
       end
