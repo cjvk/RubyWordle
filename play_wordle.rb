@@ -104,7 +104,6 @@ def print_remaining_count(d)
 end
 
 def absence_of_evidence(d, stats_hash)
-  # TODO consider making deductions based on lack of evidence?
   print 'Would you like to make deductions based on absence of evidence? (y/n) ==> '
   choice = gets.chomp
   case choice
@@ -117,15 +116,9 @@ def absence_of_evidence(d, stats_hash)
 end
 
 def filter_twitter(d, stats_hash)
-  # first pass: '4g'
   stats_hash.each do |key, _value|
     key_array = key.split('.', 2)
-    penultimate_twitter(d, key_array[0], key_array[1]) if key_array[0] == '4g'
-  end
-  # second pass: everything else
-  stats_hash.each do |key, _value|
-    key_array = key.split('.', 2)
-    penultimate_twitter(d, key_array[0], key_array[1]) if key_array[0] != '4g'
+    penultimate_twitter(d, key_array[0], key_array[1])
   end
 end
 
@@ -196,12 +189,12 @@ def penultimate_twitter_absence_of_evidence(d, stats_hash)
     (0...5).each {|i| difference[i] = matches[i] - max_4gs_seen_on_twitter[i]}
     # difference = matches - max_4gs_seen_on_twitter
     # puts "key=#{key}, 4g_matches=#{matches}, difference=#{difference}"
-    new_d[key] = difference.sum
+    new_d[key] = [difference.sum, difference, matches, max_4gs_seen_on_twitter]
   end
-  new_d = new_d.sort_by {|_key, value| value}.to_h
+  new_d = new_d.sort_by {|_key, value| value[0]}.to_h
   puts '-------- new-d: start'
   max_print = 50
-  new_d.each_with_index {|(key, value), index| break if index >= max_print; puts "key=#{key}, value=#{value}" }
+  new_d.each_with_index {|(key, value), index| break if index >= max_print; puts "key=#{key}, difference=#{value[0]}, all-4g-matches=#{value[2]}, seen-on-twitter=#{value[3]}" }
   puts "skipping #{new_d.size-max_print} additional results..." if d.size > max_print
   # new_d.each do |key, value|
   #   puts "key=#{key}, value=#{value}"

@@ -137,7 +137,7 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
   difference_in_days = (now - wordle_day_0).to_i
   wordle_number = difference_in_days.to_s
   results = 100
-  pages = 10
+  pages = 5
 
   answers = []
   num_failures = 0
@@ -318,13 +318,7 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
 
   end
 
-  puts ''
-  puts '/--------------------------------------\\'
-  puts "|              Wordle #{wordle_number}              |"
-  puts '|            Twitter report            |'
-  puts '\--------------------------------------/'
-  puts "collected #{answers.length()} answers from #{results*pages} Twitter results"
-
+  # post-processing
   stats = {}
   num_interesting = 0
   for answer in answers
@@ -333,23 +327,24 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
     end
   end
 
-  # sort stats
-  stats = stats.sort.to_h
+  # sort stats, '4g' to the top
+  stats = stats.sort_by {|key, value| [key.split('.', 2)[0] == '4g' ? 0 : 1, key]}.to_h
 
+  # print the report
+  puts ''
+  puts '/--------------------------------------\\'
+  puts "|              Wordle #{wordle_number}              |"
+  puts '|            Twitter report            |'
+  puts '\--------------------------------------/'
+  puts "#{results*pages} Twitter results parsed"
+  puts "#{answers.length()+num_failures} total answers"
+  puts "#{answers.length} correct"
+  puts "#{num_failures} incorrect (#{'%.2f' % (num_failures*100/(answers.length().to_f+num_failures))}% failure)"
   puts "#{num_interesting}/#{answers.length()} are interesting"
   puts ''
-  # first pass: '4g'
-  stats.each do |key, value|
-    key_array = key.split('.', 2)
-    puts "#{key} = #{value}" if key_array[0] == '4g'
-  end
-  # second pass: everything else
-  stats.each do |key, value|
-    key_array = key.split('.', 2)
-    puts "#{key} = #{value}" if key_array[0] != '4g'
-  end
+
+  stats.each {|key, value| puts "#{key} = #{value}"}
   puts ''
-  puts "#{num_failures}/#{results*pages} did not solve"
   puts '----------------------------------------'
   puts ''
 
