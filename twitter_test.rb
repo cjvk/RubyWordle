@@ -124,14 +124,7 @@ class Answer
   end
 end
 
-module UrlSpecifier
-  WITH_HASHTAG = 1
-  WITHOUT_HASHTAG = 2
-end
-
-def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
-  # print 'Enter Wordle number: ==> '
-  # wordle_number = gets.chomp
+def twitter
   now = Date.today
   wordle_day_0 = Date.civil(2021, 6, 19)
   difference_in_days = (now - wordle_day_0).to_i
@@ -140,182 +133,185 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
   pages = 5
 
   answers = []
+  total_twitter_posts = 0
+  unique_twitter_posts = {}
   num_failures = 0
-  next_token = ''
 
   # get the auth token
   file = File.open('twitter_auth_token')
   file_data = file.read
   file.close
   auth_token = file_data.chomp
+  search_queries = [
+    "wordle%20#{wordle_number}",   # "wordle 420"
+    "%23wordle%20#{wordle_number}" # "#wordle 420"
+  ]
 
-  (0...pages).each do |page_num|
-    # https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent
+  search_queries.each do |search_query|
+    next_token = ''
+    (0...pages).each do |page_num|
+      # https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent
 
-    # handle next token
-    next_token_get_parameter = page_num == 0 ? "" : "&next_token=#{next_token}"
+      # handle next token
+      next_token_get_parameter = page_num == 0 ? "" : "&next_token=#{next_token}"
 
-    case url_specifier
-    when UrlSpecifier::WITHOUT_HASHTAG
-      url = "https://api.twitter.com/2/tweets/search/recent?query=wordle%20#{wordle_number}&tweet.fields=created_at&max_results=#{results}#{next_token_get_parameter}"
-    when UrlSpecifier::WITH_HASHTAG
-      url = "https://api.twitter.com/2/tweets/search/recent?query=%23wordle%20#{wordle_number}&tweet.fields=created_at&max_results=#{results}#{next_token_get_parameter}"
-    else
-      # shouldn't happen
-      url = ''
-    end
+      url = "https://api.twitter.com/2/tweets/search/recent?query=#{search_query}&tweet.fields=created_at&max_results=#{results}#{next_token_get_parameter}"
 
-    response = Faraday.get(url, nil, {'Accept' => 'application/json', 'Authorization' => "Bearer #{auth_token}"})
-    parsed_json = JSON.parse(response.body)
+      response = Faraday.get(url, nil, {'Accept' => 'application/json', 'Authorization' => "Bearer #{auth_token}"})
+      parsed_json = JSON.parse(response.body)
 
-    # puts '-------- next token: start'
-    # puts parsed_json['meta']['next_token']
-    # puts '-------- next token: end'
-    next_token = parsed_json['meta']['next_token']
+      next_token = parsed_json['meta']['next_token']
 
-    # transform into array of Answer objects
-    # (w)hite, (y)ellow, (g)reen
-    # Answer.guess_array = ['wwwwy', 'ywwww', 'yywyw', 'wwwwy', 'yyyww', 'ggggg']
-    # https://twitter.com/Thousandkoban/status/1553269881952681985
-    for result in parsed_json['data']
-      text = result['text']
-      id = result['id']
-      debug_print_it = (id == '1555234404812857344') && false
-      if is_probably_a_wordle_post?(text, wordle_number)
-        puts 'is probably a wordle post!' if debug_print_it
-
-        # determine how many guesses they took
-        if text.include? "Wordle #{wordle_number} 1/6"
-          num_guesses = 1
-        elsif text.include? "Wordle #{wordle_number} 2/6"
-          num_guesses = 2
-        elsif text.include? "Wordle #{wordle_number} 3/6"
-          num_guesses = 3
-        elsif text.include? "Wordle #{wordle_number} 4/6"
-          num_guesses = 4
-        elsif text.include? "Wordle #{wordle_number} 5/6"
-          num_guesses = 5
-        elsif text.include? "Wordle #{wordle_number} 6/6"
-          num_guesses = 6
-        elsif text.include? "Wordle #{wordle_number} X/6"
-          num_guesses = 'X'
-        else
-          num_guesses = 'Unknown'
-        end
-
-        if num_guesses == 'X' || num_guesses == 'Unknown'
-          # puts 'not a solution, skipping'
-          if num_guesses == 'X'
-            num_failures += 1
-          end
+      # transform into array of Answer objects
+      # (w)hite, (y)ellow, (g)reen
+      # Answer.guess_array = ['wwwwy', 'ywwww', 'yywyw', 'wwwwy', 'yyyww', 'ggggg']
+      # https://twitter.com/Thousandkoban/status/1553269881952681985
+      for result in parsed_json['data']
+        text = result['text']
+        id = result['id']
+        debug_print_it = (id == '1555234404812857344') && false
+        total_twitter_posts += 1
+        if unique_twitter_posts.key?(id)
+          # skip those we've already seen
           next
+        else
+          unique_twitter_posts[id] = '1'
         end
+        if is_probably_a_wordle_post?(text, wordle_number)
+          puts 'is probably a wordle post!' if debug_print_it
 
-        # before determining mode, only determine based on the wordle answer
-        # some goofballs do Wordle in regular mode and Worldle in dark mode
-        # e.g. https://twitter.com/fire__girl/status/1555234404812857344
-        # so restrict only to looking at the wordle answer
-        wordle_begin_pattern = /Wordle #{wordle_number} [123456]\/6/
-        wordle_begin_index = text.index(wordle_begin_pattern)
-        wordle_begin_pattern_length = wordle_number.to_i < 1000 ? 14 : 15
-        # typically 2 newline characters
-        wordle_squares_begin = wordle_begin_index + wordle_begin_pattern_length + 2
-        puts "wordle_squares_begin = #{wordle_squares_begin}" if debug_print_it
-        first_non_wordle_character = text.index(NON_WORDLE_CHARACTERS, wordle_squares_begin)
-        puts "wordle_begin_index=#{wordle_begin_index}" if debug_print_it
-        puts "first_non_wordle_character=#{first_non_wordle_character}" if debug_print_it
-        if first_non_wordle_character != nil
-          text = text[wordle_begin_index..first_non_wordle_character - 1]
-        end
-
-        # determine mode
-        if text.include? "#{ORANGE}"
-          if text.include? "#{BLACK}"
-            mode = 'Deborah-dark'
+          # determine how many guesses they took
+          if text.include? "Wordle #{wordle_number} 1/6"
+            num_guesses = 1
+          elsif text.include? "Wordle #{wordle_number} 2/6"
+            num_guesses = 2
+          elsif text.include? "Wordle #{wordle_number} 3/6"
+            num_guesses = 3
+          elsif text.include? "Wordle #{wordle_number} 4/6"
+            num_guesses = 4
+          elsif text.include? "Wordle #{wordle_number} 5/6"
+            num_guesses = 5
+          elsif text.include? "Wordle #{wordle_number} 6/6"
+            num_guesses = 6
+          elsif text.include? "Wordle #{wordle_number} X/6"
+            num_guesses = 'X'
           else
-            mode = 'Deborah'
+            num_guesses = 'Unknown'
           end
-        elsif text.include? "#{BLACK}"
-          mode = 'Dark'
-        elsif text.include? "#{WHITE}"
-          mode = 'Normal'
-        else
-          mode = 'Unknown'
-        end
 
-        if mode == 'Unknown'
-          # puts 'unknown mode, skipping'
-          next
-        end
-        puts "mode = #{mode}" if debug_print_it
-
-        current_index = 0
-        guess_array = []
-        for _ in 0...num_guesses
-          case mode
-          when 'Normal'
-            pattern = NORMAL_MODE_PATTERN
-          when 'Dark'
-            pattern = DARK_MODE_PATTERN
-          when 'Deborah'
-            pattern = DEBORAH_MODE_PATTERN
-          when 'Deborah-dark'
-            pattern = DEBORAH_DARK_MODE_PATTERN
-          end
-          matching_index = text.index(pattern, current_index)
-          if matching_index == nil
+          if num_guesses == 'X' || num_guesses == 'Unknown'
+            # puts 'not a solution, skipping'
+            if num_guesses == 'X'
+              num_failures += 1
+            end
             next
           end
-          guess_string = ''
-          for j in 0...5
-            guess_string += unicode_to_normalized_string(text[matching_index+j], mode)
+
+          # before determining mode, only determine based on the wordle answer
+          # some goofballs do Wordle in regular mode and Worldle in dark mode
+          # e.g. https://twitter.com/fire__girl/status/1555234404812857344
+          # so restrict only to looking at the wordle answer
+          wordle_begin_pattern = /Wordle #{wordle_number} [123456]\/6/
+          wordle_begin_index = text.index(wordle_begin_pattern)
+          wordle_begin_pattern_length = wordle_number.to_i < 1000 ? 14 : 15
+          # typically 2 newline characters
+          wordle_squares_begin = wordle_begin_index + wordle_begin_pattern_length + 2
+          puts "wordle_squares_begin = #{wordle_squares_begin}" if debug_print_it
+          first_non_wordle_character = text.index(NON_WORDLE_CHARACTERS, wordle_squares_begin)
+          puts "wordle_begin_index=#{wordle_begin_index}" if debug_print_it
+          puts "first_non_wordle_character=#{first_non_wordle_character}" if debug_print_it
+          if first_non_wordle_character != nil
+            text = text[wordle_begin_index..first_non_wordle_character - 1]
           end
-          current_index = matching_index + 1
-          guess_array.append(guess_string)
 
-        end
-
-        if guess_array.length() != num_guesses
-          generic_tweet_url = "https://twitter.com/anyuser/status/#{id}"
-          puts "Alert: guess array not correct length! (#{generic_tweet_url})"
-          next
-        end
-
-        if guess_array[guess_array.length()-1] == 'ggggy'
-          # Suppose you find a result to dig further on
-          # https://www.bram.us/2017/11/22/accessing-a-tweet-using-only-its-id-and-without-the-twitter-api/
-          # above just redirects to this:
-          # https://twitter.com/anyuser/status/1554551230864560128
-          # which redirects to this:
-          # https://twitter.com/Vat_of_useless/status/1554551230864560128
-          #
-          # https://twitter.com/Vat_of_useless/status/1554551230864560128
-          # The answer was "coyly", and the penultimate guess was ygwgg.
-          # I asked what their second-to-last guess was, they said "lobby".
-          # I followed up with "wouldn't that be ygwwg", and now I'm blocked (!)
-          # Follow-up: Appears to be no way for "yo?ly" to be a word
-          #
-          # https://twitter.com/NerizArielle/status/1555215699152211969
-          # Answer: "rhyme"
-          # Penultimate guess: gggwg
-          # Same as above for https://twitter.com/katheryn_avila/status/1555210731603247104
-          # Solved: Wordle considers "rhyne" to be a word
-          if false
-            puts '-------- TEXT: BEGIN     --------'
-            puts text
-            puts '-------- TEXT: END       --------'
-            puts '-------- RESULT: BEGIN   --------'
-            puts result
-            puts '-------- RESULT: END     --------'
+          # determine mode
+          if text.include? "#{ORANGE}"
+            if text.include? "#{BLACK}"
+              mode = 'Deborah-dark'
+            else
+              mode = 'Deborah'
+            end
+          elsif text.include? "#{BLACK}"
+            mode = 'Dark'
+          elsif text.include? "#{WHITE}"
+            mode = 'Normal'
+          else
+            mode = 'Unknown'
           end
+
+          if mode == 'Unknown'
+            # puts 'unknown mode, skipping'
+            next
+          end
+          puts "mode = #{mode}" if debug_print_it
+
+          # construct the normalized guess_array
+          current_index = 0
+          guess_array = []
+          for _ in 0...num_guesses
+            case mode
+            when 'Normal'
+              pattern = NORMAL_MODE_PATTERN
+            when 'Dark'
+              pattern = DARK_MODE_PATTERN
+            when 'Deborah'
+              pattern = DEBORAH_MODE_PATTERN
+            when 'Deborah-dark'
+              pattern = DEBORAH_DARK_MODE_PATTERN
+            end
+            matching_index = text.index(pattern, current_index)
+            if matching_index == nil
+              next
+            end
+            guess_string = ''
+            for j in 0...5
+              guess_string += unicode_to_normalized_string(text[matching_index+j], mode)
+            end
+            current_index = matching_index + 1
+            guess_array.append(guess_string)
+
+          end
+
+          if guess_array.length() != num_guesses
+            generic_tweet_url = "https://twitter.com/anyuser/status/#{id}"
+            puts "Alert: guess array not correct length! (#{generic_tweet_url})"
+            next
+          end
+
+          if guess_array[guess_array.length()-1] == 'ggggy'
+            # Suppose you find a result to dig further on
+            # https://www.bram.us/2017/11/22/accessing-a-tweet-using-only-its-id-and-without-the-twitter-api/
+            # above just redirects to this:
+            # https://twitter.com/anyuser/status/1554551230864560128
+            # which redirects to this:
+            # https://twitter.com/Vat_of_useless/status/1554551230864560128
+            #
+            # https://twitter.com/Vat_of_useless/status/1554551230864560128
+            # The answer was "coyly", and the penultimate guess was ygwgg.
+            # I asked what their second-to-last guess was, they said "lobby".
+            # I followed up with "wouldn't that be ygwwg", and now I'm blocked (!)
+            # Follow-up: Appears to be no way for "yo?ly" to be a word
+            #
+            # https://twitter.com/NerizArielle/status/1555215699152211969
+            # Answer: "rhyme"
+            # Penultimate guess: gggwg
+            # Same as above for https://twitter.com/katheryn_avila/status/1555210731603247104
+            # Solved: Wordle considers "rhyne" to be a word
+            if false
+              puts '-------- TEXT: BEGIN     --------'
+              puts text
+              puts '-------- TEXT: END       --------'
+              puts '-------- RESULT: BEGIN   --------'
+              puts result
+              puts '-------- RESULT: END     --------'
+            end
+          end
+
+          answers.append(Answer.new(guess_array))
+
         end
-
-        answers.append(Answer.new(guess_array))
-
       end
-
     end
-
   end
 
   # post-processing
@@ -336,7 +332,8 @@ def twitter(url_specifier=UrlSpecifier::WITHOUT_HASHTAG)
   puts "|              Wordle #{wordle_number}              |"
   puts '|            Twitter report            |'
   puts '\--------------------------------------/'
-  puts "#{results*pages} Twitter results parsed"
+  puts "#{total_twitter_posts} Twitter posts seen"
+  puts "#{unique_twitter_posts.size} Unique Twitter posts seen"
   puts "#{answers.length()+num_failures} total answers"
   puts "#{answers.length} correct"
   puts "#{num_failures} incorrect (#{'%.2f' % (num_failures*100/(answers.length().to_f+num_failures))}% failure)"

@@ -52,19 +52,19 @@ def play(d)
       when 'penultimate'
         penultimate(d)
       when 'twitter'
-        twitter
-      when 'twitter2'
-        twitter(UrlSpecifier::WITH_HASHTAG)
-      when 'twitter-filter'
         stats_hash = twitter
-        filter_twitter(d, stats_hash)
         print_remaining_count(d)
-        absence_of_evidence(d, stats_hash)
-      when 'twitter2-filter'
-        stats_hash = twitter(UrlSpecifier::WITH_HASHTAG)
-        filter_twitter(d, stats_hash)
-        print_remaining_count(d)
-        absence_of_evidence(d, stats_hash)
+        print 'Would you like to proceed with filtering? (y/n) ==> '
+        choice2 = gets.chomp
+        case choice2
+        when 'y'
+          filter_twitter(d, stats_hash)
+          print_remaining_count(d)
+          absence_of_evidence(d, stats_hash)
+        when 'n'
+        else
+          puts "unrecognized input (#{choice2}), skipping"
+        end
       when 'dad'
         print_a_dad_joke
       when 'help'
@@ -81,10 +81,7 @@ def play(d)
         puts 'q               : quit'
         puts 'dad             : print a dad joke'
         puts 'penultimate     : run penultimate-style analysis'
-        puts 'twitter         : run Twitter analysis, with default URL (no hashtag)'
-        puts 'twitter2        : run Twitter analysis, with hashtag URL'
-        puts 'twitter-filter  : run Twitter analysis + filtering'
-        puts 'twitter2-filter : run Twitter analysis w/ hashtag URL + filtering'
+        puts 'twitter         : run Twitter analysis'
         puts ''
       when ''
       else # assume anything else is a guess
@@ -93,6 +90,8 @@ def play(d)
           response = gets.chomp
           filter(d, choice, response)
           break
+        else
+          puts "unrecognized input (#{choice})"
         end
       end
     end
