@@ -44,8 +44,12 @@ end
 
 class Answer
   # array of "Normal-mode" squares
-  def initialize(guess_array)
+  def initialize(guess_array, id)
     @guess_array = guess_array
+    @id = id
+  end
+  def generic_tweet_url
+    "https://twitter.com/anyuser/status/#{@id}"
   end
   def num_guesses
     @guess_array.length()
@@ -130,7 +134,7 @@ def twitter
   difference_in_days = (now - wordle_day_0).to_i
   wordle_number = difference_in_days.to_s
   results = 100
-  pages = 5
+  pages = 10
 
   answers = []
   total_twitter_posts = 0
@@ -152,6 +156,9 @@ def twitter
     (0...pages).each do |page_num|
       # https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent
 
+      # quit early if nothing remaining
+      next if page_num != 0 && next_token == ''
+
       # handle next token
       next_token_get_parameter = page_num == 0 ? "" : "&next_token=#{next_token}"
 
@@ -160,7 +167,8 @@ def twitter
       response = Faraday.get(url, nil, {'Accept' => 'application/json', 'Authorization' => "Bearer #{auth_token}"})
       parsed_json = JSON.parse(response.body)
 
-      next_token = parsed_json['meta']['next_token']
+      next_token = parsed_json['meta'].key?('next_token') ? parsed_json['meta']['next_token'] : ''
+      # next_token = parsed_json['meta']['next_token']
 
       # transform into array of Answer objects
       # (w)hite, (y)ellow, (g)reen
@@ -307,7 +315,7 @@ def twitter
             end
           end
 
-          answers.append(Answer.new(guess_array))
+          answers.append(Answer.new(guess_array, id))
 
         end
       end
@@ -322,6 +330,10 @@ def twitter
       num_interesting += 1
     end
   end
+
+  # remove entries if they have exactly one occurrence (probable goofballs)
+  # TODO print URLs for those which are being deleted (via Answer.generic_tweet_url)
+  stats.delete_if { |key, value| value == 1 }
 
   # sort stats, '4g' to the top
   stats = stats.sort_by {|key, value| [key.split('.', 2)[0] == '4g' ? 0 : 1, key]}.to_h
