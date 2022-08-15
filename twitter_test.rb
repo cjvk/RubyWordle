@@ -7,10 +7,8 @@ require 'date'
 
 module Configuration
   # Twitter API calls
-  # @@results = 100
-  # @@pages = 20
   @@results = 100
-  @@pages = 2
+  @@pages = 20
 
   # uncomment this to query a specific wordle number
   # @@wordle_number_override = 422
