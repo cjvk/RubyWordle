@@ -40,10 +40,25 @@ def play(d)
       case choice
       when 'p'
         max_print = 30
-        d.each_with_index {|(key, _value), index| break if index >= max_print; puts key }
+        # d.each_with_index {|(key, _value), index| break if index >= max_print; puts key }
+        d.each_with_index do |(key, _value), index|
+          break if index >= max_print
+          if PreviousWordleSolutions.check_word(key)
+            puts "#{key} (Alert! Wordle #{PreviousWordleSolutions.check_word(key)} answer!)"
+          else
+            puts key
+          end
+        end
         puts "skipping #{d.size-max_print} additional results..." if d.size > max_print
       when 'pa'
-        d.each {|key, value| puts key}
+        # d.each {|key, value| puts key}
+        d.each do |key, value|
+          if PreviousWordleSolutions.check_word(key)
+            puts "#{key} (Alert! Wordle #{PreviousWordleSolutions.check_word(key)} answer!)"
+          else
+            puts key
+          end
+        end
       when 'h'
         hint(d)
       when 'q'
@@ -52,6 +67,10 @@ def play(d)
         print_remaining_count(d)
       when 'penultimate'
         penultimate(d)
+      # when 'pws'
+      #   print 'testing previous wordle solutions.. enter a word: ==> '
+      #   user_word = gets.chomp
+      #   puts "#{user_word} apparently was in Wordle #{PreviousWordleSolutions.check_word(user_word)}."
       when 'twitter'
         stats_hash = twitter
         print_remaining_count(d)
@@ -253,7 +272,14 @@ def penultimate_twitter_absence_of_evidence(d, stats_hash)
   new_d = new_d.sort_by {|_key, value| value[0]}.to_h
   puts '-------- new-d: start'
   max_print = 50
-  new_d.each_with_index {|(key, value), index| break if index >= max_print; puts "key=#{key}, difference=#{value[0]}, all-4g-matches=#{value[2]}, seen-on-twitter=#{value[3]}" }
+  # new_d.each_with_index {|(key, value), index| break if index >= max_print; puts "key=#{key}, difference=#{value[0]}, all-4g-matches=#{value[2]}, seen-on-twitter=#{value[3]}" }
+  new_d.each_with_index do |(key, value), index|
+    break if index >= max_print
+    puts "key=#{key}, difference=#{value[0]}, all-4g-matches=#{value[2]}, seen-on-twitter=#{value[3]}"
+    if PreviousWordleSolutions.check_word(key)
+      puts "    -------- Alert! Wordle #{PreviousWordleSolutions.check_word(key)} solution was #{key} --------"
+    end
+  end
   puts "skipping #{new_d.size-max_print} additional results..." if d.size > max_print
   # new_d.each do |key, value|
   #   puts "key=#{key}, value=#{value}"
@@ -327,6 +353,66 @@ def all_4g_matches(word)
     return_array[i] = ith_sum
   end
   return_array
+end
+
+module PreviousWordleSolutions
+  # https://www.rockpapershotgun.com/wordle-past-answers
+  # note: Wordle 0 was on 6/19/2021
+  @@previous_wordle_solutions = [
+    'cigar', 'rebut', 'sissy', 'humph', 'awake', 'blush', 'focal', 'evade', 'naval', 'serve', # 0-9
+    'heath', 'dwarf', 'model', 'karma', 'stink', 'grade', 'quiet', 'bench', 'abate', 'feign', # 10-19
+    'major', 'death', 'fresh', 'crust', 'stool', 'colon', 'abase', 'marry', 'react', 'batty', # 20-29
+    'pride', 'floss', 'helix', 'croak', 'staff', 'paper', 'unfed', 'whelp', 'trawl', 'outdo', # 30-39
+    'adobe', 'crazy', 'sower', 'repay', 'digit', 'crate', 'cluck', 'spike', 'mimic', 'pound', # 40-49
+    'maxim', 'linen', 'unmet', 'flesh', 'booby', 'forth', 'first', 'stand', 'belly', 'ivory', # 50-59
+    'seedy', 'print', 'yearn', 'drain', 'bribe', 'stout', 'panel', 'crass', 'flume', 'offal', # 60-69
+    'agree', 'error', 'swirl', 'argue', 'bleed', 'delta', 'flick', 'totem', 'wooer', 'front', # 70-79
+    'shrub', 'parry', 'biome', 'lapel', 'start', 'greet', 'goner', 'golem', 'lusty', 'loopy', # 80-89
+    'round', 'audit', 'lying', 'gamma', 'labor', 'islet', 'civic', 'forge', 'corny', 'moult', # 90-99
+    'basic', 'salad', 'agate', 'spicy', 'spray', 'essay', 'fjord', 'spend', 'kebab', 'guild', # 100-109
+    'aback', 'motor', 'alone', 'hatch', 'hyper', 'thumb', 'dowry', 'ought', 'belch', 'dutch', # 110-119
+    'pilot', 'tweed', 'comet', 'jaunt', 'enema', 'steed', 'abyss', 'growl', 'fling', 'dozen', # 120-129
+    'boozy', 'erode', 'world', 'gouge', 'click', 'briar', 'great', 'altar', 'pulpy', 'blurt', # 130-139
+    'coast', 'duchy', 'groin', 'fixer', 'group', 'rogue', 'badly', 'smart', 'pithy', 'gaudy', # 140-149
+    'chill', 'heron', 'vodka', 'finer', 'surer', 'radio', 'rouge', 'perch', 'retch', 'wrote', # 150-159
+    'clock', 'tilde', 'store', 'prove', 'bring', 'solve', 'cheat', 'grime', 'exult', 'usher', # 160-169
+    'epoch', 'triad', 'break', 'rhino', 'viral', 'conic', 'masse', 'sonic', 'vital', 'trace', # 170-179
+    'using', 'peach', 'champ', 'baton', 'brake', 'pluck', 'craze', 'gripe', 'weary', 'picky', # 180-189
+    'acute', 'ferry', 'aside', 'tapir', 'troll', 'unify', 'rebus', 'boost', 'truss', 'siege', # 190-199
+    'tiger', 'banal', 'slump', 'crank', 'gorge', 'query', 'drink', 'favor', 'abbey', 'tangy', # 200-209
+    'panic', 'solar', 'shire', 'proxy', 'point', 'robot', 'prick', 'wince', 'crimp', 'knoll', # 210-219
+    'sugar', 'whack', 'mount', 'perky', 'could', 'wrung', 'light', 'those', 'moist', 'shard', # 220-229
+    'pleat', 'aloft', 'skill', 'elder', 'frame', 'humor', 'pause', 'ulcer', 'ultra', 'robin', # 230-239
+    'cynic', 'aroma', 'caulk', 'shake', 'dodge', 'swill', 'tacit', 'other', 'thorn', 'trove', # 240-249
+    'bloke', 'vivid', 'spill', 'chant', 'choke', 'rupee', 'nasty', 'mourn', 'ahead', 'brine', # 250-259
+    'cloth', 'hoard', 'sweet', 'month', 'lapse', 'watch', 'today', 'focus', 'smelt', 'tease', # 260-269
+    'cater', 'movie', 'saute', 'allow', 'renew', 'their', 'slosh', 'purge', 'chest', 'depot', # 270-279
+    'epoxy', 'nymph', 'found', 'shall', 'stove', 'lowly', 'snout', 'trope', 'fewer', 'shawl', # 280-289
+    'natal', 'comma', 'foray', 'scare', 'stair', 'black', 'squad', 'royal', 'chunk', 'mince', # 290-299
+    'shame', 'cheek', 'ample', 'flair', 'foyer', 'cargo', 'oxide', 'plant', 'olive', 'inert', # 300-309
+    'askew', 'heist', 'shown', 'zesty', 'trash', 'larva', 'forgo', 'hairy', 'story', 'train', # 310-319
+    'homer', 'badge', 'midst', 'canny', 'shine', 'gecko', 'farce', 'slung', 'tipsy', 'metal', # 320-329
+    'yield', 'delve', 'being', 'scour', 'glass', 'gamer', 'scrap', 'money', 'hinge', 'album', # 330-339
+    'vouch', 'asset', 'tiara', 'crept', 'bayou', 'atoll', 'manor', 'creak', 'showy', 'phase', # 340-349
+    'froth', 'depth', 'gloom', 'flood', 'trait', 'girth', 'piety', 'goose', 'float', 'donor', # 350-359
+    'atone', 'primo', 'apron', 'blown', 'cacao', 'loser', 'input', 'gloat', 'awful', 'brink', # 360-369
+    'smite', 'beady', 'rusty', 'retro', 'droll', 'gawky', 'hutch', 'pinto', 'egret', 'lilac', # 370-379
+    'sever', 'field', 'fluff', 'agape', 'voice', 'stead', 'berth', 'madam', 'night', 'bland', # 380-389
+    'liver', 'wedge', 'roomy', 'wacky', 'flock', 'angry', 'trite', 'aphid', 'tryst', 'midge', # 390-399
+    'power', 'elope', 'cinch', 'motto', 'stomp', 'upset', 'bluff', 'cramp', 'quart', 'coyly', # 400-409
+    'youth', 'rhyme', 'buggy', 'alien', 'smear', 'unfit', 'patty', 'cling', 'glean', 'label', # 410-419
+    'hunky', 'khaki', 'poker', '', '', '', '', '', '', '',
+    # '', '', '', '', '', '', '', '', '', '',
+  ]
+  @@previous_wordle_solutions_hash = @@previous_wordle_solutions.map.with_index { |x, i| [x, i] }.to_h
+
+  def self.all_solutions
+    @@previous_wordle_solutions_hash
+  end
+
+  def self.check_word(word)
+    PreviousWordleSolutions.all_solutions[word]
+  end
 end
 
 module Filter

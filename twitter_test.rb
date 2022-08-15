@@ -8,7 +8,7 @@ require 'date'
 module Configuration
   # Twitter API calls
   @@results = 100
-  @@pages = 20
+  @@pages = 5
 
   # uncomment this to query a specific wordle number
   # @@wordle_number_override = 422
@@ -21,7 +21,7 @@ module Configuration
   # use normalized colors: g/y/w
   # @@print_this_penultimate_pattern = 'wgggw'
 
-  # author_id denylist
+  # author_id denylist: If this gets too large, use a hash instead?
   @@author_id_denylist = [
     '1487026288682418180', # 6Wordle
   ]
