@@ -44,12 +44,21 @@ end
 
 class Answer
   # array of "Normal-mode" squares
-  def initialize(guess_array, id)
+  def initialize(guess_array, id, author_id)
     @guess_array = guess_array
     @id = id
+    @author_id = author_id
+    @is_interesting = nil
+    @key = nil
   end
   def generic_tweet_url
     "https://twitter.com/anyuser/status/#{@id}"
+  end
+  def author_id
+    @author_id
+  end
+  def matches_key(key)
+    @is_interesting != nil && @is_interesting && @key == key
   end
   def num_guesses
     @guess_array.length()
@@ -71,12 +80,14 @@ class Answer
       subname = "#{penultimate.index('w')+1}.#{count}"
       # subname = (penultimate.index('w') + 1).to_s
       create_or_increment("#{name}.#{subname}", stats)
+      @is_interesting = true
       return true
     end
     if num_with_color('g', penultimate) == 3 && num_with_color('y', penultimate) == 1
       name = '3g1y'
       subname = "yellow#{penultimate.index('y')+1}.white#{penultimate.index('w')+1}"
       create_or_increment("#{name}.#{subname}", stats)
+      @is_interesting = true
       return true
     end
     if num_with_color('g', penultimate) == 3 && num_with_color('y', penultimate) == 2
@@ -84,7 +95,9 @@ class Answer
       y1 = penultimate.index('y')
       y2 = penultimate.index('y', y1+1)
       subname = "yellow#{y1+1}#{y2+1}"
-      create_or_increment("#{name}.#{subname}", stats)
+      @key = "#{name}.#{subname}"
+      create_or_increment("#{@key}", stats)
+      @is_interesting = true
       return true
     end
     if num_with_color('g', penultimate) == 2 && num_with_color('y', penultimate) == 3
@@ -96,22 +109,29 @@ class Answer
       # y2 = penultimate.index('y', y1+1)
       # y3 = penultimate.index('y', y2+1)
       # subname = "yellow#{y1+1}#{y2+1}#{y3+1}"
-      create_or_increment("#{name}.#{subname}", stats)
+      @key = "#{name}.#{subname}"
+      create_or_increment("#{@key}", stats)
+      @is_interesting = true
       return true
     end
     if num_with_color('g', penultimate) == 1 && num_with_color('y', penultimate) == 4
       name = '1g4y'
       g = penultimate.index('g')
       subname = "green#{g+1}"
-      create_or_increment("#{name}.#{subname}", stats)
+      @key = "#{name}.#{subname}"
+      create_or_increment("#{@key}", stats)
+      @is_interesting = true
       return true
     end
     if num_with_color('y', penultimate) == 5
       name = '0g5y'
       subname = ''
-      create_or_increment("#{name}.#{subname}", stats)
+      @key = "#{name}.#{subname}"
+      create_or_increment("#{@key}", stats)
+      @is_interesting = true
       return true
     end
+    @is_interesting = false
     false
   end
   def num_with_color(color, word)
@@ -133,8 +153,9 @@ def twitter
   wordle_day_0 = Date.civil(2021, 6, 19)
   difference_in_days = (now - wordle_day_0).to_i
   wordle_number = difference_in_days.to_s
+  # TODO move all "configuration" things into a Configuration module?
   results = 100
-  pages = 10
+  pages = 20
 
   answers = []
   total_twitter_posts = 0
@@ -162,13 +183,12 @@ def twitter
       # handle next token
       next_token_get_parameter = page_num == 0 ? "" : "&next_token=#{next_token}"
 
-      url = "https://api.twitter.com/2/tweets/search/recent?query=#{search_query}&tweet.fields=created_at&max_results=#{results}#{next_token_get_parameter}"
+      url = "https://api.twitter.com/2/tweets/search/recent?query=#{search_query}&tweet.fields=created_at,author_id&max_results=#{results}#{next_token_get_parameter}"
 
       response = Faraday.get(url, nil, {'Accept' => 'application/json', 'Authorization' => "Bearer #{auth_token}"})
       parsed_json = JSON.parse(response.body)
 
       next_token = parsed_json['meta'].key?('next_token') ? parsed_json['meta']['next_token'] : ''
-      # next_token = parsed_json['meta']['next_token']
 
       # transform into array of Answer objects
       # (w)hite, (y)ellow, (g)reen
@@ -177,7 +197,9 @@ def twitter
       for result in parsed_json['data']
         text = result['text']
         id = result['id']
-        debug_print_it = (id == '1555234404812857344') && false
+        author_id = result['author_id']
+        debug_print_it = (id == '1558951610197258241') && false
+        puts result if debug_print_it
         total_twitter_posts += 1
         if unique_twitter_posts.key?(id)
           # skip those we've already seen
@@ -315,7 +337,7 @@ def twitter
             end
           end
 
-          answers.append(Answer.new(guess_array, id))
+          answers.append(Answer.new(guess_array, id, author_id))
 
         end
       end
@@ -333,7 +355,24 @@ def twitter
 
   # remove entries if they have exactly one occurrence (probable goofballs)
   # TODO print URLs for those which are being deleted (via Answer.generic_tweet_url)
-  stats.delete_if { |key, value| value == 1 }
+  # stats.delete_if { |key, value| value == 1 }
+  # How to convert an author id to a username: https://tweeterid.com/
+  # Goofball #1: https://twitter.com/6Wordle/status/1558951610197258241
+  #              Wordle 421 was KHAKI, and his penultimate was YGGYY (!)
+  #              6Wordle == author_id=1487026288682418180
+  # TODO create denylist of known goofball author_ids
+  stats.delete_if do |key, value|
+    if value == 1
+      for answer in answers
+        if answer.matches_key(key)
+          puts "Alert: deleting key #{key} with value 1! (#{answer.generic_tweet_url}) (author_id=#{answer.author_id})"
+          # puts answer.generic_tweet_url
+          break
+        end
+      end
+    end
+    value == 1
+  end
 
   # sort stats, '4g' to the top
   stats = stats.sort_by {|key, value| [key.split('.', 2)[0] == '4g' ? 0 : 1, key]}.to_h

@@ -28,6 +28,7 @@ def populate_all_words
 end
 
 def play(d)
+  # TODO Consider having a warning on previously-used Wordle answers? (And how would it be maintained?)
   puts 'Welcome to Wordle!'
   for guess in 1..6
     print "You are on guess #{guess}/6. "
@@ -54,12 +55,14 @@ def play(d)
       when 'twitter'
         stats_hash = twitter
         print_remaining_count(d)
+        # TODO rename filter_twitter as maybe_filter_twitter and move I/O there
         print 'Would you like to proceed with filtering? (y/n) ==> '
         choice2 = gets.chomp
         case choice2
         when 'y'
           filter_twitter(d, stats_hash)
           print_remaining_count(d)
+          # TODO rename maybe_absence_of_evidence
           absence_of_evidence(d, stats_hash)
         when 'n'
         else
@@ -150,6 +153,7 @@ def check_for_problematic_patterns(d)
 end
 
 def penultimate_twitter_absence_of_evidence(d, stats_hash)
+  # TODO (big feature) do offline calculations for each word and constraint type (not only 4g)
   puts 'Absence of evidence is not evidence of absence!'
   # 4g-based analysis
   # sample entry in stash_hash: key=4g.3.1, value=7
