@@ -21,7 +21,7 @@ module Configuration
   # Suppose you find a pattern to dig further on
   # uncomment this to enable printing of ALL penultimate which match this pattern
   # use normalized colors: g/y/w
-  @@print_this_penultimate_pattern = 'wgggw'
+  # @@print_this_penultimate_pattern = 'wgggw'
 
   # author_id denylist
   @@author_id_denylist = [
