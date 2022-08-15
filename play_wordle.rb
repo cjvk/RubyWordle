@@ -55,19 +55,8 @@ def play(d)
       when 'twitter'
         stats_hash = twitter
         print_remaining_count(d)
-        # TODO rename filter_twitter as maybe_filter_twitter and move I/O there
-        # TODO add an option for "verbose" (filtering on guess 1 takes FOREVER and has a ton of output)
-        print 'Would you like to proceed with filtering? (y/n) ==> '
-        choice2 = gets.chomp
-        case choice2
-        when 'y'
-          filter_twitter(d, stats_hash)
-          print_remaining_count(d)
-          # TODO rename maybe_absence_of_evidence
-          absence_of_evidence(d, stats_hash)
-        when 'n'
-        else
-          puts "unrecognized input (#{choice2}), skipping"
+        if maybe_filter_twitter(d, stats_hash)
+          maybe_absence_of_evidence(d, stats_hash)
         end
       when 'dad'
         print_a_dad_joke
@@ -106,7 +95,7 @@ def print_remaining_count(d)
   puts "There #{d.length==1?'is':'are'} #{d.size} matching word#{d.length==1?'':'s'} remaining."
 end
 
-def absence_of_evidence(d, stats_hash)
+def maybe_absence_of_evidence(d, stats_hash)
   print 'Would you like to make deductions based on absence of evidence? (y/n) ==> '
   choice = gets.chomp
   case choice
@@ -118,11 +107,25 @@ def absence_of_evidence(d, stats_hash)
   end
 end
 
-def filter_twitter(d, stats_hash)
-  stats_hash.each do |key, _value|
-    key_array = key.split('.', 2)
-    penultimate_twitter(d, key_array[0], key_array[1])
+def maybe_filter_twitter(d, stats_hash)
+  print 'Would you like to proceed with filtering? (y/n) ==> '
+  choice = gets.chomp
+  case choice
+  when 'y'
+    print "There are #{d.size} words remaining. Would you like to see filtering output? (y/n) ==> "
+    choice2 = gets.chomp
+    verbose = choice2 == 'y'
+    stats_hash.each do |key, _value|
+      key_array = key.split('.', 2)
+      penultimate_twitter(d, key_array[0], key_array[1], verbose)
+    end
+    print_remaining_count(d) # this is useful regardless of verbose, since filtering occurred
+  when 'n'
+  else
+    puts "unrecognized input (#{choice}), skipping"
   end
+  # caller needs to know whether filtering was done
+  choice == 'y'
 end
 
 def close(w1, w2)
@@ -260,7 +263,7 @@ def penultimate_twitter_absence_of_evidence(d, stats_hash)
   puts '-------- new-d: end'
 end
 
-def penultimate_twitter(d, pattern, subpattern)
+def penultimate_twitter(d, pattern, subpattern, verbose)
   puts "penultimate_twitter called, pattern=#{pattern}, subpattern=#{subpattern}"
   case pattern
   when '4g'
@@ -274,7 +277,7 @@ def penultimate_twitter(d, pattern, subpattern)
     end
     gray = subpattern_array[0].to_i - 1
     count = subpattern_array[1].to_i
-    Filter::filter_4g(d, gray, count)
+    Filter::filter_4g(d, gray, count, verbose)
   when '3g1y'
     # 3g1y.yellow3.white4 = 3
     subpattern_array = subpattern.split('.')
@@ -284,24 +287,24 @@ def penultimate_twitter(d, pattern, subpattern)
     end
     yellow = subpattern_array[0][6].to_i - 1
     gray = subpattern_array[1][5].to_i - 1
-    Filter::filter_3g1y(d, yellow, gray)
+    Filter::filter_3g1y(d, yellow, gray, verbose)
   when '3g2y'
     # 3g2y.yellow24
     yellow1 = subpattern[6].to_i - 1
     yellow2 = subpattern[7].to_i - 1
-    Filter::filter_3g2y(d, yellow1, yellow2)
+    Filter::filter_3g2y(d, yellow1, yellow2, verbose)
   when '2g3y'
     # 2g3y.green24
     green1 = subpattern[5].to_i - 1
     green2 = subpattern[6].to_i - 1
-    Filter::filter_2g3y(d, green1, green2)
+    Filter::filter_2g3y(d, green1, green2, verbose)
   when '1g4y'
     # 1g4y.green3
     green = subpattern[5].to_i - 1
-    Filter::filter_1g4y(d, green)
+    Filter::filter_1g4y(d, green, verbose)
   when '0g5y'
     # 0g5y.
-    Filter::filter_0g5y(d)
+    Filter::filter_0g5y(d, verbose)
   else
     puts "#{pattern} not yet supported"
   end
@@ -327,7 +330,7 @@ def all_4g_matches(word)
 end
 
 module Filter
-  def Filter::filter_4g(d, gray, count)
+  def Filter::filter_4g(d, gray, count, verbose)
     d.each_key do |key|
       all_words = populate_valid_wordle_words
       for i in 0...5
@@ -344,12 +347,12 @@ module Filter
         # print_string = "keeping #{key} ("
         # all_words.each_key {|key| print_string += "#{key}, "}
         # puts print_string[0..-3] + ')'
-        puts "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
+        puts "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')' if verbose
       end
     end
   end
 
-  def Filter::filter_3g1y(d, yellow, gray)
+  def Filter::filter_3g1y(d, yellow, gray, verbose)
     d.each_key do |key|
       all_words = populate_valid_wordle_words
       for i in 0...5
@@ -364,26 +367,26 @@ module Filter
       if all_words.size == 0
         d.delete(key)
       else
-        puts "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
+        puts "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')' if verbose
       end
     end
   end
 
-  def Filter::filter_3g2y(d, yellow1, yellow2)
+  def Filter::filter_3g2y(d, yellow1, yellow2, verbose)
     all_words = populate_valid_wordle_words
     d.each_key do |key|
       switched_word = key.dup
       switched_word[yellow1] = key[yellow2]
       switched_word[yellow2] = key[yellow1]
       if key != switched_word and all_words.key?(switched_word)
-        puts "keeping #{key} (#{switched_word})"
+        puts "keeping #{key} (#{switched_word})" if verbose
       else
         d.delete(key)
       end
     end
   end
 
-  def Filter::filter_2g3y(d, green1, green2)
+  def Filter::filter_2g3y(d, green1, green2, verbose)
     d.each_key do |key|
       all_words = populate_valid_wordle_words
       for i in 0...5
@@ -396,12 +399,12 @@ module Filter
       if all_words.size == 0
         d.delete(key)
       else
-        puts "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
+        puts "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')' if verbose
       end
     end
   end
 
-  def Filter::filter_1g4y(d, green)
+  def Filter::filter_1g4y(d, green, verbose)
     d.each_key do |key|
       all_words = populate_valid_wordle_words
       for i in 0...5
@@ -414,12 +417,12 @@ module Filter
       if all_words.size == 0
         d.delete(key)
       else
-        puts "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
+        puts "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')' if verbose
       end
     end
   end
 
-  def Filter::filter_0g5y(d)
+  def Filter::filter_0g5y(d, verbose)
     d.each_key do |key|
       all_words = populate_valid_wordle_words
       for i in 0...5
@@ -429,11 +432,10 @@ module Filter
       if all_words.size == 0
         d.delete(key)
       else
-        puts "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
+        puts "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')' if verbose
       end
     end
   end
-
 end
 
 def penultimate(d)

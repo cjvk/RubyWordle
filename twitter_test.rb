@@ -5,6 +5,63 @@ require 'faraday'
 require 'json'
 require 'date'
 
+module Configuration
+  # Twitter API calls
+  # @@results = 100
+  # @@pages = 20
+  @@results = 100
+  @@pages = 2
+
+  # uncomment this to query a specific wordle number
+  # @@wordle_number_override = 422
+
+  # uncomment this to enable debug printing for a specific tweet_id
+  # @@debug_print_tweet_id = '1559163924548915201'
+
+  # Suppose you find a pattern to dig further on
+  # uncomment this to enable printing of ALL penultimate which match this pattern
+  # use normalized colors: g/y/w
+  @@print_this_penultimate_pattern = 'wgggw'
+
+  # author_id denylist
+  @@author_id_denylist = [
+    '1487026288682418180', # 6Wordle
+  ]
+
+  # interesting Twitter handles and author IDs (use https://tweeterid.com/ to convert between)
+  # habanerohiker / 45384296
+  #         appears to have authored a bot (https://twitter.com/habanerohiker/status/1559163924548915201)
+  # 6Wordle / 1487026288682418180
+  #         Wordle 421 was KHAKI, and his penultimate was YGGYY (!) which is impossible
+  #         https://twitter.com/6Wordle/status/1558951610197258241
+  #         The account description says "I do wordle in 6/6 every day so even the 5/6 friends can be proud"
+  # Vat_of_useless / ???
+  #         https://twitter.com/Vat_of_useless/status/1554551230864560128
+  #         The answer was "coyly", and the penultimate guess was ygwgg.
+  #         I asked what their second-to-last guess was, they said "lobby".
+  #         I followed up with "wouldn't that be ygwwg", and now I'm blocked (!)
+  #         Follow-up: Appears to be no way for "yo?ly" to be a word
+
+  def self.results
+    @@results
+  end
+  def self.pages
+    @@pages
+  end
+  def self.wordle_number_override
+    defined?(@@wordle_number_override) ? @@wordle_number_override : nil
+  end
+  def self.debug_print_tweet_id
+    defined?(@@debug_print_tweet_id) ? @@debug_print_tweet_id : nil
+  end
+  def self.print_this_penultimate_pattern
+    defined?(@@print_this_penultimate_pattern) ? @@print_this_penultimate_pattern : nil
+  end
+  def self.author_id_denylist
+    @@author_id_denylist
+  end
+end
+
 # standard (confirmed working)
 # e.g. https://twitter.com/mobanwar/status/1552908148696129536
 GREEN = "\u{1F7E9}"
@@ -75,10 +132,8 @@ class Answer
       # count how many of these occurred
       count = 1
       (num_guesses-2).downto(1) { |i| count+= 1 if get_guess(i) == penultimate }
-      # puts 'count = #{count}'
       name = '4g'
       subname = "#{penultimate.index('w')+1}.#{count}"
-      # subname = (penultimate.index('w') + 1).to_s
       create_or_increment("#{name}.#{subname}", stats)
       @is_interesting = true
       return true
@@ -105,10 +160,6 @@ class Answer
       g1 = penultimate.index('g')
       g2 = penultimate.index('g', g1+1)
       subname = "green#{g1+1}#{g2+1}"
-      # y1 = penultimate.index('y')
-      # y2 = penultimate.index('y', y1+1)
-      # y3 = penultimate.index('y', y2+1)
-      # subname = "yellow#{y1+1}#{y2+1}#{y3+1}"
       @key = "#{name}.#{subname}"
       create_or_increment("#{@key}", stats)
       @is_interesting = true
@@ -153,13 +204,14 @@ def twitter
   wordle_day_0 = Date.civil(2021, 6, 19)
   difference_in_days = (now - wordle_day_0).to_i
   wordle_number = difference_in_days.to_s
-  # TODO move all "configuration" things into a Configuration module?
-  results = 100
-  pages = 20
-
+  if Configuration.wordle_number_override != nil
+    wordle_number = Configuration.wordle_number_override
+    puts "using user-specified wordle number: #{wordle_number}"
+  end
   answers = []
   total_twitter_posts = 0
   unique_twitter_posts = {}
+  skipped_twitter_posts = 0
   num_failures = 0
 
   # get the auth token
@@ -174,7 +226,7 @@ def twitter
 
   search_queries.each do |search_query|
     next_token = ''
-    (0...pages).each do |page_num|
+    (0...Configuration.pages).each do |page_num|
       # https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent
 
       # quit early if nothing remaining
@@ -183,7 +235,7 @@ def twitter
       # handle next token
       next_token_get_parameter = page_num == 0 ? "" : "&next_token=#{next_token}"
 
-      url = "https://api.twitter.com/2/tweets/search/recent?query=#{search_query}&tweet.fields=created_at,author_id&max_results=#{results}#{next_token_get_parameter}"
+      url = "https://api.twitter.com/2/tweets/search/recent?query=#{search_query}&tweet.fields=created_at,author_id&max_results=#{Configuration.results}#{next_token_get_parameter}"
 
       response = Faraday.get(url, nil, {'Accept' => 'application/json', 'Authorization' => "Bearer #{auth_token}"})
       parsed_json = JSON.parse(response.body)
@@ -192,20 +244,24 @@ def twitter
 
       # transform into array of Answer objects
       # (w)hite, (y)ellow, (g)reen
-      # Answer.guess_array = ['wwwwy', 'ywwww', 'yywyw', 'wwwwy', 'yyyww', 'ggggg']
-      # https://twitter.com/Thousandkoban/status/1553269881952681985
+      # puts "-------- id=#{parsed_json['data'][0]['id']}, author_id=#{parsed_json['data'][0]['author_id']}"
       for result in parsed_json['data']
         text = result['text']
         id = result['id']
         author_id = result['author_id']
-        debug_print_it = (id == '1558951610197258241') && false
-        puts result if debug_print_it
+        debug_print_it = Configuration.debug_print_tweet_id != nil && Configuration.debug_print_tweet_id == id
+        puts "result=#{result}" if debug_print_it
         total_twitter_posts += 1
+        # skip those we've already seen
         if unique_twitter_posts.key?(id)
-          # skip those we've already seen
           next
         else
           unique_twitter_posts[id] = '1'
+        end
+        # check the denylist
+        if Configuration.author_id_denylist.include?(author_id)
+          skipped_twitter_posts += 1
+          next
         end
         if is_probably_a_wordle_post?(text, wordle_number)
           puts 'is probably a wordle post!' if debug_print_it
@@ -230,7 +286,7 @@ def twitter
           end
 
           if num_guesses == 'X' || num_guesses == 'Unknown'
-            # puts 'not a solution, skipping'
+            # no solution found - record if a failure and skip
             if num_guesses == 'X'
               num_failures += 1
             end
@@ -269,8 +325,8 @@ def twitter
             mode = 'Unknown'
           end
 
+          # if mode is unknown, skip
           if mode == 'Unknown'
-            # puts 'unknown mode, skipping'
             next
           end
           puts "mode = #{mode}" if debug_print_it
@@ -308,33 +364,13 @@ def twitter
             next
           end
 
-          if guess_array[guess_array.length()-1] == 'ggggy'
-            # Suppose you find a result to dig further on
-            # https://www.bram.us/2017/11/22/accessing-a-tweet-using-only-its-id-and-without-the-twitter-api/
-            # above just redirects to this:
-            # https://twitter.com/anyuser/status/1554551230864560128
-            # which redirects to this:
-            # https://twitter.com/Vat_of_useless/status/1554551230864560128
-            #
-            # https://twitter.com/Vat_of_useless/status/1554551230864560128
-            # The answer was "coyly", and the penultimate guess was ygwgg.
-            # I asked what their second-to-last guess was, they said "lobby".
-            # I followed up with "wouldn't that be ygwwg", and now I'm blocked (!)
-            # Follow-up: Appears to be no way for "yo?ly" to be a word
-            #
-            # https://twitter.com/NerizArielle/status/1555215699152211969
-            # Answer: "rhyme"
-            # Penultimate guess: gggwg
-            # Same as above for https://twitter.com/katheryn_avila/status/1555210731603247104
-            # Solved: Wordle considers "rhyne" to be a word
-            if false
-              puts '-------- TEXT: BEGIN     --------'
-              puts text
-              puts '-------- TEXT: END       --------'
-              puts '-------- RESULT: BEGIN   --------'
-              puts result
-              puts '-------- RESULT: END     --------'
-            end
+          if guess_array[guess_array.length()-2] == Configuration.print_this_penultimate_pattern
+            puts '-------- TEXT: BEGIN     --------'
+            puts text
+            puts '-------- TEXT: END       --------'
+            puts '-------- RESULT: BEGIN   --------'
+            puts result
+            puts '-------- RESULT: END     --------'
           end
 
           answers.append(Answer.new(guess_array, id, author_id))
@@ -353,20 +389,13 @@ def twitter
     end
   end
 
-  # remove entries if they have exactly one occurrence (probable goofballs)
-  # TODO print URLs for those which are being deleted (via Answer.generic_tweet_url)
+  # remove entries if they have exactly one occurrence (possible goofballs)
   # stats.delete_if { |key, value| value == 1 }
-  # How to convert an author id to a username: https://tweeterid.com/
-  # Goofball #1: https://twitter.com/6Wordle/status/1558951610197258241
-  #              Wordle 421 was KHAKI, and his penultimate was YGGYY (!)
-  #              6Wordle == author_id=1487026288682418180
-  # TODO create denylist of known goofball author_ids
   stats.delete_if do |key, value|
     if value == 1
       for answer in answers
         if answer.matches_key(key)
           puts "Alert: deleting key #{key} with value 1! (#{answer.generic_tweet_url}) (author_id=#{answer.author_id})"
-          # puts answer.generic_tweet_url
           break
         end
       end
@@ -385,6 +414,7 @@ def twitter
   puts '\--------------------------------------/'
   puts "#{total_twitter_posts} Twitter posts seen"
   puts "#{unique_twitter_posts.size} Unique Twitter posts seen"
+  puts "#{skipped_twitter_posts} skipped"
   puts "#{answers.length()+num_failures} total answers"
   puts "#{answers.length} correct"
   puts "#{num_failures} incorrect (#{'%.2f' % (num_failures*100/(answers.length().to_f+num_failures))}% failure)"
@@ -442,15 +472,6 @@ def unicode_to_normalized_string(unicode_string, mode)
   end
 end
 
-def is_a_wordle_post_old?(text, wordle_number)
-  text.include? "Wordle #{wordle_number} 2/6"
-end
-
 def is_probably_a_wordle_post?(text, wordle_number)
   !! (text =~ /Wordle #{wordle_number} [123456X]\/6/)
 end
-
-# print_a_dad_joke
-
-# twitter
-
