@@ -56,6 +56,7 @@ def play(d)
         stats_hash = twitter
         print_remaining_count(d)
         # TODO rename filter_twitter as maybe_filter_twitter and move I/O there
+        # TODO add an option for "verbose" (filtering on guess 1 takes FOREVER and has a ton of output)
         print 'Would you like to proceed with filtering? (y/n) ==> '
         choice2 = gets.chomp
         case choice2
@@ -154,6 +155,58 @@ end
 
 def penultimate_twitter_absence_of_evidence(d, stats_hash)
   # TODO (big feature) do offline calculations for each word and constraint type (not only 4g)
+  #
+  # Wordle 422 Twitter report below (great for implementing the "big feature").
+  #/--------------------------------------\
+  #|              Wordle 422              |
+  #|            Twitter report            |
+  #\--------------------------------------/
+  #2918 Twitter posts seen
+  #2852 Unique Twitter posts seen
+  #2476 total answers
+  #2331 correct
+  #145 incorrect (5.86% failure)
+  #1367/2331 are interesting
+  #
+  #4g.1.1 = 211
+  #4g.1.2 = 9
+  #4g.2.1 = 19
+  #4g.3.1 = 787
+  #4g.3.2 = 151
+  #4g.3.3 = 9
+  #4g.3.4 = 2
+  #4g.5.1 = 37
+  #4g.5.2 = 7
+  #4g.5.3 = 3
+  #1g4y.green1 = 2
+  #3g1y.yellow3.white1 = 77
+  #3g1y.yellow3.white5 = 49
+  #
+  #
+  #
+  #Would you like to make deductions based on absence of evidence? (y/n) ==> y
+  #Absence of evidence is not evidence of absence!
+  #max 4gs seen on Twitter: [2, 1, 4, 0, 3]
+  #-------- new-d: start
+  #key=gamer, difference=2, all-4g-matches=[3, 1, 5, 0, 3], seen-on-twitter=[2, 1, 4, 0, 3]
+  #key=poker, difference=5, all-4g-matches=[6, 2, 4, 0, 3], seen-on-twitter=[2, 1, 4, 0, 3]
+  #key=toker, difference=5, all-4g-matches=[6, 1, 5, 0, 3], seen-on-twitter=[2, 1, 4, 0, 3]
+  #key=toper, difference=6, all-4g-matches=[6, 1, 5, 0, 4], seen-on-twitter=[2, 1, 4, 0, 3]
+  #key=caper, difference=6, all-4g-matches=[6, 1, 6, 0, 3], seen-on-twitter=[2, 1, 4, 0, 3]
+  #key=toner, difference=6, all-4g-matches=[7, 1, 5, 0, 3], seen-on-twitter=[2, 1, 4, 0, 3]
+  #key=carer, difference=8, all-4g-matches=[6, 2, 6, 0, 4], seen-on-twitter=[2, 1, 4, 0, 3]
+  #key=paler, difference=9, all-4g-matches=[4, 3, 8, 0, 4], seen-on-twitter=[2, 1, 4, 0, 3]
+  #key=baker, difference=9, all-4g-matches=[11, 1, 4, 0, 3], seen-on-twitter=[2, 1, 4, 0, 3]
+  #key=taper, difference=11, all-4g-matches=[6, 1, 9, 1, 4], seen-on-twitter=[2, 1, 4, 0, 3]
+  #key=waker, difference=12, all-4g-matches=[11, 1, 7, 0, 3], seen-on-twitter=[2, 1, 4, 0, 3]
+  #key=pater, difference=13, all-4g-matches=[11, 1, 8, 0, 3], seen-on-twitter=[2, 1, 4, 0, 3]
+  #key=cures, difference=14, all-4g-matches=[7, 4, 4, 6, 3], seen-on-twitter=[2, 1, 4, 0, 3]
+  #key=cared, difference=16, all-4g-matches=[11, 3, 8, 0, 4], seen-on-twitter=[2, 1, 4, 0, 3]
+  #key=rates, difference=22, all-4g-matches=[12, 2, 11, 4, 3], seen-on-twitter=[2, 1, 4, 0, 3]
+  #key=motes, difference=23, all-4g-matches=[9, 4, 11, 4, 5], seen-on-twitter=[2, 1, 4, 0, 3]
+  #key=pares, difference=29, all-4g-matches=[13, 4, 9, 7, 6], seen-on-twitter=[2, 1, 4, 0, 3]
+  #-------- new-d: end
+  #
   puts 'Absence of evidence is not evidence of absence!'
   # 4g-based analysis
   # sample entry in stash_hash: key=4g.3.1, value=7
