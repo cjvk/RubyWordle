@@ -168,8 +168,34 @@ def check_for_problematic_patterns(d)
   puts 'No problematic patterns found!' if pp_dict.values.max <= 2
 end
 
-def penultimate_twitter_absence_of_evidence(d, stats_hash)
+def calculate_constraint_cardinality
+
+end
+
+def static_analysis(d, stats_hash)
   # TODO (big feature) do offline calculations for each word and constraint type (not only 4g)
+  #
+  # 4g   : Can represent as below, 5-tuple [3, 1, 5, 0, 3]
+  # 3g1y : This is a 2-D array. Array[i][j] = number which match ith as yellow and jth as white
+  #        Array[i][i] is undefined because i != j
+  #                         [
+  #                          [-, 0, 0, 2, 0], # e.g. 2 words give a yggwg result
+  #                          [0, -, 1, 0, 0], # and 1 word gives a gywgg result
+  #                          [2, 0, -, 0, 0],
+  #                          [0, 0, 1, -, 0],
+  #                          [0, 0, 0, 0, -],
+  #                         ]
+  # 3g2y : Also a 2-D array. Elements i and j are both the yellow positions.
+  # 2g3y : Also a 2-D array. Elements i and j are now the green positions.
+  # 1g4y : This is a 1-D array. Element i indicates the green position.
+  # 0g5y : This is just a simple count.
+  #
+  # So there are a total of 71 numbers on which to match.
+  #
+  # Thoughts: Only the 4g array includes count.
+end
+
+def penultimate_twitter_absence_of_evidence(d, stats_hash)
   #
   # Wordle 422 Twitter report below (great for implementing the "big feature").
   #/--------------------------------------\

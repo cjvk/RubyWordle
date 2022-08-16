@@ -27,10 +27,6 @@ module Configuration
   ].map { |x| [x[0], x[1]] }.to_h
   # @@author_id_denylist_hash = @@author_id_denylist.map { |x| [x, 0] }.to_h
 
-  def self.test
-    puts @@author_id_denylist
-  end
-
   # interesting Twitter handles and author IDs
   # https://tweeterid.com/
   # https://commentpicker.com/twitter-id.php
