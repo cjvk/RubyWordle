@@ -10,28 +10,38 @@ module Configuration
   @@results = 100
   @@pages = 5
 
-  # uncomment this to query a specific wordle number
+  #         Uncomment this to query a specific wordle number
+  #         note: Wordle 423 (GRUEL) was first this program got in 1
   # @@wordle_number_override = 422
 
-  # uncomment this to enable debug printing for a specific tweet_id
+  #         Uncomment this to enable debug printing for a specific tweet_id
   # @@debug_print_tweet_id = '1559163924548915201'
 
-  # uncomment to enable printing of ALL penultimate which match this pattern
+  #         Uncomment to enable printing of ALL penultimate which match this pattern
   # @@print_this_penultimate_pattern = 'wgggw' # use normalized colors (g/y/w)
 
   # author_id denylist: If this gets too large, use a hash instead?
   @@author_id_denylist = [
-    '1487026288682418180', # 6Wordle
-  ]
+    ['1487026288682418180', '@6wordle'],
+    ['911760502333743104', '@Vat_of_useless'],
+  ].map { |x| [x[0], x[1]] }.to_h
+  # @@author_id_denylist_hash = @@author_id_denylist.map { |x| [x, 0] }.to_h
 
-  # interesting Twitter handles and author IDs (use https://tweeterid.com/ to convert between)
+  def self.test
+    puts @@author_id_denylist
+  end
+
+  # interesting Twitter handles and author IDs
+  # https://tweeterid.com/
+  # https://commentpicker.com/twitter-id.php
+  #
   # habanerohiker / 45384296
   #         appears to have authored a bot (https://twitter.com/habanerohiker/status/1559163924548915201)
   # 6Wordle / 1487026288682418180
   #         Wordle 421 was KHAKI, and his penultimate was YGGYY (!) which is impossible
   #         https://twitter.com/6Wordle/status/1558951610197258241
   #         The account description says "I do wordle in 6/6 every day so even the 5/6 friends can be proud"
-  # Vat_of_useless / ???
+  # Vat_of_useless / 911760502333743104
   #         https://twitter.com/Vat_of_useless/status/1554551230864560128
   #         The answer was "coyly", and the penultimate guess was ygwgg.
   #         I asked what their second-to-last guess was, they said "lobby".
