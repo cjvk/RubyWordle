@@ -28,7 +28,6 @@ def populate_all_words
 end
 
 def play(d)
-  # TODO Consider having a warning on previously-used Wordle answers? (And how would it be maintained?)
   puts 'Welcome to Wordle!'
   for guess in 1..6
     print "You are on guess #{guess}/6. "
@@ -40,7 +39,6 @@ def play(d)
       case choice
       when 'p'
         max_print = 30
-        # d.each_with_index {|(key, _value), index| break if index >= max_print; puts key }
         d.each_with_index do |(key, _value), index|
           break if index >= max_print
           if PreviousWordleSolutions.check_word(key)
@@ -51,7 +49,6 @@ def play(d)
         end
         puts "skipping #{d.size-max_print} additional results..." if d.size > max_print
       when 'pa'
-        # d.each {|key, value| puts key}
         d.each do |key, value|
           if PreviousWordleSolutions.check_word(key)
             puts "#{key} (Alert! Wordle #{PreviousWordleSolutions.check_word(key)} answer!)"
@@ -67,10 +64,6 @@ def play(d)
         print_remaining_count(d)
       when 'penultimate'
         penultimate(d)
-      # when 'pws'
-      #   print 'testing previous wordle solutions.. enter a word: ==> '
-      #   user_word = gets.chomp
-      #   puts "#{user_word} apparently was in Wordle #{PreviousWordleSolutions.check_word(user_word)}."
       when 'twitter'
         stats_hash = twitter
         print_remaining_count(d)
@@ -96,7 +89,7 @@ def play(d)
         puts 'twitter         : run Twitter analysis'
         puts ''
       when ''
-      else # assume anything else is a guess
+      else
         if choice.length == 5
           print 'Enter the response (!?-): ==> '
           response = gets.chomp

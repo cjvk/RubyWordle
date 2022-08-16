@@ -16,10 +16,8 @@ module Configuration
   # uncomment this to enable debug printing for a specific tweet_id
   # @@debug_print_tweet_id = '1559163924548915201'
 
-  # Suppose you find a pattern to dig further on
-  # uncomment this to enable printing of ALL penultimate which match this pattern
-  # use normalized colors: g/y/w
-  # @@print_this_penultimate_pattern = 'wgggw'
+  # uncomment to enable printing of ALL penultimate which match this pattern
+  # @@print_this_penultimate_pattern = 'wgggw' # use normalized colors (g/y/w)
 
   # author_id denylist: If this gets too large, use a hash instead?
   @@author_id_denylist = [
@@ -265,31 +263,25 @@ def twitter
           puts 'is probably a wordle post!' if debug_print_it
 
           # determine how many guesses they took
-          if text.include? "Wordle #{wordle_number} 1/6"
-            num_guesses = 1
-          elsif text.include? "Wordle #{wordle_number} 2/6"
-            num_guesses = 2
-          elsif text.include? "Wordle #{wordle_number} 3/6"
-            num_guesses = 3
-          elsif text.include? "Wordle #{wordle_number} 4/6"
-            num_guesses = 4
-          elsif text.include? "Wordle #{wordle_number} 5/6"
-            num_guesses = 5
-          elsif text.include? "Wordle #{wordle_number} 6/6"
-            num_guesses = 6
-          elsif text.include? "Wordle #{wordle_number} X/6"
-            num_guesses = 'X'
-          else
-            num_guesses = 'Unknown'
-          end
+          # because text is "probably a wordle post", it should match
+          num_guesses = text.match(/Wordle #{wordle_number} ([1-6X])\/6/)
 
-          if num_guesses == 'X' || num_guesses == 'Unknown'
-            # no solution found - record if a failure and skip
-            if num_guesses == 'X'
-              num_failures += 1
-            end
+          if !num_guesses
+            # equivalent of Unknown mode above
             next
           end
+
+          # get the first match
+          num_guesses = num_guesses[1]
+
+          if num_guesses == 'X'
+            # no solution found - record if a failure and skip
+            num_failures += 1
+            next
+          end
+
+          # convert
+          num_guesses = num_guesses.to_i
 
           # before determining mode, only determine based on the wordle answer
           # some goofballs do Wordle in regular mode and Worldle in dark mode
