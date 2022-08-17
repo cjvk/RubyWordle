@@ -422,6 +422,6 @@ cling
 glean
 label
 hunky
-khaki
+khaki # Wordle 421, 8/14/2022
 poker
-gruel
+gruel # Wordle 423, 8/16/2022

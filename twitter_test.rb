@@ -101,6 +101,73 @@ def print_a_dad_joke
   puts joke_object[:joke]
 end
 
+module InterestingWordleResponses
+  # TODO Is it possible to nest modules? Can this help with separating logic from Answer.is_interesting()?
+  WORDLE_4G   = 1
+  WORDLE_3G1Y = 2
+  WORDLE_3G2Y = 3
+  WORDLE_2G3Y = 4
+  WORDLE_1G4Y = 5
+  WORDLE_0G5Y = 6
+  NOT_INTERESTING = 7
+
+  def InterestingWordleResponses::determine_interestingness(wordle_response)
+    # wordle_response is a 5-character string normalized to g/y/w
+    # e.g. "ygwyy" for a guess of saner and a wordle of raise
+    num_g = num_with_color('g', wordle_response)
+    num_y = num_with_color('y', wordle_response)
+    num_w = num_with_color('w', wordle_response)
+    # puts "wordle_response=#{wordle_response}, g/y/w=#{num_g}/#{num_y}/#{num_w}"
+    return InterestingWordleResponses::WORDLE_4G if num_g == 4 && num_w == 1
+    return InterestingWordleResponses::WORDLE_3G1Y if num_g == 3 && num_y == 1
+    return InterestingWordleResponses::WORDLE_3G2Y if num_g == 3 && num_y == 2
+    return InterestingWordleResponses::WORDLE_2G3Y if num_g == 2 && num_y == 3
+    return InterestingWordleResponses::WORDLE_1G4Y if num_g == 1 && num_y == 4
+    return InterestingWordleResponses::WORDLE_0G5Y if num_g == 0 && num_y == 5
+    return InterestingWordleResponses::NOT_INTERESTING
+  end
+
+  def InterestingWordleResponses::calculate_name_subname_key(wordle_response, interestingness, count=0)
+    case interestingness
+    when InterestingWordleResponses::WORDLE_4G
+      name = '4g'
+      subname = "#{wordle_response.index('w')+1}.#{count}"
+    when InterestingWordleResponses::WORDLE_3G1Y
+      name = '3g1y'
+      subname = "yellow#{wordle_response.index('y')+1}.white#{wordle_response.index('w')+1}"
+    when InterestingWordleResponses::WORDLE_3G2Y
+      name = '3g2y'
+      y1 = wordle_response.index('y')
+      y2 = wordle_response.index('y', y1+1)
+      subname = "yellow#{y1+1}#{y2+1}"
+    when InterestingWordleResponses::WORDLE_2G3Y
+      name = '2g3y'
+      g1 = wordle_response.index('g')
+      g2 = wordle_response.index('g', g1+1)
+      subname = "green#{g1+1}#{g2+1}"
+    when InterestingWordleResponses::WORDLE_1G4Y
+      name = '1g4y'
+      g = wordle_response.index('g')
+      subname = "green#{g+1}"
+    when InterestingWordleResponses::WORDLE_0G5Y
+      name = '0g5y'
+      subname = ''
+    when InterestingWordleResponses::NOT_INTERESTING
+      raise "Error: NOT_INTERESTING sent to calculate_name_subname_key"
+    else
+      raise "Error: unknown interestingness"
+    end
+    key = "#{name}.#{subname}"
+    return name, subname, key
+  end
+end
+
+def num_with_color(color, word)
+  num_with_color = 0
+  (0...5).each { |i| num_with_color += 1 if word[i] == color }
+  num_with_color
+end
+
 class Answer
   # array of "Normal-mode" squares
   def initialize(guess_array, id, author_id)
@@ -130,67 +197,29 @@ class Answer
   end
   def is_interesting(stats)
     penultimate = penultimate()
-    if num_with_color('g', penultimate) == 4
+    interestingness = InterestingWordleResponses::determine_interestingness(penultimate)
+    case interestingness
+    when InterestingWordleResponses::WORDLE_4G
       # count how many of these occurred
       count = 1
       (num_guesses-2).downto(1) { |i| count+= 1 if get_guess(i) == penultimate }
-      name = '4g'
-      subname = "#{penultimate.index('w')+1}.#{count}"
-      create_or_increment("#{name}.#{subname}", stats)
-      @is_interesting = true
-      return true
-    end
-    if num_with_color('g', penultimate) == 3 && num_with_color('y', penultimate) == 1
-      name = '3g1y'
-      subname = "yellow#{penultimate.index('y')+1}.white#{penultimate.index('w')+1}"
-      create_or_increment("#{name}.#{subname}", stats)
-      @is_interesting = true
-      return true
-    end
-    if num_with_color('g', penultimate) == 3 && num_with_color('y', penultimate) == 2
-      name = '3g2y'
-      y1 = penultimate.index('y')
-      y2 = penultimate.index('y', y1+1)
-      subname = "yellow#{y1+1}#{y2+1}"
-      @key = "#{name}.#{subname}"
+      _name, _subname, @key = InterestingWordleResponses::calculate_name_subname_key(penultimate, InterestingWordleResponses::WORDLE_4G, count)
+      # name = '4g'
+      # subname = "#{penultimate.index('w')+1}.#{count}"
       create_or_increment("#{@key}", stats)
       @is_interesting = true
       return true
-    end
-    if num_with_color('g', penultimate) == 2 && num_with_color('y', penultimate) == 3
-      name = '2g3y'
-      g1 = penultimate.index('g')
-      g2 = penultimate.index('g', g1+1)
-      subname = "green#{g1+1}#{g2+1}"
-      @key = "#{name}.#{subname}"
+    when InterestingWordleResponses::WORDLE_3G1Y, InterestingWordleResponses::WORDLE_3G2Y, InterestingWordleResponses::WORDLE_2G3Y, InterestingWordleResponses::WORDLE_1G4Y, InterestingWordleResponses::WORDLE_0G5Y
+      _name, _subname, @key = InterestingWordleResponses::calculate_name_subname_key(penultimate, interestingness)
       create_or_increment("#{@key}", stats)
       @is_interesting = true
       return true
+    when InterestingWordleResponses::NOT_INTERESTING
+      @is_interesting = false
+      return false
+    else
+      raise "unknown interestingness"
     end
-    if num_with_color('g', penultimate) == 1 && num_with_color('y', penultimate) == 4
-      name = '1g4y'
-      g = penultimate.index('g')
-      subname = "green#{g+1}"
-      @key = "#{name}.#{subname}"
-      create_or_increment("#{@key}", stats)
-      @is_interesting = true
-      return true
-    end
-    if num_with_color('y', penultimate) == 5
-      name = '0g5y'
-      subname = ''
-      @key = "#{name}.#{subname}"
-      create_or_increment("#{@key}", stats)
-      @is_interesting = true
-      return true
-    end
-    @is_interesting = false
-    false
-  end
-  def num_with_color(color, word)
-    num_with_color = 0
-    (0...5).each { |i| num_with_color += 1 if word[i] == color }
-    num_with_color
   end
   def create_or_increment(name, hash)
     if hash.key?(name)

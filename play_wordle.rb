@@ -72,6 +72,8 @@ def play(d)
         end
       when 'dad'
         print_a_dad_joke
+      when 'test'
+        calculate_constraint_cardinality
       when 'help'
         puts ''
         puts '.----------------------------------------------.'
@@ -130,8 +132,8 @@ def maybe_filter_twitter(d, stats_hash)
     stats_hash.each do |key, _value|
       key_array = key.split('.', 2)
       penultimate_twitter(d, key_array[0], key_array[1], verbose)
+      print_remaining_count(d) # moving this here, to show filtering as it goes
     end
-    print_remaining_count(d) # this is useful regardless of verbose, since filtering occurred
   when 'n'
   else
     puts "unrecognized input (#{choice}), skipping"
@@ -169,7 +171,68 @@ def check_for_problematic_patterns(d)
 end
 
 def calculate_constraint_cardinality
+  # {
+  #   'khaki' :
+  #   'gruel'
+  # }
+  reasonable_words = [
+    'khaki', # Wordle 421
+    'gruel', # Wordle 423
+    'twice', # Wordle 424
+  ]
+  h = {}
+  valid_wordle_words = populate_valid_wordle_words
 
+  reasonable_words.each do |word|
+    d = {}
+    valid_wordle_words.each do |guess, _line_num|
+      wordle_response = wordle_response(guess, word)
+      interestingness = InterestingWordleResponses::determine_interestingness(wordle_response)
+      case interestingness
+      when InterestingWordleResponses::WORDLE_4G, InterestingWordleResponses::WORDLE_3G1Y, InterestingWordleResponses::WORDLE_3G2Y, InterestingWordleResponses::WORDLE_2G3Y, InterestingWordleResponses::WORDLE_1G4Y, InterestingWordleResponses::WORDLE_0G5Y
+        _name, _subname, key = InterestingWordleResponses::calculate_name_subname_key(wordle_response, interestingness, 1)
+        d[key] = 0 if !d.key?(key)
+        d[key] = d[key] + 1
+      when InterestingWordleResponses::NOT_INTERESTING
+      else
+        raise "unknown interestingness"
+      end
+    end
+    h[word] = d
+  end
+  puts h
+end
+
+def wordle_response(guess, word)
+  # defensive copying
+  guess_copy = guess.dup
+  word_copy = word.dup
+  wordle_response = '-----'
+
+  # first green
+  (0...5).each do |i|
+    if guess_copy[i] == word_copy[i]
+      wordle_response[i] = 'g'
+      word_copy[i] = '-'
+    end
+  end
+  # then white
+  (0...5).each do |i|
+    next if wordle_response[i] != '-'
+    wordle_response[i] = 'w' if !word_copy.include?(guess_copy[i])
+  end
+  # everything else is yellow or white
+  (0...5).each do |i|
+    next if wordle_response[i] != '-'
+    if word_copy.include?(guess_copy[i])
+      wordle_response[i] = 'y'
+      index = word_copy.index(guess_copy[i])
+      word_copy[index] = '-'
+    else
+      wordle_response[i] = 'w'
+    end
+  end
+  wordle_response
 end
 
 def static_analysis(d, stats_hash)
@@ -192,7 +255,13 @@ def static_analysis(d, stats_hash)
   #
   # So there are a total of 71 numbers on which to match.
   #
-  # Thoughts: Only the 4g array includes count.
+  # Thoughts: Only the 4g array includes count. So while we can measure 4g here and on
+  #           Twitter, the only deduction we could make is (for example) if there are
+  #           many words which result in a gggyw, and nobody on Twitter gets that
+  #           pattern, then we should rank it lower.
+  # Plan:     Start writing and executing the "calculate_constraint_cardinality" code.
+  #           Do the first 10 in the word list, and also the most recent 10 Wordle
+  #           answers. See how things look in terms of matchups.
 end
 
 def penultimate_twitter_absence_of_evidence(d, stats_hash)
@@ -291,15 +360,31 @@ def penultimate_twitter_absence_of_evidence(d, stats_hash)
   new_d = new_d.sort_by {|_key, value| value[0]}.to_h
   puts '-------- new-d: start'
   max_print = 50
+  current_difference = -1
   # new_d.each_with_index {|(key, value), index| break if index >= max_print; puts "key=#{key}, difference=#{value[0]}, all-4g-matches=#{value[2]}, seen-on-twitter=#{value[3]}" }
   new_d.each_with_index do |(key, value), index|
     break if index >= max_print
-    puts "key=#{key}, difference=#{value[0]}, all-4g-matches=#{value[2]}, seen-on-twitter=#{value[3]}"
-    if PreviousWordleSolutions.check_word(key)
-      puts "    -------- Alert! Wordle #{PreviousWordleSolutions.check_word(key)} solution was #{key} --------"
+    solution_number = PreviousWordleSolutions.check_word(key)
+    maybe_alert = solution_number ? " -------- Alert! Wordle #{solution_number} solution was #{key} --------" : ''
+    if value[0] != current_difference
+      puts "-------- Difference #{value[0]} --------"
+      current_difference = value[0]
     end
+    puts "key=#{key}, difference=#{value[0]}, all-4g-matches=#{value[2]}, seen-on-twitter=#{value[3]}#{maybe_alert}"
   end
   puts "skipping #{new_d.size-max_print} additional results..." if d.size > max_print
+  while true do
+    print 'Enter a word to see its analysis line, or (q)uit: ==> '
+    user_entered_word = gets.chomp
+    break if user_entered_word == 'q'
+    if new_d.key?(user_entered_word)
+      key = user_entered_word
+      value = new_d[key]
+      solution_number = PreviousWordleSolutions.check_word(key)
+      maybe_alert = solution_number ? " -------- Alert! Wordle #{solution_number} solution was #{key} --------" : ''
+      puts "key=#{key}, difference=#{value[0]}, all-4g-matches=#{value[2]}, seen-on-twitter=#{value[3]}#{maybe_alert}"
+    end
+  end
   # new_d.each do |key, value|
   #   puts "key=#{key}, value=#{value}"
   #   total_printed += 1
@@ -614,6 +699,23 @@ def run_tests
   fail unless close('abcde', 'abxde')
   fail unless close('abcde', 'abcxe')
   fail unless close('abcde', 'abcdx')
+
+  # wordle_response(guess, word)
+  fail unless wordle_response('saner', 'raise') == 'ygwyy'
+  fail unless wordle_response('sanee', 'raise') == 'ygwwg'
+  fail unless wordle_response('saaer', 'raise') == 'ygwyy'
+  fail unless wordle_response('saaer', 'raisa') == 'ygywy'
+  fail unless wordle_response('saaar', 'raisa') == 'ygywy'
+
+  fail unless InterestingWordleResponses::determine_interestingness('ggggg') == InterestingWordleResponses::NOT_INTERESTING
+  fail unless InterestingWordleResponses::determine_interestingness('ggggw') == InterestingWordleResponses::WORDLE_4G
+  fail unless InterestingWordleResponses::determine_interestingness('ggwgg') == InterestingWordleResponses::WORDLE_4G
+  fail unless InterestingWordleResponses::determine_interestingness('wgggg') == InterestingWordleResponses::WORDLE_4G
+  fail unless InterestingWordleResponses::determine_interestingness('gggwy') == InterestingWordleResponses::WORDLE_3G1Y
+  fail unless InterestingWordleResponses::determine_interestingness('gggyy') == InterestingWordleResponses::WORDLE_3G2Y
+  fail unless InterestingWordleResponses::determine_interestingness('ggyyy') == InterestingWordleResponses::WORDLE_2G3Y
+  fail unless InterestingWordleResponses::determine_interestingness('gyyyy') == InterestingWordleResponses::WORDLE_1G4Y
+  fail unless InterestingWordleResponses::determine_interestingness('yyyyy') == InterestingWordleResponses::WORDLE_0G5Y
 end
 
 run_tests
