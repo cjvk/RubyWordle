@@ -11,7 +11,6 @@ module Configuration
   @@pages = 5
 
   #         Uncomment this to query a specific wordle number
-  #         note: Wordle 423 (GRUEL) was first this program got in 1
   # @@wordle_number_override = 422
 
   #         Uncomment this to enable debug printing for a specific tweet_id
@@ -63,6 +62,17 @@ module Configuration
     @@author_id_denylist
   end
 end
+
+#############################################################################
+#
+#      Wordles solved in 1
+#
+#      Wordle 423 (GRUEL): first one
+#      Wordle 426 (SHRUG): Enema/sugar eliminated b/c previous solutions
+#      Wordle 427 (TREAT)
+#      Wordle 428 (WASTE): Sonic eliminated b/c previous solution
+#
+#############################################################################
 
 # standard (confirmed working)
 # e.g. https://twitter.com/mobanwar/status/1552908148696129536
