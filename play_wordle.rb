@@ -27,125 +27,184 @@ def populate_all_words
   d
 end
 
-def play(d)
-  puts 'Welcome to Wordle!'
-  for guess in 1..6
-    print "You are on guess #{guess}/6. "
-    print_remaining_count(d)
-    check_for_problematic_patterns(d) if guess >= 3
-    while true do
-      print 'Enter a guess, or (p)rint, (c)ount, (h)int, (q)uit: ==> '
-      choice = gets.chomp
-      case choice
-      when 'p'
-        max_print = 30
-        d.each_with_index do |(key, _value), index|
-          break if index >= max_print
-          if PreviousWordleSolutions.check_word(key)
-            puts "#{key} (Alert! Wordle #{PreviousWordleSolutions.check_word(key)} answer!)"
-          else
-            puts key
-          end
-        end
-        puts "skipping #{d.size-max_print} additional results..." if d.size > max_print
-      when 'pa'
-        d.each do |key, value|
-          if PreviousWordleSolutions.check_word(key)
-            puts "#{key} (Alert! Wordle #{PreviousWordleSolutions.check_word(key)} answer!)"
-          else
-            puts key
-          end
-        end
-      when 'h'
-        hint(d)
-      when 'q'
-        return
-      when 'c'
-        print_remaining_count(d)
-      when 'penultimate'
-        penultimate(d)
-      when 'twitter'
-        stats_hash = twitter
-        print_remaining_count(d)
-        if maybe_filter_twitter(d, stats_hash)
-          maybe_absence_of_evidence(d, stats_hash)
-        end
-      when 'dad'
-        print_a_dad_joke
-      when 'test'
-        calculate_constraint_cardinality
-      when 'help'
-        puts ''
-        puts '.----------------------------------------------.'
-        puts '|                                              |'
-        puts '|                     Usage                    |'
-        puts '|                                              |'
-        puts '\----------------------------------------------/'
-        puts 'c               : count'
-        puts 'p               : print'
-        puts 'pa              : print all'
-        puts 'h               : hint'
-        puts 'q               : quit'
-        puts 'dad             : print a dad joke'
-        puts 'penultimate     : run penultimate-style analysis'
-        puts 'twitter         : run Twitter analysis'
-        puts ''
-      when ''
-      else
-        if choice.length == 5
-          print 'Enter the response (!?-): ==> '
-          response = gets.chomp
-          filter(d, choice, response)
-          break
-        else
-          puts "unrecognized input (#{choice})"
-        end
-      end
-    end
-  end
-end
-
-def print_remaining_count(d)
-  puts "There #{d.length==1?'is':'are'} #{d.size} matching word#{d.length==1?'':'s'} remaining."
-end
-
-def maybe_absence_of_evidence(d, stats_hash)
-  print 'Would you like to make deductions based on absence of evidence? (y/n) ==> '
-  choice = gets.chomp
-  case choice
-  when 'y'
-    penultimate_twitter_absence_of_evidence(d, stats_hash)
-  when 'n'
-  else
-    puts "unrecognized input (#{choice}), skipping"
-  end
-end
-
-def maybe_filter_twitter(d, stats_hash)
-  print 'Would you like to proceed with filtering? (y/n) ==> '
-  choice = gets.chomp
-  case choice
-  when 'y'
-    print "There are #{d.size} words remaining. Would you like to see filtering output? (y/n) ==> "
-    choice2 = gets.chomp
-    verbose = choice2 == 'y'
-    stats_hash.each do |key, _value|
-      key_array = key.split('.', 2)
-      penultimate_twitter(d, key_array[0], key_array[1], verbose)
-      print_remaining_count(d) # moving this here, to show filtering as it goes
-    end
-  when 'n'
-  else
-    puts "unrecognized input (#{choice}), skipping"
-  end
-  # caller needs to know whether filtering was done
-  choice == 'y'
-end
+INSTRUMENTATION_ONLY = true
 
 def close(w1, w2)
   diff = 0
   (0...5).each {|i| diff += (w1[i]==w2[i] ? 0 : 1)}
   diff == 1
+end
+
+module UI
+  LEFT_PADDING_DEFAULT = 20
+
+  def UI::padded_puts(s)
+    puts "#{' ' * LEFT_PADDING_DEFAULT}#{s}"
+  end
+
+  def UI::padded_print(s)
+    print "#{' ' * LEFT_PADDING_DEFAULT}#{s}"
+  end
+
+  # What should the UI guidelines be?
+  # - prompt_for_input should itself have guidelines... should prompts be grouped?
+  # - should the "Enter a guess" line be changed to "Enter a guess (h for help)"?
+  # What about having a UI.puts and UI.print, along with UI.debug and UI.prompt_for_input
+  # - Do I really need UI.prompt_for_input?
+  # - How about this: regular print/puts have a fixed left-padding, but prompt-for-input is right-aligned
+  def self.play(d)
+    puts ''
+    UI::padded_puts '----------------------------------------------------------'
+    UI::padded_puts '|                                                        |'
+    UI::padded_puts '|                   Welcome to Wordle!                   |'
+    UI::padded_puts '|                                                        |'
+    UI::padded_puts '----------------------------------------------------------'
+    for guess in 1..6
+      UI::padded_puts "You are on guess #{guess}/6. #{remaining_count_string(d)}"
+      check_for_problematic_patterns(d) if guess >= 3
+      while true do
+        choice = UI.prompt_for_input("Enter a guess, or 'help':")
+        case choice
+        when 'c'
+          UI.print_remaining_count(d)
+        when 'p', 'pa'
+          UI.print_remaining_words(d, choice == 'p' ? 30 : nil)
+        when 'hint'
+          hint(d)
+        when 'q'
+          puts ''
+          return
+        when 'penultimate'
+          penultimate(d)
+        when 'twitter'
+          stats_hash = twitter
+          UI.print_remaining_count(d)
+          if UI.maybe_filter_twitter(d, stats_hash)
+            UI.maybe_absence_of_evidence(d, stats_hash)
+          end
+        when 'dad'
+          print_a_dad_joke
+        when 'test'
+          calculate_constraint_cardinality
+        when 'help', 'h'
+          UI.print_usage
+        when '' # pressing enter shouldn't cause "unrecognized input"
+        else
+          if choice.length == 5
+            response = UI.prompt_for_input('Enter the response (!?-): ==> ', false)
+            # print 'Enter the response (!?-): ==> '
+            # response = gets.chomp
+            filter(d, choice, response)
+            break
+          else
+            puts "unrecognized input (#{choice})"
+          end
+        end
+      end
+    end
+  end
+
+  def self.maybe_absence_of_evidence(d, stats_hash)
+    print 'Would you like to make deductions based on absence of evidence? (y/n) ==> '
+    choice = gets.chomp
+    case choice
+    when 'y'
+      penultimate_twitter_absence_of_evidence(d, stats_hash)
+    when 'n'
+    else
+      puts "unrecognized input (#{choice}), skipping"
+    end
+  end
+
+  # INPUT_RIGHT_ALIGNMENT = LEFT_PADDING_DEFAULT + 30
+
+  # def self.prompt_for_input_old(input_string)
+  #   padding = ' ' * [0, INPUT_RIGHT_ALIGNMENT - input_string.length].max
+  #   # Print.just_print "#{padding}#{input_string}"
+  #   print "#{padding}#{input_string}"
+  #   return gets.chomp
+  # end
+
+  def self.prompt_for_input(input_string, prompt_on_new_line = true)
+    if prompt_on_new_line
+      padded_puts input_string
+      padded_print '==> '
+    else
+      padded_print input_string
+    end
+    return gets.chomp
+  end
+
+  # def self.padding(s)
+  #   max_padding = 50
+  #   ' ' * [0, max_padding - s.length].max
+  # end
+
+  def self.maybe_filter_twitter(d, stats_hash)
+    choice = self.prompt_for_input 'Would you like to proceed with filtering? (y/n) ==> '
+    # print 'Would you like to proceed with filtering? (y/n) ==> '
+    # choice = gets.chomp
+    case choice
+    when 'y'
+      print "There are #{d.size} words remaining. Would you like to see filtering output? (y/n) ==> "
+      choice2 = gets.chomp
+      verbose = choice2 == 'y'
+      stats_hash.each do |key, _value|
+        key_array = key.split('.', 2)
+        penultimate_twitter(d, key_array[0], key_array[1], verbose) if !INSTRUMENTATION_ONLY
+        UI.print_remaining_count(d) # moving this here, to show filtering as it goes
+      end
+    when 'n'
+    else
+      puts "unrecognized input (#{choice}), skipping"
+    end
+    # caller needs to know whether filtering was done
+    choice == 'y'
+  end
+
+  def self.print_remaining_words(d, max_print = nil)
+    # route
+    # pride (Alert! Wordle 30 answer!)
+    # prize
+    d.each_with_index do |(key, _value), index|
+      break if max_print && index >= max_print
+      if PreviousWordleSolutions.check_word(key)
+        UI::padded_puts "#{key} (Alert! Wordle #{PreviousWordleSolutions.check_word(key)} answer!)"
+      else
+        UI::padded_puts key
+      end
+    end
+    UI::padded_puts "skipping #{d.size-max_print} additional results..." if max_print && d.size > max_print
+  end
+
+  def self.print_usage
+    puts ''
+    puts '.----------------------------------------------.'
+    puts '|                                              |'
+    puts '|                     Usage                    |'
+    puts '|                                              |'
+    puts '\----------------------------------------------/'
+    puts 'c               : count'
+    puts 'p               : print'
+    puts 'pa              : print all'
+    puts 'hint            : hint'
+    puts 'q               : quit'
+    puts ''
+    puts 'penultimate     : run penultimate-style analysis'
+    puts 'twitter         : run Twitter analysis'
+    puts ''
+    puts 'dad             : print a dad joke'
+    puts 'help, h         : print this message'
+    puts ''
+  end
+
+  def self.print_remaining_count(d)
+    UI::padded_puts remaining_count_string(d)
+  end
+
+  def self.remaining_count_string(d)
+    "There #{d.length==1?'is':'are'} #{d.size} matching word#{d.length==1?'':'s'} remaining."
+  end
 end
 
 def check_for_problematic_patterns(d)
@@ -154,6 +213,7 @@ def check_for_problematic_patterns(d)
   # 6 words with _atch, plus tacky
   pp_dict = {}
   d.each do |key1, value1|
+    break if INSTRUMENTATION_ONLY
     found = false
     pp_dict.each do |key2, value2|
       if close(key1, key2)
@@ -163,7 +223,8 @@ def check_for_problematic_patterns(d)
     end
     pp_dict[key1] = 1 if !found
   end
-  puts 'Checking for problematic patterns...'
+  pp_dict = {'hilly': 3} if INSTRUMENTATION_ONLY
+  UI::padded_puts 'Checking for problematic patterns...'
   pp_dict.each do |key, value|
     puts "\nPROBLEMATIC PATTERN ALERT: found \"#{key}\" with #{value} matching words (print for details)\n\n" if value > 2
   end
@@ -171,6 +232,7 @@ def check_for_problematic_patterns(d)
 end
 
 def calculate_constraint_cardinality
+  puts 'UNDER CONSTRUCTION'
   # {
   #   'khaki' :
   #   'gruel'
@@ -634,7 +696,7 @@ def penultimate(d)
 end
 
 def hint(d)
-  puts "remaining: #{d.size}"
+  UI::padded_puts "remaining: #{d.size}"
 
   # letter_usage stores, for each letter, the number of remaining words with that letter
   letter_usage = {}
@@ -648,15 +710,15 @@ def hint(d)
     next_largest = letter_usage.max_by{|k,v| (v==d.size||top_n_dict.has_key?(k)) ? 0 : v}
     top_n_dict[next_largest[0]]=next_largest[1]
   end
-  puts top_n_dict
+  UI::padded_puts top_n_dict
 
   # for all remaining words, they are a great guess if all of the "top N" characters are contained
   # and they are a "good" guess if all but one of the top N characters occur
   d.each do |word, line_num|
     count = 0
     top_n_dict.each {|c, num_occurrences| count = count + 1 if word[c]}
-    puts "#{word} is a GREAT guess" if count == top_n
-    puts "#{word} is a good guess" if count == (top_n - 1)
+    UI::padded_puts "#{word} is a GREAT guess" if count == top_n
+    UI::padded_puts "#{word} is a good guess" if count == (top_n - 1)
   end
 end
 
@@ -667,7 +729,7 @@ def num_green_or_yellow(word, response, letter)
 end
 
 def filter(d, word, response)
-  puts "d.size: #{d.size()}"
+  # puts "d.size: #{d.size()}"
   for i in 0...5
     letter = word[i]
     case response[i]
@@ -720,4 +782,4 @@ end
 
 run_tests
 d = populate_all_words
-play(d)
+UI.play(d)

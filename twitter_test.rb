@@ -71,6 +71,7 @@ end
 #      Wordle 426 (SHRUG): Enema/sugar eliminated b/c previous solutions
 #      Wordle 427 (TREAT)
 #      Wordle 428 (WASTE): Sonic eliminated b/c previous solution
+#      Wordle 429 (MERIT)
 #
 #############################################################################
 
@@ -442,6 +443,7 @@ def twitter
   stats = stats.sort_by {|key, value| [key.split('.', 2)[0] == '4g' ? 0 : 1, key]}.to_h
 
   # print the report
+  # TODO add average number of guesses, or a histogram, or something
   puts ''
   puts '/--------------------------------------\\'
   puts "|              Wordle #{wordle_number}              |"
