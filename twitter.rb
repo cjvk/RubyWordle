@@ -88,35 +88,41 @@ end
 #
 #############################################################################
 
-# standard (confirmed working)
-# e.g. https://twitter.com/mobanwar/status/1552908148696129536
-GREEN = "\u{1F7E9}"
-YELLOW = "\u{1F7E8}"
-WHITE = "\u{2B1C}"
-NORMAL_MODE_PATTERN = /[#{GREEN}#{YELLOW}#{WHITE}][#{GREEN}#{YELLOW}#{WHITE}][#{GREEN}#{YELLOW}#{WHITE}][#{GREEN}#{YELLOW}#{WHITE}][#{GREEN}#{YELLOW}#{WHITE}]/
+module WordleTweetColors
+  # Normal mode
+  # e.g. https://twitter.com/mobanwar/status/1552908148696129536
+  GREEN = "\u{1F7E9}"
+  YELLOW = "\u{1F7E8}"
+  WHITE = "\u{2B1C}"
+  NORMAL_MODE_PATTERN = /[#{GREEN}#{YELLOW}#{WHITE}][#{GREEN}#{YELLOW}#{WHITE}][#{GREEN}#{YELLOW}#{WHITE}][#{GREEN}#{YELLOW}#{WHITE}][#{GREEN}#{YELLOW}#{WHITE}]/
 
-# dark mode?
-# https://twitter.com/SLW551505/status/1552871344680886278
-# green and yellow as before, but black instead of white
-BLACK = "\u{2B1B}"
-DARK_MODE_PATTERN = /[#{GREEN}#{YELLOW}#{BLACK}][#{GREEN}#{YELLOW}#{BLACK}][#{GREEN}#{YELLOW}#{BLACK}][#{GREEN}#{YELLOW}#{BLACK}][#{GREEN}#{YELLOW}#{BLACK}]/
+  # Dark mode
+  # https://twitter.com/SLW551505/status/1552871344680886278
+  # green and yellow as before, but black instead of white
+  BLACK = "\u{2B1B}"
+  DARK_MODE_PATTERN = /[#{GREEN}#{YELLOW}#{BLACK}][#{GREEN}#{YELLOW}#{BLACK}][#{GREEN}#{YELLOW}#{BLACK}][#{GREEN}#{YELLOW}#{BLACK}][#{GREEN}#{YELLOW}#{BLACK}]/
 
-# name: ???
-# https://twitter.com/DeborahDtfpress/status/1552860375602778112
-# white   => white
-# yellow  => blue
-# green   => orange
-BLUE = "\u{1F7E6}"
-ORANGE = "\u{1F7E7}"
-DEBORAH_MODE_PATTERN = /[#{WHITE}#{BLUE}#{ORANGE}][#{WHITE}#{BLUE}#{ORANGE}][#{WHITE}#{BLUE}#{ORANGE}][#{WHITE}#{BLUE}#{ORANGE}][#{WHITE}#{BLUE}#{ORANGE}]/
+  # name: Decided on "Deborah mode"
+  # https://twitter.com/DeborahDtfpress/status/1552860375602778112
+  # white   => white
+  # yellow  => blue
+  # green   => orange
+  BLUE = "\u{1F7E6}"
+  ORANGE = "\u{1F7E7}"
+  DEBORAH_MODE_PATTERN = /[#{WHITE}#{BLUE}#{ORANGE}][#{WHITE}#{BLUE}#{ORANGE}][#{WHITE}#{BLUE}#{ORANGE}][#{WHITE}#{BLUE}#{ORANGE}][#{WHITE}#{BLUE}#{ORANGE}]/
 
-# "Deborah-dark" mode
-# https://twitter.com/sandraschulze/status/1552673827766689792
-DEBORAH_DARK_MODE_PATTERN = /[#{BLACK}#{BLUE}#{ORANGE}][#{BLACK}#{BLUE}#{ORANGE}][#{BLACK}#{BLUE}#{ORANGE}][#{BLACK}#{BLUE}#{ORANGE}][#{BLACK}#{BLUE}#{ORANGE}]/
+  # "Deborah-dark" mode
+  # https://twitter.com/sandraschulze/status/1552673827766689792
+  # white   => black
+  # yellow  => blue
+  # green   => orange
+  DEBORAH_DARK_MODE_PATTERN = /[#{BLACK}#{BLUE}#{ORANGE}][#{BLACK}#{BLUE}#{ORANGE}][#{BLACK}#{BLUE}#{ORANGE}][#{BLACK}#{BLUE}#{ORANGE}][#{BLACK}#{BLUE}#{ORANGE}]/
 
-ANY_WORDLE_SQUARE = /[#{GREEN}#{YELLOW}#{WHITE}#{BLACK}#{BLUE}#{ORANGE}]/
-ANY_WORDLE_SQUARE_PLUS_NEWLINE = /[#{GREEN}#{YELLOW}#{WHITE}#{BLACK}#{BLUE}#{ORANGE}\n]/
-NON_WORDLE_CHARACTERS = /[^#{GREEN}#{YELLOW}#{WHITE}#{BLACK}#{BLUE}#{ORANGE}\n]/
+  # Other useful patterns
+  ANY_WORDLE_SQUARE = /[#{GREEN}#{YELLOW}#{WHITE}#{BLACK}#{BLUE}#{ORANGE}]/
+  ANY_WORDLE_SQUARE_PLUS_NEWLINE = /[#{GREEN}#{YELLOW}#{WHITE}#{BLACK}#{BLUE}#{ORANGE}\n]/
+  NON_WORDLE_CHARACTERS = /[^#{GREEN}#{YELLOW}#{WHITE}#{BLACK}#{BLUE}#{ORANGE}\n]/
+end
 
 def print_a_dad_joke
   url = 'https://icanhazdadjoke.com/'
@@ -348,7 +354,7 @@ def twitter
           # typically 2 newline characters
           wordle_squares_begin = wordle_begin_index + wordle_begin_pattern_length + 2
           Debug.maybe_log "wordle_squares_begin = #{wordle_squares_begin}"
-          first_non_wordle_character = text.index(NON_WORDLE_CHARACTERS, wordle_squares_begin)
+          first_non_wordle_character = text.index(WordleTweetColors::NON_WORDLE_CHARACTERS, wordle_squares_begin)
           Debug.maybe_log "wordle_begin_index=#{wordle_begin_index}"
           Debug.maybe_log "first_non_wordle_character=#{first_non_wordle_character}"
           if first_non_wordle_character != nil
@@ -356,19 +362,7 @@ def twitter
           end
 
           # determine mode
-          if text.include? "#{ORANGE}"
-            if text.include? "#{BLACK}"
-              mode = 'Deborah-dark'
-            else
-              mode = 'Deborah'
-            end
-          elsif text.include? "#{BLACK}"
-            mode = 'Dark'
-          elsif text.include? "#{WHITE}"
-            mode = 'Normal'
-          else
-            mode = 'Unknown'
-          end
+          mode = WordleModes.determine_mode(text)
 
           # if mode is unknown, skip
           if mode == 'Unknown'
@@ -379,24 +373,15 @@ def twitter
           # construct the normalized guess_array
           current_index = 0
           guess_array = []
+          pattern = WordleModes.mode_to_pattern(mode)
           for _ in 0...num_guesses
-            case mode
-            when 'Normal'
-              pattern = NORMAL_MODE_PATTERN
-            when 'Dark'
-              pattern = DARK_MODE_PATTERN
-            when 'Deborah'
-              pattern = DEBORAH_MODE_PATTERN
-            when 'Deborah-dark'
-              pattern = DEBORAH_DARK_MODE_PATTERN
-            end
             matching_index = text.index(pattern, current_index)
             if matching_index == nil
               next
             end
             guess_string = ''
             for j in 0...5
-              guess_string += unicode_to_normalized_string(text[matching_index+j], mode)
+              guess_string += WordleModes.unicode_to_normalized_string(text[matching_index+j], mode)
             end
             current_index = matching_index + 1
             guess_array.append(guess_string)
@@ -501,45 +486,92 @@ def twitter
   stats
 end
 
-def unicode_to_normalized_string(unicode_string, mode)
-  case mode
-  when 'Normal'
-    case unicode_string
-    when WHITE
-      return 'w'
-    when YELLOW
-      return 'y'
-    when GREEN
-      return 'g'
+module WordleModes
+  NORMAL_MODE = 0
+  DARK_MODE = 1
+  DEBORAH_MODE = 2
+  DEBORAH_DARK_MODE = 3
+  UNKNOWN_MODE = 4
+
+  def self.determine_mode(text)
+    # This would typically be called if text is "probably a wordle post"
+    if text.include? "#{WordleTweetColors::ORANGE}" # TODO this should also test for blue
+      if text.include? "#{WordleTweetColors::BLACK}"
+        mode = 'Deborah-dark'
+      else
+        mode = 'Deborah'
+      end
+    elsif text.include? "#{WordleTweetColors::BLACK}"
+      mode = 'Dark'
+    elsif text.include? "#{WordleTweetColors::WHITE}"
+      mode = 'Normal'
     else
-      return -1
+      mode = 'Unknown'
     end
-  when 'Dark'
-    case unicode_string
-    when BLACK
-      return 'w'
-    when YELLOW
-      return 'y'
-    when GREEN
-      return 'g'
-    end
-  when 'Deborah'
-    case unicode_string
-    when WHITE
-      return 'w'
-    when BLUE
-      return 'y'
-    when ORANGE
-      return 'g'
-    end
-  when 'Deborah-dark'
-    case unicode_string
-    when BLACK
-      return 'w'
-    when BLUE
-      return 'y'
-    when ORANGE
-      return 'g'
+    mode # TODO this should return modes not strings
+  end
+
+  MODES_TO_PATTERNS = [
+    ['Normal', WordleTweetColors::NORMAL_MODE_PATTERN],
+    ['Dark', WordleTweetColors::DARK_MODE_PATTERN],
+    ['Deborah', WordleTweetColors::DEBORAH_MODE_PATTERN],
+    ['Deborah-dark', WordleTweetColors::DEBORAH_DARK_MODE_PATTERN],
+  ].map { |x| [x[0], x[1]] }.to_h
+  def self.mode_to_pattern(mode)
+    MODES_TO_PATTERNS[mode]
+    # case mode
+    # when 'Normal'
+    #   pattern = NORMAL_MODE_PATTERN
+    # when 'Dark'
+    #   pattern = DARK_MODE_PATTERN
+    # when 'Deborah'
+    #   pattern = DEBORAH_MODE_PATTERN
+    # when 'Deborah-dark'
+    #   pattern = DEBORAH_DARK_MODE_PATTERN
+    # end
+  end
+
+  def self.unicode_to_normalized_string(unicode_string, mode)
+    # TODO refactor this to not be "code"
+    case mode
+    when 'Normal'
+      case unicode_string
+      when WordleTweetColors::WHITE
+        return 'w'
+      when WordleTweetColors::YELLOW
+        return 'y'
+      when WordleTweetColors::GREEN
+        return 'g'
+      else
+        return -1
+      end
+    when 'Dark'
+      case unicode_string
+      when WordleTweetColors::BLACK
+        return 'w'
+      when WordleTweetColors::YELLOW
+        return 'y'
+      when WordleTweetColors::GREEN
+        return 'g'
+      end
+    when 'Deborah'
+      case unicode_string
+      when WordleTweetColors::WHITE
+        return 'w'
+      when WordleTweetColors::BLUE
+        return 'y'
+      when WordleTweetColors::ORANGE
+        return 'g'
+      end
+    when 'Deborah-dark'
+      case unicode_string
+      when WordleTweetColors::BLACK
+        return 'w'
+      when WordleTweetColors::BLUE
+        return 'y'
+      when WordleTweetColors::ORANGE
+        return 'g'
+      end
     end
   end
 end
