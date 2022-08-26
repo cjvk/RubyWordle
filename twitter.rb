@@ -36,6 +36,8 @@ module Configuration
   ].to_h
 
   @@author_id_allowlist = [
+    # https://twitter.com/inosffirehs/status/1563208536179351552
+    ['140688018', 'inosffirehs'], # Wordle 433 (IRONY), 4g.5.2: irons/irone
     # https://twitter.com/FergalSweeney/status/1562375685892603904
     ['2742981849', 'FergalSweeney'], # Wordle 431 (NEEDY), 3g1y.yellow1.white4, deedy/deely
     # https://twitter.com/HughRoberts05/status/1562385965490081792
@@ -366,7 +368,7 @@ def twitter
           mode = WordleModes.determine_mode(text)
 
           # if mode is unknown, skip
-          if mode == 'Unknown'
+          if mode == WordleModes::UNKNOWN_MODE
             next
           end
           Debug.maybe_log_terse "mode = #{mode}"
@@ -488,94 +490,66 @@ def twitter
 end
 
 module WordleModes
-  NORMAL_MODE = 0
-  DARK_MODE = 1
-  DEBORAH_MODE = 2
-  DEBORAH_DARK_MODE = 3
-  UNKNOWN_MODE = 4
+  NORMAL_MODE = 'Normal'
+  DARK_MODE = 'Dark'
+  DEBORAH_MODE = 'Deborah'
+  DEBORAH_DARK_MODE = 'DeborahDark'
+  UNKNOWN_MODE = 'Unknown'
 
   def self.determine_mode(text)
     # This would typically be called if text is "probably a wordle post"
     if text.include?(WordleTweetColors::ORANGE) || text.include?(WordleTweetColors::BLUE)
       if text.include? WordleTweetColors::BLACK
-        mode = 'Deborah-dark'
+        mode = DEBORAH_DARK_MODE
       else
-        mode = 'Deborah'
+        mode = DEBORAH_MODE
       end
     elsif text.include?(WordleTweetColors::GREEN) || text.include?(WordleTweetColors::YELLOW)
       if text.include? WordleTweetColors::BLACK
-        mode = 'Dark'
+        mode = DARK_MODE
       else
-        mode = 'Normal'
+        mode = NORMAL_MODE
       end
     else
-      mode = 'Unknown'
+      mode = UNKNOWN_MODE
     end
-    mode # TODO this should return modes not strings
+    mode
   end
 
   MODES_TO_PATTERNS = [
-    ['Normal', WordleTweetColors::NORMAL_MODE_PATTERN],
-    ['Dark', WordleTweetColors::DARK_MODE_PATTERN],
-    ['Deborah', WordleTweetColors::DEBORAH_MODE_PATTERN],
-    ['Deborah-dark', WordleTweetColors::DEBORAH_DARK_MODE_PATTERN],
+    [NORMAL_MODE, WordleTweetColors::NORMAL_MODE_PATTERN],
+    [DARK_MODE, WordleTweetColors::DARK_MODE_PATTERN],
+    [DEBORAH_MODE, WordleTweetColors::DEBORAH_MODE_PATTERN],
+    [DEBORAH_DARK_MODE, WordleTweetColors::DEBORAH_DARK_MODE_PATTERN],
   ].to_h
   def self.mode_to_pattern(mode)
     MODES_TO_PATTERNS[mode]
-    # case mode
-    # when 'Normal'
-    #   pattern = NORMAL_MODE_PATTERN
-    # when 'Dark'
-    #   pattern = DARK_MODE_PATTERN
-    # when 'Deborah'
-    #   pattern = DEBORAH_MODE_PATTERN
-    # when 'Deborah-dark'
-    #   pattern = DEBORAH_DARK_MODE_PATTERN
-    # end
   end
 
+  UNICODES_TO_NORMALIZED_STRINGS = {
+    NORMAL_MODE => { # not sure why but '=>' works, but ':' does not
+      WordleTweetColors::WHITE => 'w',
+      WordleTweetColors::YELLOW => 'y',
+      WordleTweetColors::GREEN => 'g',
+    },
+    DARK_MODE => {
+      WordleTweetColors::BLACK => 'w',
+      WordleTweetColors::YELLOW => 'y',
+      WordleTweetColors::GREEN => 'g',
+    },
+    DEBORAH_MODE => {
+      WordleTweetColors::WHITE => 'w',
+      WordleTweetColors::BLUE => 'y',
+      WordleTweetColors::ORANGE => 'g',
+    },
+    DEBORAH_DARK_MODE => {
+      WordleTweetColors::BLACK => 'w',
+      WordleTweetColors::BLUE => 'y',
+      WordleTweetColors::ORANGE => 'g',
+    },
+  }
   def self.unicode_to_normalized_string(unicode_string, mode)
-    # TODO refactor this to not be "code"
-    case mode
-    when 'Normal'
-      case unicode_string
-      when WordleTweetColors::WHITE
-        return 'w'
-      when WordleTweetColors::YELLOW
-        return 'y'
-      when WordleTweetColors::GREEN
-        return 'g'
-      else
-        return -1
-      end
-    when 'Dark'
-      case unicode_string
-      when WordleTweetColors::BLACK
-        return 'w'
-      when WordleTweetColors::YELLOW
-        return 'y'
-      when WordleTweetColors::GREEN
-        return 'g'
-      end
-    when 'Deborah'
-      case unicode_string
-      when WordleTweetColors::WHITE
-        return 'w'
-      when WordleTweetColors::BLUE
-        return 'y'
-      when WordleTweetColors::ORANGE
-        return 'g'
-      end
-    when 'Deborah-dark'
-      case unicode_string
-      when WordleTweetColors::BLACK
-        return 'w'
-      when WordleTweetColors::BLUE
-        return 'y'
-      when WordleTweetColors::ORANGE
-        return 'g'
-      end
-    end
+    UNICODES_TO_NORMALIZED_STRINGS[mode][unicode_string]
   end
 end
 

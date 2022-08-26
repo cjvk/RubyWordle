@@ -784,8 +784,21 @@ def run_tests
   fail unless WordleModes.determine_mode("#{WordleTweetColors::YELLOW}#{WordleTweetColors::BLACK}") == 'Dark'
   fail unless WordleModes.determine_mode("#{WordleTweetColors::ORANGE}#{WordleTweetColors::WHITE}") == 'Deborah'
   fail unless WordleModes.determine_mode("#{WordleTweetColors::BLUE}#{WordleTweetColors::WHITE}") == 'Deborah'
-  fail unless WordleModes.determine_mode("#{WordleTweetColors::ORANGE}#{WordleTweetColors::BLACK}") == 'Deborah-dark'
-  fail unless WordleModes.determine_mode("#{WordleTweetColors::BLUE}#{WordleTweetColors::BLACK}") == 'Deborah-dark'
+  fail unless WordleModes.determine_mode("#{WordleTweetColors::ORANGE}#{WordleTweetColors::BLACK}") == 'DeborahDark'
+  fail unless WordleModes.determine_mode("#{WordleTweetColors::BLUE}#{WordleTweetColors::BLACK}") == 'DeborahDark'
+
+  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::WHITE, 'Normal') == 'w'
+  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::YELLOW, 'Normal') == 'y'
+  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::GREEN, 'Normal') == 'g'
+  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::BLACK, 'Dark') == 'w'
+  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::YELLOW, 'Dark') == 'y'
+  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::GREEN, 'Dark') == 'g'
+  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::WHITE, 'Deborah') == 'w'
+  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::BLUE, 'Deborah') == 'y'
+  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::ORANGE, 'Deborah') == 'g'
+  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::BLACK, 'DeborahDark') == 'w'
+  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::BLUE, 'DeborahDark') == 'y'
+  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::ORANGE, 'DeborahDark') == 'g'
 end
 
 run_tests
