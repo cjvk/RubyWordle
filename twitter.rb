@@ -32,7 +32,8 @@ module Configuration
     # https://twitter.com/Vat_of_useless/status/1554551230864560128
     # I asked, they said 'lobby', I replied "wouldn't that be YGWWG", then they blocked me (!)
     ['911760502333743104', '@Vat_of_useless'], # Wordle 409 (COYLY), YGWGG (impossible)
-  ].map { |x| [x[0], x[1]] }.to_h
+  # ].map { |x| [x[0], x[1]] }.to_h # looks like it's just mapping to itself
+  ].to_h
 
   @@author_id_allowlist = [
     # https://twitter.com/FergalSweeney/status/1562375685892603904
@@ -43,7 +44,7 @@ module Configuration
     ['468854236', 'michelle4mmkh4'], # Wordle 431 (NEEDY), 4g.1.3, many -EEDY options
     # https://twitter.com/JoshRey100/status/1562543624012713985
     ['2168411925', 'JoshRey100'], # Wordle 431 was NEEDY, 3g1y.yellow5.white4, (neeld)
-  ].map { |x| [x[0], x[1]] }.to_h
+  ].to_h
 
   # interesting Twitter handles and author IDs
   # habanerohiker / 45384296
@@ -272,7 +273,7 @@ def twitter
   num_failures = 0
 
   # get the auth token
-  file = File.open('twitter_auth_token')
+  file = File.open('auth_token_twitter')
   file_data = file.read
   file.close
   auth_token = file_data.chomp
@@ -518,7 +519,7 @@ module WordleModes
     ['Dark', WordleTweetColors::DARK_MODE_PATTERN],
     ['Deborah', WordleTweetColors::DEBORAH_MODE_PATTERN],
     ['Deborah-dark', WordleTweetColors::DEBORAH_DARK_MODE_PATTERN],
-  ].map { |x| [x[0], x[1]] }.to_h
+  ].to_h
   def self.mode_to_pattern(mode)
     MODES_TO_PATTERNS[mode]
     # case mode
