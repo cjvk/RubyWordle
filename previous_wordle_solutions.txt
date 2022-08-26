@@ -421,10 +421,10 @@ patty
 cling
 glean
 label
-hunky
-khaki # Wordle 421, 8/14/2022
+hunky # Wordle 420, 8/13/2022
+khaki
 poker
-gruel # Wordle 423, 8/16/2022
+gruel
 twice
 twang
 shrug
@@ -432,3 +432,6 @@ treat
 waste
 merit
 woven # Wordle 430, 8/23/2022
+needy
+clown
+irony

@@ -10,8 +10,10 @@ module Configuration
   @@results = 100
   @@pages = 5
 
+  @@instrumentation_only = false
+
   #         Uncomment this to query a specific wordle number
-  # @@wordle_number_override = 422
+  # @@wordle_number_override = 430
 
   #         Uncomment this to enable debug printing for a specific tweet_id
   # @@debug_print_tweet_id = '1559163924548915201'
@@ -19,35 +21,41 @@ module Configuration
   #         Uncomment to enable printing of ALL penultimate which match this pattern
   # @@print_this_penultimate_pattern = 'wgggw' # use normalized colors (g/y/w)
 
-  # author_id denylist: If this gets too large, use a hash instead?
+  # username/author ID conversion sites: https://tweeterid.com/, https://commentpicker.com/twitter-id.php
   @@author_id_denylist = [
-    ['1487026288682418180', '@6wordle'],
-    ['911760502333743104', '@Vat_of_useless'],
+    # https://twitter.com/chryo29t/status/1563129697382195200
+    ['140922619', 'chryo29t'], # Wordle 433 (IRONY), 4g.3.1: Only "irony" matches "ir.ny"
+    # https://twitter.com/6Wordle/status/1558951610197258241
+    # The account description says "I do wordle in 6/6 every day so even the 5/6 friends can be proud"
+    ['1487026288682418180', '@6wordle'], # Wordle 421 (KHAKI), YGGYY (impossible).
+    # https://twitter.com/Vat_of_useless/status/1554551230864560128
+    # I asked, they said 'lobby', I replied "wouldn't that be YGWWG", then they blocked me (!)
+    ['911760502333743104', '@Vat_of_useless'], # Wordle 409 (COYLY), YGWGG (impossible)
   ].map { |x| [x[0], x[1]] }.to_h
-  # @@author_id_denylist_hash = @@author_id_denylist.map { |x| [x, 0] }.to_h
+
+  @@author_id_allowlist = [
+    # https://twitter.com/FergalSweeney/status/1562375685892603904
+    ['2742981849', 'FergalSweeney'], # Wordle 431 (NEEDY), 3g1y.yellow1.white4, deedy/deely
+    # https://twitter.com/HughRoberts05/status/1562385965490081792
+    ['315843621', 'HughRoberts05'], # Wordle 431 (NEEDY), 4g.3.2, neddy/nerdy
+    # https://twitter.com/michelle4mmkh4/status/1562452851711811584
+    ['468854236', 'michelle4mmkh4'], # Wordle 431 (NEEDY), 4g.1.3, many -EEDY options
+    # https://twitter.com/JoshRey100/status/1562543624012713985
+    ['2168411925', 'JoshRey100'], # Wordle 431 was NEEDY, 3g1y.yellow5.white4, (neeld)
+  ].map { |x| [x[0], x[1]] }.to_h
 
   # interesting Twitter handles and author IDs
-  # https://tweeterid.com/
-  # https://commentpicker.com/twitter-id.php
-  #
   # habanerohiker / 45384296
   #         appears to have authored a bot (https://twitter.com/habanerohiker/status/1559163924548915201)
-  # 6Wordle / 1487026288682418180
-  #         Wordle 421 was KHAKI, and his penultimate was YGGYY (!) which is impossible
-  #         https://twitter.com/6Wordle/status/1558951610197258241
-  #         The account description says "I do wordle in 6/6 every day so even the 5/6 friends can be proud"
-  # Vat_of_useless / 911760502333743104
-  #         https://twitter.com/Vat_of_useless/status/1554551230864560128
-  #         The answer was "coyly", and the penultimate guess was ygwgg.
-  #         I asked what their second-to-last guess was, they said "lobby".
-  #         I followed up with "wouldn't that be ygwwg", and now I'm blocked (!)
-  #         Follow-up: Appears to be no way for "yo?ly" to be a word
 
   def self.results
     @@results
   end
   def self.pages
     @@pages
+  end
+  def self.instrumentation_only
+    @@instrumentation_only
   end
   def self.wordle_number_override
     defined?(@@wordle_number_override) ? @@wordle_number_override : nil
@@ -61,6 +69,9 @@ module Configuration
   def self.author_id_denylist
     @@author_id_denylist
   end
+  def self.author_id_allowlist
+    @@author_id_allowlist
+  end
 end
 
 #############################################################################
@@ -72,6 +83,7 @@ end
 #      Wordle 427 (TREAT)
 #      Wordle 428 (WASTE): Sonic eliminated b/c previous solution
 #      Wordle 429 (MERIT)
+#      Wordle 433 (IRONY)
 #
 #############################################################################
 
@@ -248,7 +260,7 @@ def twitter
   wordle_number = difference_in_days.to_s
   if Configuration.wordle_number_override != nil
     wordle_number = Configuration.wordle_number_override
-    puts "using user-specified wordle number: #{wordle_number}"
+    Debug.log_terse "using user-specified wordle number: #{wordle_number}"
   end
   answers = []
   total_twitter_posts = 0
@@ -291,8 +303,8 @@ def twitter
         text = result['text']
         id = result['id']
         author_id = result['author_id']
-        debug_print_it = Configuration.debug_print_tweet_id != nil && Configuration.debug_print_tweet_id == id
-        puts "result=#{result}" if debug_print_it
+        Debug.set_maybe (Configuration.debug_print_tweet_id != nil && Configuration.debug_print_tweet_id == id)
+        Debug.maybe_log "result=#{result}"
         total_twitter_posts += 1
         # skip those we've already seen
         if unique_twitter_posts.key?(id)
@@ -306,7 +318,7 @@ def twitter
           next
         end
         if is_probably_a_wordle_post?(text, wordle_number)
-          puts 'is probably a wordle post!' if debug_print_it
+          Debug.maybe_log 'is probably a wordle post!'
 
           # determine how many guesses they took
           # because text is "probably a wordle post", it should match
@@ -338,10 +350,10 @@ def twitter
           wordle_begin_pattern_length = wordle_number.to_i < 1000 ? 14 : 15
           # typically 2 newline characters
           wordle_squares_begin = wordle_begin_index + wordle_begin_pattern_length + 2
-          puts "wordle_squares_begin = #{wordle_squares_begin}" if debug_print_it
+          Debug.maybe_log "wordle_squares_begin = #{wordle_squares_begin}"
           first_non_wordle_character = text.index(NON_WORDLE_CHARACTERS, wordle_squares_begin)
-          puts "wordle_begin_index=#{wordle_begin_index}" if debug_print_it
-          puts "first_non_wordle_character=#{first_non_wordle_character}" if debug_print_it
+          Debug.maybe_log "wordle_begin_index=#{wordle_begin_index}"
+          Debug.maybe_log "first_non_wordle_character=#{first_non_wordle_character}"
           if first_non_wordle_character != nil
             text = text[wordle_begin_index..first_non_wordle_character - 1]
           end
@@ -365,7 +377,7 @@ def twitter
           if mode == 'Unknown'
             next
           end
-          puts "mode = #{mode}" if debug_print_it
+          Debug.maybe_log_terse "mode = #{mode}"
 
           # construct the normalized guess_array
           current_index = 0
@@ -396,71 +408,97 @@ def twitter
 
           if guess_array.length() != num_guesses
             generic_tweet_url = "https://twitter.com/anyuser/status/#{id}"
-            puts "Alert: guess array not correct length! (#{generic_tweet_url})"
+            Alert.alert "guess array not correct length! (#{generic_tweet_url})"
             next
           end
 
           if guess_array[guess_array.length()-2] == Configuration.print_this_penultimate_pattern
-            puts '-------- TEXT: BEGIN     --------'
-            puts text
-            puts '-------- TEXT: END       --------'
-            puts '-------- RESULT: BEGIN   --------'
-            puts result
-            puts '-------- RESULT: END     --------'
+            Debug.log '-------- TEXT: BEGIN     --------'
+            Debug.log text
+            Debug.log '-------- TEXT: END       --------'
+            Debug.log '-------- RESULT: BEGIN   --------'
+            Debug.log result
+            Debug.log '-------- RESULT: END     --------'
           end
 
           answers.append(Answer.new(guess_array, id, author_id))
 
         end
       end
+      Debug.set_maybe_false
     end
   end
 
   # post-processing
   stats = {}
   num_interesting = 0
+  total_guesses_histogram = [0, 0, 0, 0, 0, 0]
   for answer in answers
     if answer.is_interesting(stats)
       num_interesting += 1
     end
+    total_guesses_histogram[answer.num_guesses - 1] = total_guesses_histogram[answer.num_guesses - 1] + 1
   end
+
+  # calculate mean and mode
+  total_guesses = 0
+  mode_index = -1
+  mode_value = -1
+  total_guesses_histogram.each_with_index do |val, i|
+    total_guesses += (i+1) * val
+    if val > mode_value
+      mode_value = val
+      mode_index = i
+    end
+  end
+  Debug.log_verbose "average number of guesses: #{'%.2f' % (total_guesses/(answers.length.to_f+num_failures))}"
+  Debug.log_verbose "the most common number of guesses was #{mode_index+1} (#{mode_value} times)"
 
   # remove entries if they have exactly one occurrence (possible goofballs)
   # stats.delete_if { |key, value| value == 1 }
   stats.delete_if do |key, value|
+    author_allowlisted = false
     if value == 1
       for answer in answers
         if answer.matches_key(key)
-          puts "Alert: deleting key #{key} with value 1! (#{answer.generic_tweet_url}) (author_id=#{answer.author_id})"
+          if Configuration.author_id_allowlist.include?(answer.author_id)
+            author_allowlisted = true
+            Debug.log "keeping key #{key} with value 1. (#{answer.generic_tweet_url}) (author_id=#{answer.author_id})"
+          else
+            Alert.alert "deleting key #{key} with value 1! (#{answer.generic_tweet_url}) (author_id=#{answer.author_id})"
+          end
           break
         end
       end
     end
-    value == 1
+    value == 1 && !author_allowlisted
   end
 
   # sort stats, '4g' to the top
   stats = stats.sort_by {|key, value| [key.split('.', 2)[0] == '4g' ? 0 : 1, key]}.to_h
 
   # print the report
-  # TODO add average number of guesses, or a histogram, or something
+  incorrect_percentage = num_failures*100/(answers.length().to_f+num_failures)
+  avg_number_of_guesses = total_guesses/(answers.length.to_f+num_failures)
   puts ''
-  puts '/--------------------------------------\\'
-  puts "|              Wordle #{wordle_number}              |"
-  puts '|            Twitter report            |'
-  puts '\--------------------------------------/'
-  puts "#{total_twitter_posts} Twitter posts seen"
-  puts "#{unique_twitter_posts.size} Unique Twitter posts seen"
-  puts "#{skipped_twitter_posts} skipped"
-  puts "#{answers.length()+num_failures} total answers"
-  puts "#{answers.length} correct"
-  puts "#{num_failures} incorrect (#{'%.2f' % (num_failures*100/(answers.length().to_f+num_failures))}% failure)"
-  puts "#{num_interesting}/#{answers.length()} are interesting"
+  UI.padded_puts '/--------------------------------------\\'
+  UI.padded_puts "|              Wordle #{wordle_number}              |"
+  UI.padded_puts '|            Twitter report            |'
+  UI.padded_puts '\--------------------------------------/'
+  UI.padded_puts "#{total_twitter_posts} Twitter posts seen"
+  UI.padded_puts "#{unique_twitter_posts.size} Unique Twitter posts seen"
+  UI.padded_puts "#{skipped_twitter_posts} skipped"
+  UI.padded_puts "#{answers.length()+num_failures} total answers"
+  UI.padded_puts "#{answers.length} correct answers"
+  UI.padded_puts "#{num_failures} incorrect (#{'%.2f' % incorrect_percentage}% failure)"
+  UI.padded_puts "#{'%.2f' % avg_number_of_guesses}: Average number of guesses"
+  UI.padded_puts "#{mode_index+1}: Most common number of guesses (#{mode_value} times)"
+  UI.padded_puts "#{num_interesting}/#{answers.length()} are interesting"
   puts ''
 
-  stats.each {|key, value| puts "#{key} = #{value}"}
+  stats.each {|key, value| UI.padded_puts "#{key} = #{value}"}
   puts ''
-  puts '----------------------------------------'
+  UI.padded_puts '----------------------------------------'
   puts ''
 
   stats
