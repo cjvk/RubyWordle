@@ -777,6 +777,15 @@ def run_tests
 
   fail unless all_4g_matches('hilly') == [7, 2, 1, 0, 2]
   fail unless all_4g_matches('hills') == [18, 3, 0, 2, 2]
+
+  fail unless WordleModes.determine_mode("#{WordleTweetColors::GREEN}#{WordleTweetColors::WHITE}") == 'Normal'
+  fail unless WordleModes.determine_mode("#{WordleTweetColors::YELLOW}#{WordleTweetColors::WHITE}") == 'Normal'
+  fail unless WordleModes.determine_mode("#{WordleTweetColors::GREEN}#{WordleTweetColors::BLACK}") == 'Dark'
+  fail unless WordleModes.determine_mode("#{WordleTweetColors::YELLOW}#{WordleTweetColors::BLACK}") == 'Dark'
+  fail unless WordleModes.determine_mode("#{WordleTweetColors::ORANGE}#{WordleTweetColors::WHITE}") == 'Deborah'
+  fail unless WordleModes.determine_mode("#{WordleTweetColors::BLUE}#{WordleTweetColors::WHITE}") == 'Deborah'
+  fail unless WordleModes.determine_mode("#{WordleTweetColors::ORANGE}#{WordleTweetColors::BLACK}") == 'Deborah-dark'
+  fail unless WordleModes.determine_mode("#{WordleTweetColors::BLUE}#{WordleTweetColors::BLACK}") == 'Deborah-dark'
 end
 
 run_tests

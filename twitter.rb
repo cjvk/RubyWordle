@@ -495,16 +495,18 @@ module WordleModes
 
   def self.determine_mode(text)
     # This would typically be called if text is "probably a wordle post"
-    if text.include? "#{WordleTweetColors::ORANGE}" # TODO this should also test for blue
-      if text.include? "#{WordleTweetColors::BLACK}"
+    if text.include?(WordleTweetColors::ORANGE) || text.include?(WordleTweetColors::BLUE)
+      if text.include? WordleTweetColors::BLACK
         mode = 'Deborah-dark'
       else
         mode = 'Deborah'
       end
-    elsif text.include? "#{WordleTweetColors::BLACK}"
-      mode = 'Dark'
-    elsif text.include? "#{WordleTweetColors::WHITE}"
-      mode = 'Normal'
+    elsif text.include?(WordleTweetColors::GREEN) || text.include?(WordleTweetColors::YELLOW)
+      if text.include? WordleTweetColors::BLACK
+        mode = 'Dark'
+      else
+        mode = 'Normal'
+      end
     else
       mode = 'Unknown'
     end
