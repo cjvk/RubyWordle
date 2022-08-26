@@ -10,6 +10,7 @@ module Configuration
   @@results = 100
   @@pages = 5
 
+  # Set to true to skip "long" functions
   @@instrumentation_only = false
 
   #         Uncomment this to query a specific wordle number
@@ -125,7 +126,6 @@ def print_a_dad_joke
 end
 
 module InterestingWordleResponses
-  # TODO Is it possible to nest modules? Can this help with separating logic from Answer.is_interesting()?
   WORDLE_4G   = 1
   WORDLE_3G1Y = 2
   WORDLE_3G2Y = 3
@@ -140,7 +140,6 @@ module InterestingWordleResponses
     num_g = num_with_color('g', wordle_response)
     num_y = num_with_color('y', wordle_response)
     num_w = num_with_color('w', wordle_response)
-    # puts "wordle_response=#{wordle_response}, g/y/w=#{num_g}/#{num_y}/#{num_w}"
     return InterestingWordleResponses::WORDLE_4G if num_g == 4 && num_w == 1
     return InterestingWordleResponses::WORDLE_3G1Y if num_g == 3 && num_y == 1
     return InterestingWordleResponses::WORDLE_3G2Y if num_g == 3 && num_y == 2
@@ -227,8 +226,6 @@ class Answer
       count = 1
       (num_guesses-2).downto(1) { |i| count+= 1 if get_guess(i) == penultimate }
       _name, _subname, @key = InterestingWordleResponses::calculate_name_subname_key(penultimate, InterestingWordleResponses::WORDLE_4G, count)
-      # name = '4g'
-      # subname = "#{penultimate.index('w')+1}.#{count}"
       create_or_increment("#{@key}", stats)
       @is_interesting = true
       return true

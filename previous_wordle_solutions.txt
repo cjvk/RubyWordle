@@ -411,7 +411,7 @@ bluff
 cramp
 quart
 coyly
-youth
+youth # Wordle 410, 8/3/2022
 rhyme
 buggy
 alien
