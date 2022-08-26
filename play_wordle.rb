@@ -1,6 +1,6 @@
 #!/usr/bin/ruby -w
 
-require_relative 'twitter_test'
+require_relative 'twitter'
 
 # copied from https://github.com/charlesreid1/five-letter-words
 DICTIONARY_FILE_LARGE = 'sgb-words.txt'
