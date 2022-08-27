@@ -149,6 +149,14 @@ module UI
           print_a_dad_joke
         when 'test'
           calculate_constraint_cardinality
+        when 'test2'
+          sample_word = 'saner'
+          foo = ALPHABET.map do |c|
+            sample_word_copy = sample_word.dup
+            sample_word_copy[2] = c
+            sample_word_copy
+          end
+          puts foo
         when 'help', 'h'
           UI.print_usage
         when '' # pressing enter shouldn't cause "unrecognized input"
@@ -508,17 +516,18 @@ def penultimate_twitter(d, pattern, subpattern)
   end
 end
 
+ALPHABET = [
+  'a','b','c','d','e','f','g','h','i','j','k','l','m',
+  'n','o','p','q','r','s','t','u','v','w','x','y','z'
+]
+
 def all_4g_matches(word)
   return_array = [0, 0, 0, 0, 0]
-  alphabet = [
-    'a','b','c','d','e','f','g','h','i','j','k','l','m',
-    'n','o','p','q','r','s','t','u','v','w','x','y','z'
-  ]
   all_words = populate_valid_wordle_words
   (0...5).each do |i|
     ith_sum = 0
     temp_word = word.dup
-    alphabet.each do |letter|
+    ALPHABET.each do |letter|
       temp_word[i] = letter
       ith_sum += 1 if temp_word != word && all_words.key?(temp_word)
     end
@@ -549,19 +558,23 @@ module PreviousWordleSolutions
 end
 
 module Filter
-  def Filter::filter_4g(d, gray, count)
-    # TODO refactor all filters to look ahead instead of filtering (could be faster)
-    d.each_key do |key|
-      all_words = populate_valid_wordle_words
-      for i in 0...5
-        if i == gray
-          all_words.delete_if { |key2, value2| key2[i] == key[i] }
-        else
-          all_words.delete_if { |key2, value2| key2[i] != key[i] }
-        end
-      end
+  def Filter::replace_ith_letter(word, i, letter)
+    word_copy = word.dup
+    word_copy[i] = letter
+    word_copy
+  end
 
-      if all_words.size < count
+  def Filter::filter_4g(d, gray, count)
+    all_words = populate_valid_wordle_words
+
+    d.each_key do |key|
+      num_valid_alternatives = ALPHABET
+        .map{|c| replace_ith_letter(key, gray, c)}
+        .map{|word_to_check| (word_to_check != key && all_words.key?(word_to_check)) ? 1 : 0}
+        .to_a
+        .sum
+
+      if num_valid_alternatives < count
         d.delete(key)
       else
         Debug.maybe_log "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
@@ -570,18 +583,25 @@ module Filter
   end
 
   def Filter::filter_3g1y(d, yellow, gray)
+    all_words2 = populate_valid_wordle_words
     d.each_key do |key|
+      # ensure yellow and gray are different
+      d.delete(key) if key[yellow] == key[gray]
+
+      # make a copy, save the yellow, and copy over the gray
+      key_copy = key.dup
+      letter_at_yellow = key_copy[yellow]
+      key_copy[yellow] = key_copy[gray] # moving the letter makes it get a yellow
+
       all_words = populate_valid_wordle_words
-      for i in 0...5
-        if i == yellow
-          all_words.delete_if { |key2, value2| key2[i] != key[gray] }
-        elsif i == gray
-          all_words.delete_if { |key2, value2| key2[i] == key[gray] }
-        else # green
-          all_words.delete_if { |key2, value2| key2[i] != key[i] }
-        end
-      end
-      if all_words.size == 0
+
+      num_valid_alternatives = ALPHABET
+        .map{|c| replace_ith_letter(key_copy, gray, c)}
+        .map{|word_to_check| (word_to_check[gray] != letter_at_yellow && all_words.key?(word_to_check)) ? 1 : 0}
+        .to_a
+        .sum
+
+      if num_valid_alternatives == 0
         d.delete(key)
       else
         Debug.maybe_log "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
