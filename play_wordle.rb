@@ -192,12 +192,28 @@ module UI
       choice2 = UI.prompt_for_input "There are #{d.size} words remaining. Would you like to see filtering output? (y/n)"
       previous_maybe = Debug.maybe?
       Debug.set_maybe(choice2 == 'y')
+
+      # Idea is to only filter on the max 4g seen
+      max_4gs_seen = max_4gs_seen_on_twitter(stats_hash)
+
       stats_hash.each do |key, _value|
         if Configuration.instrumentation_only
           Debug.log "instrumentation_only mode, skipping penultimate_twitter() call for key #{key}..."
           next
         end
         key_array = key.split('.', 2)
+
+        # doesn't make sense to filter first on 4g.3.1 if 4g.3.2 is coming next
+        if key_array[0] == '4g'
+          key_array2 = key_array[1].split('.')
+          array_position = key_array2[0].to_i - 1
+          count = key_array2[1].to_i
+          if max_4gs_seen[array_position] != count
+            UI::padded_puts "skipping filtering for key #{key} due to higher count still to come..."
+            next
+          end
+        end
+
         penultimate_twitter(d, key_array[0], key_array[1])
         UI.print_remaining_count(d) # moving this here, to show filtering as it goes
       end
@@ -226,6 +242,7 @@ module UI
   end
 
   def self.print_usage
+    # TODO convert this more to a "main menu" type thing?
     puts ''
     UI::padded_puts '.----------------------------------------------.'
     UI::padded_puts '|                                              |'
@@ -385,6 +402,25 @@ def wordle_response(guess, word)
   wordle_response
 end
 
+def max_4gs_seen_on_twitter(stats_hash)
+  # calculate the max 4g's seen per letter
+  # [1, 0, 1, 0, 0] means the first and third letters had 4g matches, and only 4g.1.1 and 4g.3.1
+  max_4gs_seen = [0, 0, 0, 0, 0]
+  stats_hash.each do |key, value|
+    # sample (key, value): ('4g.3.1', 7) indicating the 3rd letter was white 1 time, for 7 people
+    key_array = key.split('.', 2)
+    if key_array[0] == '4g'
+      letter_position = key_array[1][0].to_i
+      num_incorrect_4gs = key_array[1][2].to_i
+      _num_people = value
+      if num_incorrect_4gs > max_4gs_seen[letter_position-1]
+        max_4gs_seen[letter_position-1] = num_incorrect_4gs
+      end
+    end
+  end
+  max_4gs_seen
+end
+
 def penultimate_twitter_absence_of_evidence(d, stats_hash)
   UI::padded_puts 'Absence of evidence is not evidence of absence!'
 
@@ -396,21 +432,8 @@ def penultimate_twitter_absence_of_evidence(d, stats_hash)
   #   2. For remaining words in d, find how many matching words there are in valid-wordle-words.txt
   #   3. Do a text-based comparison (for now)
 
-  # calculate the max 4g's seen per letter
-  # [1, 0, 1, 0, 0] means the first and third letters had 4g matches, and only 4g.1.1 and 4g.3.1
-  max_4gs_seen_on_twitter = [0, 0, 0, 0, 0]
-  stats_hash.each do |key, value|
-    # sample (key, value): ('4g.3.1', 7) indicating the 3rd letter was white 1 time, for 7 people
-    key_array = key.split('.', 2)
-    if key_array[0] == '4g'
-      letter_position = key_array[1][0].to_i
-      num_incorrect_4gs = key_array[1][2].to_i
-      _num_people = value
-      if num_incorrect_4gs > max_4gs_seen_on_twitter[letter_position-1]
-        max_4gs_seen_on_twitter[letter_position-1] = num_incorrect_4gs
-      end
-    end
-  end
+  # get max 4gs seen
+  max_4gs_seen = max_4gs_seen_on_twitter stats_hash
 
   # calculate how many actual 4g matches there are per key
   # key=laved, all_4g_matches=[6, 2, 10, 0, 2]
@@ -418,8 +441,8 @@ def penultimate_twitter_absence_of_evidence(d, stats_hash)
   d.each do |key, _value|
     matches = all_4g_matches(key)
     difference = [0, 0, 0, 0, 0]
-    (0...5).each {|i| difference[i] = matches[i] - max_4gs_seen_on_twitter[i]}
-    new_d[key] = [difference.sum, difference, matches, max_4gs_seen_on_twitter]
+    (0...5).each {|i| difference[i] = matches[i] - max_4gs_seen[i]}
+    new_d[key] = [difference.sum, difference, matches, max_4gs_seen]
   end
   new_d = new_d.sort_by {|_key, value| value[0]}.to_h
 
@@ -428,7 +451,7 @@ def penultimate_twitter_absence_of_evidence(d, stats_hash)
   UI::padded_puts "|              Absence of Evidence report              |"
   UI::padded_puts '\------------------------------------------------------/'
   UI::padded_puts ''
-  UI::padded_puts "max 4gs seen on Twitter: #{max_4gs_seen_on_twitter}"
+  UI::padded_puts "max 4gs seen on Twitter: #{max_4gs_seen}"
 
   page_size = 10
   current_difference = -1
@@ -583,7 +606,7 @@ module Filter
   end
 
   def Filter::filter_3g1y(d, yellow, gray)
-    all_words2 = populate_valid_wordle_words
+    all_words = populate_valid_wordle_words
     d.each_key do |key|
       # ensure yellow and gray are different
       d.delete(key) if key[yellow] == key[gray]
@@ -592,8 +615,6 @@ module Filter
       key_copy = key.dup
       letter_at_yellow = key_copy[yellow]
       key_copy[yellow] = key_copy[gray] # moving the letter makes it get a yellow
-
-      all_words = populate_valid_wordle_words
 
       num_valid_alternatives = ALPHABET
         .map{|c| replace_ith_letter(key_copy, gray, c)}

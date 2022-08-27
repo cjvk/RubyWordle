@@ -22,8 +22,13 @@ module Configuration
   #         Uncomment to enable printing of ALL penultimate which match this pattern
   # @@print_this_penultimate_pattern = 'wgggw' # use normalized colors (g/y/w)
 
+  # author_id analysis
+  # Wordle 430 (WOVEN)
+
   # username/author ID conversion sites: https://tweeterid.com/, https://commentpicker.com/twitter-id.php
   @@author_id_denylist = [
+    # https://twitter.com/filafresh/status/1562290346259783680
+    ['23026561', 'filafresh'], # Wordle 430 (WOVEN), 4g.5.1: Only woven matches "wove."
     # https://twitter.com/chryo29t/status/1563129697382195200
     ['140922619', 'chryo29t'], # Wordle 433 (IRONY), 4g.3.1: Only "irony" matches "ir.ny"
     # https://twitter.com/6Wordle/status/1558951610197258241
@@ -36,6 +41,12 @@ module Configuration
   ].to_h
 
   @@author_id_allowlist = [
+    # https://twitter.com/mXaw7zyRa7ARsFL/status/1562130977576865792
+    ['1301656879102218240', 'mXaw7zyRa7ARsFL'], # Wordle 430 (WOVEN), 4g.1.3: coven/doven/hoven/roven
+    # https://twitter.com/StormBlast2014/status/1562287971025375233
+    ['2153111274', 'StormBlast2014'], # Wordle 430 (WOVEN), 3g1y.yellow3.white1: "rowen"
+    # https://twitter.com/zoeloveswordle/status/1562295852831772672
+    ['1297960675923222529', 'zoeloveswordle'], # Wordle 430 (WOVEN), 4g.1.2: coven/doven/hoven/roven
     # https://twitter.com/inosffirehs/status/1563208536179351552
     ['140688018', 'inosffirehs'], # Wordle 433 (IRONY), 4g.5.2: irons/irone
     # https://twitter.com/FergalSweeney/status/1562375685892603904

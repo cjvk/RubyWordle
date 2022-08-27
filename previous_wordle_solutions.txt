@@ -435,3 +435,4 @@ woven # Wordle 430, 8/23/2022
 needy
 clown
 irony
+ruder
