@@ -22,11 +22,16 @@ module Configuration
   #         Uncomment to enable printing of ALL penultimate which match this pattern
   # @@print_this_penultimate_pattern = 'wgggw' # use normalized colors (g/y/w)
 
-  # author_id analysis
+  # TODO author_id analysis: set wordle_number_override and gather author_ids with evidence
+  # processed wordles
   # Wordle 430 (WOVEN)
 
   # username/author ID conversion sites: https://tweeterid.com/, https://commentpicker.com/twitter-id.php
   @@author_id_denylist = [
+    # https://twitter.com/visakrish/status/1563814700462514176
+    ['122248029', 'visakrish'], # Wordle 435 (GAUZE), 4g.2.1: impossible (only gauze matches "g.uze")
+    # https://twitter.com/FergalSweeney/status/1563808124817100801
+    ['2742981849', 'FergalSweeney'], # Wordle 435 (GAUZE), 4g.4.3: only 2 matches: gauje/gauge
     # https://twitter.com/filafresh/status/1562290346259783680
     ['23026561', 'filafresh'], # Wordle 430 (WOVEN), 4g.5.1: Only woven matches "wove."
     # https://twitter.com/chryo29t/status/1563129697382195200
@@ -41,6 +46,8 @@ module Configuration
   ].to_h
 
   @@author_id_allowlist = [
+    # https://twitter.com/awlgae_mm/status/1563899715347169281
+    ['1533447006', 'awlgae_mm'], # Wordle 435 (GAUZE), 4g.5.1: gauzy
     # https://twitter.com/mXaw7zyRa7ARsFL/status/1562130977576865792
     ['1301656879102218240', 'mXaw7zyRa7ARsFL'], # Wordle 430 (WOVEN), 4g.1.3: coven/doven/hoven/roven
     # https://twitter.com/StormBlast2014/status/1562287971025375233
@@ -219,8 +226,11 @@ class Answer
     @is_interesting = nil
     @key = nil
   end
+  def self.generic_tweet_url id
+    "https://twitter.com/anyuser/status/#{id}"
+  end
   def generic_tweet_url
-    "https://twitter.com/anyuser/status/#{@id}"
+    Answer.generic_tweet_url @id
   end
   def author_id
     @author_id
@@ -331,6 +341,9 @@ def twitter
         end
         # check the denylist
         if Configuration.author_id_denylist.include?(author_id)
+          allowlisted_too = Configuration.author_id_allowlist.include?(author_id)
+          al_str = allowlisted_too ? ' (author allowlisted too!)' : ''
+          Debug.log "skipping tweet, denylist (#{Answer.generic_tweet_url id}) (author_id=#{author_id})#{al_str}"
           skipped_twitter_posts += 1
           next
         end
@@ -403,8 +416,7 @@ def twitter
           end
 
           if guess_array.length() != num_guesses
-            generic_tweet_url = "https://twitter.com/anyuser/status/#{id}"
-            Alert.alert "guess array not correct length! (#{generic_tweet_url})"
+            Alert.alert "guess array not correct length! (#{Answer.generic_tweet_url id}) (author_id=#{author_id})"
             next
           end
 
