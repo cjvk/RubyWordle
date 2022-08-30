@@ -53,8 +53,12 @@ module Configuration
   ].to_h
 
   @@author_id_allowlist = [
+    # https://twitter.com/anamayzubiria/status/1564715923390472197: Not a Goofball
+    ['OK', '60993797', 'anamayzubiria'], # Wordle 437 (onset), 3g1y.yellow5.white2: (owsen)
     # https://twitter.com/awlgae_mm/status/1563899715347169281
     ['OK', '1533447006', 'awlgae_mm'], # Wordle 435 (GAUZE), 4g.5.1: gauzy
+    # https://twitter.com/Backstreetsmac/status/1564730691841101824: Not a Goofball
+    ['OK', '38323083', 'Backstreetsmac'], # Wordle 437 (onset), 3g1y.yellow5.white3: (onces)
     # https://twitter.com/FergalSweeney/status/1562375685892603904
     ['OK', '2742981849', 'FergalSweeney'], # Wordle 431 (NEEDY), 3g1y.yellow1.white4, deedy/deely
     # https://twitter.com/HughRoberts05/status/1562385965490081792
@@ -79,6 +83,8 @@ module Configuration
     ['OK', '1301656879102218240', 'mXaw7zyRa7ARsFL'], # Wordle 430 (WOVEN), 4g.1.3: coven/doven/hoven/roven
     # https://twitter.com/pawadokai/status/1562675094094487553: Not a Goofball
     ['OK', '53636369', 'pawadokai'], # Wordle 431 (needy), 3g1y.yellow5.white4: ["neeld"]
+    # https://twitter.com/RachelWLoewen/status/1564725419999363073: Not a Goofball
+    ['OK', '26732424', 'RachelWLoewen'], # Wordle 437 (onset), 4g.3.1: (oncet)
     # https://twitter.com/StormBlast2014/status/1562287971025375233
     ['OK', '2153111274', 'StormBlast2014'], # Wordle 430 (WOVEN), 3g1y.yellow3.white1: "rowen"
     # https://twitter.com/zoeloveswordle/status/1562295852831772672

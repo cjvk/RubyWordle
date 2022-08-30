@@ -309,9 +309,7 @@ def check_for_problematic_patterns(d)
 end
 
 def goofball_analysis
-  # TODO For a given wordle number, run Twitter analysis, and for all keys with 1 result,
-  #      decide if their answer was legal. Output should be copyable into allowlist/denylist.
-  #      Disable the allowlist/denylist prior to running this? If yes, could instrument users
+  #      If yes, could instrument users
   #      specifically as "already present in denylist" and such. Would want this to be
   #      automated (would not want to have to remember to disable them).
   wordle_number = UI.prompt_for_input("Enter daily wordle number (to check for goofballs): ==> ", false)
@@ -400,23 +398,20 @@ def goofball_analysis
           valid_alternatives.append key
         end
       end
-      # puts "valid_alternatives=#{valid_alternatives}"
-      title = valid_alternatives.length == 0 ? 'Definite Goofball!' : 'Not a Goofball'
-      # reasoning = "#{valid_alternatives}"
+      is_goofball = valid_alternatives.length == 0
+      title = is_goofball ? 'Definite Goofball!' : 'Not a Goofball'
       reasoning = "(#{valid_alternatives.join('/')})"
       prefix = valid_alternatives.length != 0 ? "'OK', " : ''
     end
 
     nm = wordle_number
     sn = wordle_number_solution
-    # puts '##################################################'
-    # puts '#'
-    # puts "#                    #{title}"
-    # puts '#'
-    puts "    # #{answer.generic_tweet_url}: #{title}"
+    author_id = answer.author_id
+
+    puts "Author ID #{author_id} in denylist" if Configuration.author_id_denylist.include?(author_id)
+    puts "Author ID #{author_id} in allowlist" if Configuration.author_id_allowlist.include?(author_id)
+    puts "# #{answer.generic_tweet_url}: #{title}"
     puts "[#{prefix}'#{answer.author_id}', 'REPLACE_ME'], # Wordle #{nm} (#{sn}), #{key}: #{reasoning}"
-    # puts '#'
-    # puts '##################################################'
     puts ''
 
   end
