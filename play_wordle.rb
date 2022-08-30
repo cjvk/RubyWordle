@@ -155,6 +155,9 @@ module UI
           print_a_dad_joke
         when 'test'
           calculate_constraint_cardinality
+        when 'test2'
+          puts "denylist = #{Configuration.author_id_denylist}"
+          puts "allowlist = #{Configuration.author_id_allowlist}"
         when 'goofball'
           goofball_analysis
         when 'help', 'h'
@@ -378,28 +381,47 @@ def goofball_analysis
       else
         title = 'Not a Goofball'
       end
-      if is_goofball
-        reasoning = "#{valid_alternatives}"
-      else
-        reasoning = "#{valid_alternatives}"
-      end
-      nm = wordle_number
-      sn = wordle_number_solution
-
-      puts '##################################################'
-      puts '#'
-      puts "#                    #{title}"
-      puts '#'
-      puts "# #{answer.generic_tweet_url}"
-      puts "['#{answer.author_id}', 'REPLACE_ME'] # Wordle #{nm} (#{sn}), #{key}: #{reasoning}"
-      puts '#'
-      puts '##################################################'
-      puts ''
+      reasoning = "(#{valid_alternatives.join('/')})"
+      # if is_goofball
+      #   reasoning = "#{valid_alternatives}"
+      # else
+      #   reasoning = "#{valid_alternatives}"
+      # end
+      prefix = !is_goofball ? "'OK', " : ''
     else
       # Everything besides 4g: Go through all available words, see what words get that match.
       # In principle, this is very similar to Filter::filter_4g et al.
+      # have: wordle_number_solution, penultimate
+      # puts "non-4g analysis: wordle_number_solution=#{wordle_number_solution}, penultimate=#{penultimate}"
+      valid_alternatives = []
+      all_words.each do |key, _value|
+        actual_wordle_response = wordle_response(key, wordle_number_solution)
+        if actual_wordle_response == penultimate
+          valid_alternatives.append key
+        end
+      end
+      # puts "valid_alternatives=#{valid_alternatives}"
+      title = valid_alternatives.length == 0 ? 'Definite Goofball!' : 'Not a Goofball'
+      # reasoning = "#{valid_alternatives}"
+      reasoning = "(#{valid_alternatives.join('/')})"
+      prefix = valid_alternatives.length != 0 ? "'OK', " : ''
     end
+
+    nm = wordle_number
+    sn = wordle_number_solution
+    # puts '##################################################'
+    # puts '#'
+    # puts "#                    #{title}"
+    # puts '#'
+    puts "    # #{answer.generic_tweet_url}: #{title}"
+    puts "[#{prefix}'#{answer.author_id}', 'REPLACE_ME'], # Wordle #{nm} (#{sn}), #{key}: #{reasoning}"
+    # puts '#'
+    # puts '##################################################'
+    puts ''
+
   end
+  puts ''
+  puts '##################################################'
 end
 
 def static_analysis(d, stats_hash)

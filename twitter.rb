@@ -14,7 +14,7 @@ module Configuration
   @@instrumentation_only = false
 
   #         Uncomment this to query a specific wordle number
-  # @@wordle_number_override = 435
+  # @@wordle_number_override = 433
 
   #         Uncomment this to enable debug printing for a specific tweet_id
   # @@debug_print_tweet_id = '1559163924548915201'
@@ -22,52 +22,68 @@ module Configuration
   #         Uncomment to enable printing of ALL penultimate which match this pattern
   # @@print_this_penultimate_pattern = 'wgggw' # use normalized colors (g/y/w)
 
-  # TODO author_id analysis: set wordle_number_override and gather author_ids with evidence
-  # processed wordles
-  # Wordle 430 (WOVEN)
-  # Wordle 435 (GAUZE)
+  # Goofball processing: down to 423
 
   # "Goofball mode", where denylist and allowlist is disabled, and singletons are not eliminated
   @@goofball_mode = false
   # username/author ID conversion sites: https://tweeterid.com/, https://commentpicker.com/twitter-id.php
   @@author_id_denylist = [
-    # https://twitter.com/visakrish/status/1563814700462514176
-    ['122248029', 'visakrish'], # Wordle 435 (GAUZE), 4g.2.1: impossible (only gauze matches "g.uze")
+    # https://twitter.com/chryo29t/status/1563129697382195200: Definite Goofball!
+    ['140922619', 'chryo29t'], # Wordle 433 (irony), 4g.3.1: []
     # https://twitter.com/FergalSweeney/status/1563808124817100801
     ['2742981849', 'FergalSweeney'], # Wordle 435 (GAUZE), 4g.4.3: only 2 matches: gauje/gauge
     # https://twitter.com/filafresh/status/1562290346259783680
-    ['23026561', 'filafresh'], # Wordle 430 (WOVEN), 4g.5.1: Only woven matches "wove."
-    # https://twitter.com/chryo29t/status/1563129697382195200
-    ['140922619', 'chryo29t'], # Wordle 433 (IRONY), 4g.3.1: Only "irony" matches "ir.ny"
-    # https://twitter.com/6Wordle/status/1558951610197258241
-    # The account description says "I do wordle in 6/6 every day so even the 5/6 friends can be proud"
-    ['1487026288682418180', '@6wordle'], # Wordle 421 (KHAKI), YGGYY (impossible).
+    ['23026561', 'filafresh'], # Wordle 430 (woven), 4g.5.1: []
+    # https://twitter.com/LoveSkate_Love/status/1564238522487574529: Definite Goofball!
+    ['799098238548643841', 'LoveSkate_Love'], # Wordle 436 (chief), 3g1y.yellow5.white2: []
+    # https://twitter.com/polterguyst/status/1563945348355473411: Definite Goofball!
+    ['1346120687233077249', 'polterguyst'], # Wordle 434 (ruder), 4g.4.1: []
+    # https://twitter.com/toon_mikwee/status/1564239878971424771: Possible Goofball
+    ['2267620176', 'toon_mikwee'], # Wordle 436 (chief), 4g.1.3: ["thief"]
+    # https://twitter.com/toukxa/status/1563677960917229568: Definite Goofball!
+    ['702337186893410304', 'toukxa'], # Wordle 433 (irony), 3g2y.yellow13: []
     # https://twitter.com/Vat_of_useless/status/1554551230864560128
     # I asked, they said 'lobby', I replied "wouldn't that be YGWWG", then they blocked me (!)
-    ['911760502333743104', '@Vat_of_useless'], # Wordle 409 (COYLY), YGWGG (impossible)
-  # ].map { |x| [x[0], x[1]] }.to_h # looks like it's just mapping to itself
+    ['911760502333743104', 'Vat_of_useless'], # Wordle 409 (COYLY), YGWGG (impossible)
+    # https://twitter.com/visakrish/status/1563814700462514176
+    ['122248029', 'visakrish'], # Wordle 435 (GAUZE), 4g.2.1: impossible (only gauze matches "g.uze")
+    # https://twitter.com/6Wordle/status/1558951610197258241
+    # The account description says "I do wordle in 6/6 every day so even the 5/6 friends can be proud"
+    ['1487026288682418180', '6wordle'], # Wordle 421 (KHAKI), YGGYY (impossible).
   ].to_h
 
   @@author_id_allowlist = [
     # https://twitter.com/awlgae_mm/status/1563899715347169281
-    ['1533447006', 'awlgae_mm'], # Wordle 435 (GAUZE), 4g.5.1: gauzy
-    # https://twitter.com/mXaw7zyRa7ARsFL/status/1562130977576865792
-    ['1301656879102218240', 'mXaw7zyRa7ARsFL'], # Wordle 430 (WOVEN), 4g.1.3: coven/doven/hoven/roven
-    # https://twitter.com/StormBlast2014/status/1562287971025375233
-    ['2153111274', 'StormBlast2014'], # Wordle 430 (WOVEN), 3g1y.yellow3.white1: "rowen"
-    # https://twitter.com/zoeloveswordle/status/1562295852831772672
-    ['1297960675923222529', 'zoeloveswordle'], # Wordle 430 (WOVEN), 4g.1.2: coven/doven/hoven/roven
-    # https://twitter.com/inosffirehs/status/1563208536179351552
-    ['140688018', 'inosffirehs'], # Wordle 433 (IRONY), 4g.5.2: irons/irone
+    ['OK', '1533447006', 'awlgae_mm'], # Wordle 435 (GAUZE), 4g.5.1: gauzy
     # https://twitter.com/FergalSweeney/status/1562375685892603904
-    ['2742981849', 'FergalSweeney'], # Wordle 431 (NEEDY), 3g1y.yellow1.white4, deedy/deely
+    ['OK', '2742981849', 'FergalSweeney'], # Wordle 431 (NEEDY), 3g1y.yellow1.white4, deedy/deely
     # https://twitter.com/HughRoberts05/status/1562385965490081792
-    ['315843621', 'HughRoberts05'], # Wordle 431 (NEEDY), 4g.3.2, neddy/nerdy
-    # https://twitter.com/michelle4mmkh4/status/1562452851711811584
-    ['468854236', 'michelle4mmkh4'], # Wordle 431 (NEEDY), 4g.1.3, many -EEDY options
+    ['OK', '315843621', 'HughRoberts05'], # Wordle 431 (NEEDY), 4g.3.2, neddy/nerdy
+    # https://twitter.com/inosffirehs/status/1563208536179351552
+    ['OK', '140688018', 'inosffirehs'], # Wordle 433 (IRONY), 4g.5.2: irons/irone
+    # https://twitter.com/jf_scapes/status/1564236330401398784: Not a Goofball
+    ['OK', '946614010077523968', 'jf_scapes'], # Wordle 436 (chief), 0g5y.: ["fiche"]
     # https://twitter.com/JoshRey100/status/1562543624012713985
-    ['2168411925', 'JoshRey100'], # Wordle 431 was NEEDY, 3g1y.yellow5.white4, (neeld)
-  ].to_h
+    ['OK', '2168411925', 'JoshRey100'], # Wordle 431 was NEEDY, 3g1y.yellow5.white4, (neeld)
+    # https://twitter.com/kitchen38jp/status/1562701812947623936: Not a Goofball
+    ['OK', '265368603', 'kitchen38jp'], # Wordle 426 (shrug), 4g.5.1: (shrub)
+    # https://twitter.com/Madly_Total/status/1562238786037219328: Not a Goofball
+    ['OK', '1235603239598542848', 'Madly_Total'], # Wordle 428 (waste), 4g.1.4: (baste/caste/haste/paste/taste)
+    # https://twitter.com/MankyPanky8D/status/1562318621757476866
+    ['OK', '1558549097673412609', 'MankyPanky8D'], # Wordle 430 (woven), 4g.3.3: ["woken", "women", "woxen"]
+    # https://twitter.com/michelle4mmkh4/status/1562452851711811584
+    ['OK', '468854236', 'michelle4mmkh4'], # Wordle 431 (NEEDY), 4g.1.3, many -EEDY options
+    # https://twitter.com/moore_hype/status/1563595600880619520: Not a Goofball
+    ['OK', '989297528419078144', 'moore_hype'], # Wordle 424 (twice), 4g.4.1: (twine/twire/twite)
+    # https://twitter.com/mXaw7zyRa7ARsFL/status/1562130977576865792
+    ['OK', '1301656879102218240', 'mXaw7zyRa7ARsFL'], # Wordle 430 (WOVEN), 4g.1.3: coven/doven/hoven/roven
+    # https://twitter.com/pawadokai/status/1562675094094487553: Not a Goofball
+    ['OK', '53636369', 'pawadokai'], # Wordle 431 (needy), 3g1y.yellow5.white4: ["neeld"]
+    # https://twitter.com/StormBlast2014/status/1562287971025375233
+    ['OK', '2153111274', 'StormBlast2014'], # Wordle 430 (WOVEN), 3g1y.yellow3.white1: "rowen"
+    # https://twitter.com/zoeloveswordle/status/1562295852831772672
+    ['OK', '1297960675923222529', 'zoeloveswordle'], # Wordle 430 (WOVEN), 4g.1.2: coven/doven/hoven/roven
+  ].map { |x| raise "allowlist length error" if x.length != 3; [x[1], x[2]] }.to_h
 
   # interesting Twitter handles and author IDs
   # habanerohiker / 45384296
