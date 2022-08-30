@@ -51,11 +51,17 @@ module Debug
   THRESHOLD = LOG_LEVEL_NORMAL
 
   module Internal
+    @@log_level_to_string = {
+      LOG_LEVEL_NONE => 'none',
+      LOG_LEVEL_TERSE => 'TERSE',
+      LOG_LEVEL_NORMAL => 'NORMAL',
+      LOG_LEVEL_VERBOSE => 'VERBOSE',
+    }
     def Internal::println(s, log_level)
       puts s if log_level <= THRESHOLD
     end
     def Internal::decorate(s, log_level)
-      "debug(#{log_level}): #{s}"
+      "debug(#{@@log_level_to_string[log_level]}): #{s}"
     end
     def Internal::decorate_and_print(s, log_level)
       Internal::println(Debug::Internal::decorate(s, log_level), log_level)
@@ -140,7 +146,7 @@ module UI
         when 'penultimate'
           penultimate(d)
         when 'twitter'
-          stats_hash = twitter
+          stats_hash = twitter[:stats]
           UI.print_remaining_count(d)
           if UI.maybe_filter_twitter(d, stats_hash)
             UI.maybe_absence_of_evidence(d, stats_hash)
@@ -149,14 +155,8 @@ module UI
           print_a_dad_joke
         when 'test'
           calculate_constraint_cardinality
-        when 'test2'
-          sample_word = 'saner'
-          foo = ALPHABET.map do |c|
-            sample_word_copy = sample_word.dup
-            sample_word_copy[2] = c
-            sample_word_copy
-          end
-          puts foo
+        when 'goofball'
+          goofball_analysis
         when 'help', 'h'
           UI.print_usage
         when '' # pressing enter shouldn't cause "unrecognized input"
@@ -303,6 +303,103 @@ def check_for_problematic_patterns(d)
     end
   end
   UI::padded_puts 'No problematic patterns found!' if pp_dict.values.max <= 2
+end
+
+def goofball_analysis
+  # TODO For a given wordle number, run Twitter analysis, and for all keys with 1 result,
+  #      decide if their answer was legal. Output should be copyable into allowlist/denylist.
+  #      Disable the allowlist/denylist prior to running this? If yes, could instrument users
+  #      specifically as "already present in denylist" and such. Would want this to be
+  #      automated (would not want to have to remember to disable them).
+  wordle_number = UI.prompt_for_input("Enter daily wordle number (to check for goofballs): ==> ", false)
+  Configuration.set_wordle_number_override wordle_number
+
+  Configuration.set_goofball_mode true
+  twitter_result = twitter
+  stats_hash = twitter_result[:stats]
+  answers = twitter_result[:answers]
+  Configuration.set_goofball_mode false
+  wordle_number_solution = PreviousWordleSolutions.lookup_by_number(wordle_number.to_i)
+  # puts "Wordle #{wordle_number} answer was: #{wordle_number_solution}"
+
+  singleton_keys = []
+  stats_hash.each do |key, value|
+    next if value != 1
+    # puts "found key of #{key} with value of #{value}"
+    # look for matching answer
+    answers.each do |answer|
+      if answer.matches_key(key)
+        singleton_keys.append([key, answer])
+        break
+      end
+    end
+    # should have found a matching answer
+    # puts "found a match! (#{found_answer.generic_tweet_url}) (author_id=#{found_answer.author_id})"
+  end
+
+  puts ''
+  puts ''
+  puts ''
+  UI.padded_puts '/--------------------------------------\\'
+  UI.padded_puts "|              Wordle #{wordle_number}              |"
+  UI.padded_puts '|            Goofball report           |'
+  UI.padded_puts '\--------------------------------------/'
+  puts ''
+
+  singleton_keys.each do |el|
+    key = el[0]
+    answer = el[1]
+    penultimate = answer.penultimate
+    interestingness = InterestingWordleResponses::determine_interestingness(penultimate)
+    name, subname, _key = InterestingWordleResponses::calculate_name_subname_key(penultimate, interestingness)
+    count = name == '4g' ? key[5].to_i : 0
+    all_words = populate_valid_wordle_words
+    # puts "--------------------"
+    # puts "match for key #{key}! (#{answer.generic_tweet_url}) (author_id=#{answer.author_id})"
+    # puts "penultimate guess was: #{penultimate}"
+    # puts "interestingness: #{interestingness}"
+    # puts "name/subname = #{name}/#{subname}"
+    # puts "count = #{count}"
+    # puts "----------"
+    if interestingness == InterestingWordleResponses::WORDLE_4G
+      # special handling for 4g: Find actual high-water-mark, see if the reported
+      # count is reasonable. Will need to know the words too.
+      gray_index = subname[0].to_i - 1
+      valid_alternatives = ALPHABET
+        .map{|c| Filter::replace_ith_letter(wordle_number_solution, gray_index, c)}
+        .delete_if {|word_to_check| word_to_check == wordle_number_solution || !all_words.key?(word_to_check)}
+      is_goofball = (count > valid_alternatives.length)
+      # puts "valid alternatives for #{wordle_number_solution}, key=#{key}: #{valid_alternatives}"
+      # puts ''
+
+      # Goofball report
+      if is_goofball
+        title = valid_alternatives.length == 0 ? 'Definite Goofball!' : 'Possible Goofball'
+      else
+        title = 'Not a Goofball'
+      end
+      if is_goofball
+        reasoning = "#{valid_alternatives}"
+      else
+        reasoning = "#{valid_alternatives}"
+      end
+      nm = wordle_number
+      sn = wordle_number_solution
+
+      puts '##################################################'
+      puts '#'
+      puts "#                    #{title}"
+      puts '#'
+      puts "# #{answer.generic_tweet_url}"
+      puts "['#{answer.author_id}', 'REPLACE_ME'] # Wordle #{nm} (#{sn}), #{key}: #{reasoning}"
+      puts '#'
+      puts '##################################################'
+      puts ''
+    else
+      # Everything besides 4g: Go through all available words, see what words get that match.
+      # In principle, this is very similar to Filter::filter_4g et al.
+    end
+  end
 end
 
 def static_analysis(d, stats_hash)
@@ -577,6 +674,10 @@ module PreviousWordleSolutions
 
   def self.check_word(word)
     PreviousWordleSolutions.all_solutions[word]
+  end
+
+  def self.lookup_by_number(n)
+    PreviousWordleSolutions.all_solutions.key n
   end
 end
 

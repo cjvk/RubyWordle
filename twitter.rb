@@ -14,7 +14,7 @@ module Configuration
   @@instrumentation_only = false
 
   #         Uncomment this to query a specific wordle number
-  # @@wordle_number_override = 430
+  # @@wordle_number_override = 435
 
   #         Uncomment this to enable debug printing for a specific tweet_id
   # @@debug_print_tweet_id = '1559163924548915201'
@@ -25,7 +25,10 @@ module Configuration
   # TODO author_id analysis: set wordle_number_override and gather author_ids with evidence
   # processed wordles
   # Wordle 430 (WOVEN)
+  # Wordle 435 (GAUZE)
 
+  # "Goofball mode", where denylist and allowlist is disabled, and singletons are not eliminated
+  @@goofball_mode = false
   # username/author ID conversion sites: https://tweeterid.com/, https://commentpicker.com/twitter-id.php
   @@author_id_denylist = [
     # https://twitter.com/visakrish/status/1563814700462514176
@@ -82,17 +85,27 @@ module Configuration
   def self.wordle_number_override
     defined?(@@wordle_number_override) ? @@wordle_number_override : nil
   end
+  def self.set_wordle_number_override new_wordle_number
+    Debug.log "Setting wordle_number_override to: #{new_wordle_number}"
+    @@wordle_number_override = new_wordle_number
+  end
   def self.debug_print_tweet_id
     defined?(@@debug_print_tweet_id) ? @@debug_print_tweet_id : nil
   end
   def self.print_this_penultimate_pattern
     defined?(@@print_this_penultimate_pattern) ? @@print_this_penultimate_pattern : nil
   end
+  def self.set_goofball_mode b
+    @@goofball_mode = b
+  end
+  def self.goofball_mode?
+    @@goofball_mode
+  end
   def self.author_id_denylist
-    @@author_id_denylist
+    @@goofball_mode ? {} : @@author_id_denylist
   end
   def self.author_id_allowlist
-    @@author_id_allowlist
+    @@goofball_mode ? {} : @@author_id_allowlist
   end
 end
 
@@ -286,7 +299,7 @@ def twitter
   difference_in_days = (now - wordle_day_0).to_i
   wordle_number = difference_in_days.to_s
   if Configuration.wordle_number_override != nil
-    wordle_number = Configuration.wordle_number_override
+    wordle_number = Configuration.wordle_number_override.to_s
     Debug.log_terse "using user-specified wordle number: #{wordle_number}"
   end
   answers = []
@@ -465,6 +478,7 @@ def twitter
   # remove entries if they have exactly one occurrence (possible goofballs)
   # stats.delete_if { |key, value| value == 1 }
   stats.delete_if do |key, value|
+    break if Configuration.goofball_mode?
     author_allowlisted = false
     if value == 1
       for answer in answers
@@ -509,7 +523,10 @@ def twitter
   UI.padded_puts '----------------------------------------'
   puts ''
 
-  stats
+  {
+    stats: stats,
+    answers: answers
+  }
 end
 
 module WordleModes
