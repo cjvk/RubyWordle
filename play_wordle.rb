@@ -15,6 +15,7 @@ def populate_valid_wordle_words
   File.foreach(VALID_WORDLE_WORDS_FILE).with_index do |line, line_num|
     d[line.chomp] = line_num
   end
+  ['onsen'].each { |word| d[word] = '-1' }
   d
 end
 
@@ -309,9 +310,6 @@ def check_for_problematic_patterns(d)
 end
 
 def goofball_analysis
-  #      If yes, could instrument users
-  #      specifically as "already present in denylist" and such. Would want this to be
-  #      automated (would not want to have to remember to disable them).
   wordle_number = UI.prompt_for_input("Enter daily wordle number (to check for goofballs): ==> ", false)
   Configuration.set_wordle_number_override wordle_number
 
@@ -321,21 +319,31 @@ def goofball_analysis
   answers = twitter_result[:answers]
   Configuration.set_goofball_mode false
   wordle_number_solution = PreviousWordleSolutions.lookup_by_number(wordle_number.to_i)
-  # puts "Wordle #{wordle_number} answer was: #{wordle_number_solution}"
 
   singleton_keys = []
   stats_hash.each do |key, value|
-    next if value != 1
-    # puts "found key of #{key} with value of #{value}"
     # look for matching answer
-    answers.each do |answer|
-      if answer.matches_key(key)
-        singleton_keys.append([key, answer])
-        break
+    if value == 1
+      answers.each do |answer|
+        if answer.matches_key(key)
+          singleton_keys.append([key, answer])
+          break
+        end
+      end
+    elsif value == 2
+      answers.each do |answer|
+        if answer.matches_key(key)
+          singleton_keys.append([key, answer])
+        end
       end
     end
-    # should have found a matching answer
-    # puts "found a match! (#{found_answer.generic_tweet_url}) (author_id=#{found_answer.author_id})"
+    if key == '4g.5.1' && false
+      answers.each do |answer|
+        if answer.matches_key(key)
+          puts "(#{answer.generic_tweet_url} (#{answer.author_id}))"
+        end
+      end
+    end
   end
 
   puts ''
@@ -355,13 +363,6 @@ def goofball_analysis
     name, subname, _key = InterestingWordleResponses::calculate_name_subname_key(penultimate, interestingness)
     count = name == '4g' ? key[5].to_i : 0
     all_words = populate_valid_wordle_words
-    # puts "--------------------"
-    # puts "match for key #{key}! (#{answer.generic_tweet_url}) (author_id=#{answer.author_id})"
-    # puts "penultimate guess was: #{penultimate}"
-    # puts "interestingness: #{interestingness}"
-    # puts "name/subname = #{name}/#{subname}"
-    # puts "count = #{count}"
-    # puts "----------"
     if interestingness == InterestingWordleResponses::WORDLE_4G
       # special handling for 4g: Find actual high-water-mark, see if the reported
       # count is reasonable. Will need to know the words too.
@@ -370,22 +371,12 @@ def goofball_analysis
         .map{|c| Filter::replace_ith_letter(wordle_number_solution, gray_index, c)}
         .delete_if {|word_to_check| word_to_check == wordle_number_solution || !all_words.key?(word_to_check)}
       is_goofball = (count > valid_alternatives.length)
-      # puts "valid alternatives for #{wordle_number_solution}, key=#{key}: #{valid_alternatives}"
-      # puts ''
 
-      # Goofball report
       if is_goofball
         title = valid_alternatives.length == 0 ? 'Definite Goofball!' : 'Possible Goofball'
       else
         title = 'Not a Goofball'
       end
-      reasoning = "(#{valid_alternatives.join('/')})"
-      # if is_goofball
-      #   reasoning = "#{valid_alternatives}"
-      # else
-      #   reasoning = "#{valid_alternatives}"
-      # end
-      prefix = !is_goofball ? "'OK', " : ''
     else
       # Everything besides 4g: Go through all available words, see what words get that match.
       # In principle, this is very similar to Filter::filter_4g et al.
@@ -400,16 +391,17 @@ def goofball_analysis
       end
       is_goofball = valid_alternatives.length == 0
       title = is_goofball ? 'Definite Goofball!' : 'Not a Goofball'
-      reasoning = "(#{valid_alternatives.join('/')})"
-      prefix = valid_alternatives.length != 0 ? "'OK', " : ''
     end
 
     nm = wordle_number
     sn = wordle_number_solution
     author_id = answer.author_id
+    reasoning = "(#{valid_alternatives.join('/')})"
+    prefix = !is_goofball ? "'OK', " : ''
 
-    puts "Author ID #{author_id} in denylist" if Configuration.author_id_denylist.include?(author_id)
-    puts "Author ID #{author_id} in allowlist" if Configuration.author_id_allowlist.include?(author_id)
+    # Goofball report
+    puts "Author ID #{author_id} already in denylist" if Configuration.author_id_denylist.include?(author_id)
+    puts "Author ID #{author_id} already in allowlist" if Configuration.author_id_allowlist.include?(author_id)
     puts "# #{answer.generic_tweet_url}: #{title}"
     puts "[#{prefix}'#{answer.author_id}', 'REPLACE_ME'], # Wordle #{nm} (#{sn}), #{key}: #{reasoning}"
     puts ''

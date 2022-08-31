@@ -59,6 +59,8 @@ module Configuration
     ['OK', '1533447006', 'awlgae_mm'], # Wordle 435 (GAUZE), 4g.5.1: gauzy
     # https://twitter.com/Backstreetsmac/status/1564730691841101824: Not a Goofball
     ['OK', '38323083', 'Backstreetsmac'], # Wordle 437 (onset), 3g1y.yellow5.white3: (onces)
+    # https://twitter.com/Dave_DSilent/status/1564758254193848320: Not a Goofball
+    ['OK', '1056203598', 'Dave_DSilent'], # Wordle 437 (onset), 4g.5.1: (onsen)
     # https://twitter.com/FergalSweeney/status/1562375685892603904
     ['OK', '2742981849', 'FergalSweeney'], # Wordle 431 (NEEDY), 3g1y.yellow1.white4, deedy/deely
     # https://twitter.com/HughRoberts05/status/1562385965490081792
@@ -71,6 +73,8 @@ module Configuration
     ['OK', '2168411925', 'JoshRey100'], # Wordle 431 was NEEDY, 3g1y.yellow5.white4, (neeld)
     # https://twitter.com/kitchen38jp/status/1562701812947623936: Not a Goofball
     ['OK', '265368603', 'kitchen38jp'], # Wordle 426 (shrug), 4g.5.1: (shrub)
+    # https://twitter.com/LysanderTheLion/status/1564586413538033664: Not a Goofball
+    ['OK', '1406775085264998402', 'LysanderTheLion'], # Wordle 437 (onset), 4g.5.1: (onsen)
     # https://twitter.com/Madly_Total/status/1562238786037219328: Not a Goofball
     ['OK', '1235603239598542848', 'Madly_Total'], # Wordle 428 (waste), 4g.1.4: (baste/caste/haste/paste/taste)
     # https://twitter.com/MankyPanky8D/status/1562318621757476866
