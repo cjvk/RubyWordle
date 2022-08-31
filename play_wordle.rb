@@ -330,7 +330,7 @@ def goofball_analysis
           break
         end
       end
-    elsif value == 2
+    elsif value == 2 # disable this if it gets too chatty
       answers.each do |answer|
         if answer.matches_key(key)
           singleton_keys.append([key, answer])
