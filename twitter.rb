@@ -24,6 +24,7 @@ module Configuration
 
   # Goofball processing: down to 423
 
+
   # "Goofball mode", where denylist and allowlist is disabled, and singletons are not eliminated
   @@goofball_mode = false
   # username/author ID conversion sites: https://tweeterid.com/, https://commentpicker.com/twitter-id.php
@@ -63,10 +64,16 @@ module Configuration
     ['OK', '38323083', 'Backstreetsmac'], # Wordle 437 (onset), 3g1y.yellow5.white3: (onces)
     # https://twitter.com/Dave_DSilent/status/1564758254193848320: Not a Goofball
     ['OK', '1056203598', 'Dave_DSilent'], # Wordle 437 (onset), 4g.5.1: (onsen)
+    # https://twitter.com/FeelUnusual/status/1565062742402293765: Not a Goofball
+    ['OK', '1337774146655293443', 'FeelUnusual'], # Wordle 438 (prize), 4g.1.1: (brize/frize/grize)
     # https://twitter.com/FergalSweeney/status/1562375685892603904
     ['OK', '2742981849', 'FergalSweeney'], # Wordle 431 (NEEDY), 3g1y.yellow1.white4, deedy/deely
+    # https://twitter.com/gortex2/status/1565101262735130625: Not a Goofball
+    ['OK', '242823233', 'gortex2'], # Wordle 438 (prize), 3g1y.yellow4.white2: (paire)
     # https://twitter.com/HughRoberts05/status/1562385965490081792
     ['OK', '315843621', 'HughRoberts05'], # Wordle 431 (NEEDY), 4g.3.2, neddy/nerdy
+    # https://twitter.com/inamy45/status/1564983467946811399: Not a Goofball
+    ['OK', '4728764066', 'inamy45'], # Wordle 438 (prize), 4g.2.1: (peize)
     # https://twitter.com/inosffirehs/status/1563208536179351552
     ['OK', '140688018', 'inosffirehs'], # Wordle 433 (IRONY), 4g.5.2: irons/irone
     # https://twitter.com/jf_scapes/status/1564236330401398784: Not a Goofball
