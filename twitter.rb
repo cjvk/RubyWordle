@@ -38,6 +38,8 @@ module Configuration
     ['799098238548643841', 'LoveSkate_Love'], # Wordle 436 (chief), 3g1y.yellow5.white2: []
     # https://twitter.com/polterguyst/status/1563945348355473411: Definite Goofball!
     ['1346120687233077249', 'polterguyst'], # Wordle 434 (ruder), 4g.4.1: []
+    # https://twitter.com/RepublicanDalek/status/1565005705727410178: Definite Goofball!
+    ['308900763', 'RepublicanDalek'], # Wordle 438 (prize), 4g.3.1: ()
     # https://twitter.com/toon_mikwee/status/1564239878971424771: Possible Goofball
     ['2267620176', 'toon_mikwee'], # Wordle 436 (chief), 4g.1.3: ["thief"]
     # https://twitter.com/toukxa/status/1563677960917229568: Definite Goofball!
