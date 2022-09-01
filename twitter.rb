@@ -28,6 +28,7 @@ module Configuration
   # "Goofball mode", where denylist and allowlist is disabled, and singletons are not eliminated
   @@goofball_mode = false
   # username/author ID conversion sites: https://tweeterid.com/, https://commentpicker.com/twitter-id.php
+  # TODO move denylist and allowlists to a separate file?
   @@author_id_denylist = [
     # https://twitter.com/chryo29t/status/1563129697382195200: Definite Goofball!
     ['140922619', 'chryo29t'], # Wordle 433 (irony), 4g.3.1: []
@@ -62,8 +63,12 @@ module Configuration
     ['OK', '1533447006', 'awlgae_mm'], # Wordle 435 (GAUZE), 4g.5.1: gauzy
     # https://twitter.com/Backstreetsmac/status/1564730691841101824: Not a Goofball
     ['OK', '38323083', 'Backstreetsmac'], # Wordle 437 (onset), 3g1y.yellow5.white3: (onces)
+    # https://twitter.com/C_Muteba/status/1565472253705392131: Not a Goofball
+    ['OK', '198585104', 'C_Muteba'], # Wordle 439 (fungi), 4g.1.2: (lungi/mungi/pungi)
     # https://twitter.com/Dave_DSilent/status/1564758254193848320: Not a Goofball
     ['OK', '1056203598', 'Dave_DSilent'], # Wordle 437 (onset), 4g.5.1: (onsen)
+    # https://twitter.com/Dope_Dan/status/1565393035139194882: Not a Goofball
+    ['OK', '166221335', 'Dope_Dan'], # Wordle 439 (fungi), 3g1y.yellow1.white4: (gundi)
     # https://twitter.com/FeelUnusual/status/1565062742402293765: Not a Goofball
     ['OK', '1337774146655293443', 'FeelUnusual'], # Wordle 438 (prize), 4g.1.1: (brize/frize/grize)
     # https://twitter.com/FergalSweeney/status/1562375685892603904
@@ -98,6 +103,8 @@ module Configuration
     ['OK', '53636369', 'pawadokai'], # Wordle 431 (needy), 3g1y.yellow5.white4: ["neeld"]
     # https://twitter.com/RachelWLoewen/status/1564725419999363073: Not a Goofball
     ['OK', '26732424', 'RachelWLoewen'], # Wordle 437 (onset), 4g.3.1: (oncet)
+    # https://twitter.com/rnkellystclair/status/1565415427643023360: Not a Goofball
+    ['OK', '17948846', 'rnkellystclair'], # Wordle 439 (fungi), 3g1y.yellow1.white4: (gundi)
     # https://twitter.com/StormBlast2014/status/1562287971025375233
     ['OK', '2153111274', 'StormBlast2014'], # Wordle 430 (WOVEN), 3g1y.yellow3.white1: "rowen"
     # https://twitter.com/zoeloveswordle/status/1562295852831772672

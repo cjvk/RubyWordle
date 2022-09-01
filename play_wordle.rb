@@ -13,9 +13,9 @@ VALID_WORDLE_WORDS_FILE = 'valid-wordle-words.txt'
 def populate_valid_wordle_words
   d = {}
   File.foreach(VALID_WORDLE_WORDS_FILE).with_index do |line, line_num|
+    next if line.start_with?('#')
     d[line.chomp] = line_num
   end
-  ['onsen'].each { |word| d[word] = '-1' }
   d
 end
 
@@ -926,7 +926,7 @@ def run_tests
   fail unless InterestingWordleResponses::determine_interestingness('gyyyy') == InterestingWordleResponses::WORDLE_1G4Y
   fail unless InterestingWordleResponses::determine_interestingness('yyyyy') == InterestingWordleResponses::WORDLE_0G5Y
 
-  fail unless all_4g_matches('hilly') == [7, 2, 1, 0, 2]
+  fail unless all_4g_matches('hilly') == [9, 3, 1, 0, 2]
   fail unless all_4g_matches('hills') == [18, 3, 0, 2, 2]
 
   fail unless WordleModes.determine_mode("#{WordleTweetColors::GREEN}#{WordleTweetColors::WHITE}") == 'Normal'

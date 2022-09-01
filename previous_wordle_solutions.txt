@@ -1,4 +1,4 @@
-# All Wordle answers, scraped from https://www.rockpapershotgun.com/wordle-past-answers
+# All Wordle answers, taken from https://www.rockpapershotgun.com/wordle-past-answers
 # This file supports comments, the first character must be '#'
 # Anything else is parsed as a word, first five characters only
 cigar # Wordle 0, 6/19/2021
@@ -440,3 +440,4 @@ gauze
 chief # Wordle 436, 8/29/2022
 onset
 prize
+fungi
