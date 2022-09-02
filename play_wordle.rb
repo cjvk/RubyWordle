@@ -348,7 +348,7 @@ def goofball_analysis
     if key == '4g.5.1' && false
       answers.each do |answer|
         if answer.matches_key(key)
-          puts "(#{answer.generic_tweet_url} (#{answer.author_id}))"
+          puts "(#{answer.tweet_url} (#{answer.author_id}))"
         end
       end
     end
@@ -362,6 +362,8 @@ def goofball_analysis
   UI.padded_puts '|            Goofball report           |'
   UI.padded_puts '\--------------------------------------/'
   puts ''
+
+  answers_and_verdicts = [] # [answer, key, reasoning, verdict, title]
 
   singleton_keys.each do |el|
     key = el[0]
@@ -401,24 +403,52 @@ def goofball_analysis
       title = is_goofball ? 'Definite Goofball!' : 'Not a Goofball'
     end
 
+    reasoning = "(#{valid_alternatives.join('/')})"
+    verdict = is_goofball ? 'deny' : 'allow'
+
+    answers_and_verdicts.append(
+      [answer, key, reasoning, verdict, title]
+    )
+
+  end
+
+  print_goofball_report_entry = ->(answer, key, reasoning, verdict, title) {
     nm = wordle_number
     sn = wordle_number_solution
     author_id = answer.author_id
-    reasoning = "(#{valid_alternatives.join('/')})"
-    prefix = !is_goofball ? "'OK', " : ''
-    verdict = is_goofball ? 'deny' : 'allow'
+    username = answer.username
 
     # Goofball report
     puts "Author ID #{author_id} already in denylist" if Configuration.author_id_denylist.include?(author_id)
     puts "Author ID #{author_id} already in allowlist" if Configuration.author_id_allowlist.include?(author_id)
-    puts '- name: REPLACE_ME'
+    puts "- name: #{username}"
     puts "  author_id: #{author_id}"
-    puts "  tweet: #{answer.generic_tweet_url}"
+    puts "  tweet: #{answer.tweet_url}"
     puts "  analysis: Wordle #{nm} (#{sn}), #{key}, #{reasoning}"
     puts "  verdict: #{verdict} # #{title}"
     puts ''
+  }
 
+  check_lists = ->(author_id) {
+    Configuration.author_id_denylist.include?(author_id) || Configuration.author_id_allowlist.include?(author_id)
+  }
+
+  num_suppressed = 0
+  answers_and_verdicts
+    .map{|el| num_suppressed += 1 if check_lists.call(el[0].author_id); el}
+    .delete_if{|el| check_lists.call(el[0].author_id)}
+    .each{|el| print_goofball_report_entry.call(el[0], el[1], el[2], el[3], el[4])}
+
+  if num_suppressed > 0
+    if 'show' == UI::prompt_for_input("#{num_suppressed} entries suppressed ('show' to display) ==> ", false)
+      puts ''
+      answers_and_verdicts
+        .map{|el| el} # make a copy
+        .delete_if{|el| !check_lists.call(el[0].author_id)}
+        .each{|el| print_goofball_report_entry.call(el[0], el[1], el[2], el[3], el[4])}
+    end
   end
+
   puts ''
   puts '##################################################'
 end
@@ -555,6 +585,8 @@ def penultimate_twitter_absence_of_evidence(d, stats_hash)
 
   # calculate how many actual 4g matches there are per key
   # key=laved, all_4g_matches=[6, 2, 10, 0, 2]
+  # TODO words should not be penalized for having "too many" matches
+  #      e.g. Twitter would never find 10 alternatives, since max is 5
   new_d = {}
   d.each do |key, _value|
     matches = all_4g_matches(key)

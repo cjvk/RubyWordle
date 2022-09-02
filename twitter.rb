@@ -206,24 +206,28 @@ end
 
 class Answer
   # array of "Normal-mode" squares
-  def initialize(guess_array, id, author_id)
+  def initialize(guess_array, id, author_id, username)
     @guess_array = guess_array
     @id = id
     @author_id = author_id
+    @username = username
     @is_interesting = nil
     @key = nil
   end
-  def self.generic_tweet_url id
-    "https://twitter.com/anyuser/status/#{id}"
+  def self.tweet_url(tweet_id, username)
+    "https://twitter.com/#{username}/status/#{tweet_id}"
   end
-  def generic_tweet_url
-    Answer.generic_tweet_url @id
+  def tweet_url
+    Answer.tweet_url(@id, @username)
   end
   def author_id
     @author_id
   end
+  def username
+    @username
+  end
   def pp
-    UI::padded_puts "tweet: #{generic_tweet_url}"
+    UI::padded_puts "tweet: #{tweet_url}"
     UI::padded_puts "author_id: #{author_id}"
     UI::padded_puts "key: #{@key}"
     puts ''
@@ -295,12 +299,8 @@ def twitter
   auth_token = file_data.chomp
   search_queries = [
     "wordle%20#{wordle_number}",   # "wordle 420"
-    "%23wordle%20#{wordle_number}" # "#wordle 420"
+    "%23wordle%20#{wordle_number}", # "#wordle 420"
   ]
-
-  # TODO is there a way to eliminate retweets?
-  # example original tweet: https://twitter.com/ilikep4pp4roni/status/1565602075337187328
-  # example retweet: https://twitter.com/JohnnyDee62/status/1565637313287307267
 
   search_queries.each do |search_query|
     next_token = ''
@@ -313,10 +313,18 @@ def twitter
       # handle next token
       next_token_get_parameter = page_num == 0 ? "" : "&next_token=#{next_token}"
 
-      url = "https://api.twitter.com/2/tweets/search/recent?query=#{search_query}&tweet.fields=created_at,author_id&max_results=#{Configuration.results}#{next_token_get_parameter}"
+      url = "https://api.twitter.com/2/tweets/search/recent?query=#{search_query}&tweet.fields=author_id,referenced_tweets&user.fields=id,username&expansions=author_id&max_results=#{Configuration.results}#{next_token_get_parameter}"
 
       response = Faraday.get(url, nil, {'Accept' => 'application/json', 'Authorization' => "Bearer #{auth_token}"})
       parsed_json = JSON.parse(response.body)
+
+      # create hash for author_id to username
+      author_id_to_username = {}
+      for user in parsed_json['includes']['users']
+        author_id = user['id']
+        username = user['username']
+        author_id_to_username[author_id] = username
+      end
 
       next_token = parsed_json['meta'].key?('next_token') ? parsed_json['meta']['next_token'] : ''
 
@@ -327,6 +335,9 @@ def twitter
         text = result['text']
         id = result['id']
         author_id = result['author_id']
+        username = author_id_to_username[author_id]
+        is_retweet = result['referenced_tweets'] != nil && result['referenced_tweets'][0]['type'] == 'retweeted'
+
         Debug.set_maybe (Configuration.debug_print_tweet_id != nil && Configuration.debug_print_tweet_id == id)
         Debug.maybe_log "result=#{result}"
         total_twitter_posts += 1
@@ -340,7 +351,15 @@ def twitter
         if Configuration.author_id_denylist.include?(author_id)
           allowlisted_too = Configuration.author_id_allowlist.include?(author_id)
           al_str = allowlisted_too ? ' (author allowlisted too!)' : ''
-          Debug.log "skipping tweet, denylist (#{Answer.generic_tweet_url id}) (author_id=#{author_id})#{al_str}"
+          Debug.log "skipping tweet (denylist) (#{Answer.tweet_url id, username}) (author_id=#{author_id})#{al_str}"
+          skipped_twitter_posts += 1
+          next
+        end
+        # skip retweets
+        # example tweet  : https://twitter.com/ilikep4pp4roni/status/1565602075337187328
+        # example retweet: https://twitter.com/JohnnyDee62/status/1565637313287307267
+        if is_retweet
+          Debug.log_verbose "skipping tweet (retweet) (#{Answer.tweet_url id, username}) (author_id=#{author_id})"
           skipped_twitter_posts += 1
           next
         end
@@ -413,7 +432,7 @@ def twitter
           end
 
           if guess_array.length() != num_guesses
-            Alert.alert "guess array not correct length! (#{Answer.generic_tweet_url id}) (author_id=#{author_id})"
+            Alert.alert "guess array not correct length! (#{Answer.tweet_url id, username}) (author_id=#{author_id})"
             next
           end
 
@@ -426,7 +445,7 @@ def twitter
             Debug.log '-------- RESULT: END     --------'
           end
 
-          answers.append(Answer.new(guess_array, id, author_id))
+          answers.append(Answer.new(guess_array, id, author_id, username))
 
         end
       end
@@ -467,7 +486,7 @@ def twitter
     if value == 1
       for answer in answers
         if answer.matches_key(key)
-          url = answer.generic_tweet_url
+          url = answer.tweet_url
           author_id = answer.author_id
           if Configuration.author_id_allowlist.include?(answer.author_id)
             author_allowlisted = true

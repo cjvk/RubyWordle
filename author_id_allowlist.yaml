@@ -42,6 +42,12 @@
   analysis: Wordle 439 (fungi), 3g1y.yellow1.white4, (gundi)
   verdict: allow # Not a Goofball
 
+- name: fast_n_kurious
+  author_id: 25990288
+  tweet: https://twitter.com/fast_n_kurious/status/1565756590598258689
+  analysis: Wordle 440 (charm), 4g.5.4, (chara/chard/chare/chark/charr/chars/chart/chary)
+  verdict: allow # Not a Goofball
+
 - name: FeelUnusual
   author_id: 1337774146655293443
   tweet: https://twitter.com/FeelUnusual/status/1565062742402293765
@@ -66,6 +72,18 @@
   analysis: Wordle 431 (NEEDY), 4g.3.2, neddy/nerdy
   verdict: allow # Not a Goofball
 
+- name: ihaveahat2
+  author_id: 1476249867542360067
+  tweet: https://twitter.com/ihaveahat2/status/1565812312887291904
+  analysis: Wordle 440 (charm), 4g.5.4, (chara/chard/chare/chark/charr/chars/chart/chary)
+  verdict: allow # Not a Goofball
+
+- name: ilikep4pp4roni
+  author_id: 4504452673
+  tweet: https://twitter.com/ilikep4pp4roni/status/1565602075337187328
+  analysis: Wordle 440 (charm), 4g.5.5, (chara/chard/chare/chark/charr/chars/chart/chary)
+  verdict: allow # Not a Goofball
+
 - name: inamy45
   author_id: 4728764066
   tweet: https://twitter.com/inamy45/status/1564983467946811399
@@ -76,6 +94,12 @@
   author_id: 140688018
   tweet: https://twitter.com/inosffirehs/status/1563208536179351552
   analysis: Wordle 433 (IRONY), 4g.5.2, irons/irone
+  verdict: allow # Not a Goofball
+
+- name: jaradiokids
+  author_id: 291726099
+  tweet: https://twitter.com/jaradiokids/status/1565473635426615296
+  analysis: Wordle 440 (charm), 4g.3.1, (chirm)
   verdict: allow # Not a Goofball
 
 - name: jf_scapes

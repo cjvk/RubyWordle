@@ -18,10 +18,22 @@
   analysis: Wordle 430 (woven), 4g.5.1, ()
   verdict: deny # Definite Goofball!
 
+- name: ka_ta_ck
+  author_id: 112974516
+  tweet: https://twitter.com/ka_ta_ck/status/1565696152011386881
+  analysis: Wordle 440 (charm), 3g1y.yellow1.white5, ()
+  verdict: deny # Definite Goofball!
+
 - name: LoveSkate_Love
   author_id: 799098238548643841
   tweet: https://twitter.com/LoveSkate_Love/status/1564238522487574529
   analysis: Wordle 436 (chief), 3g1y.yellow5.white2, ()
+  verdict: deny # Definite Goofball!
+
+- name: megalomania0419
+  author_id: 127868554
+  tweet: https://twitter.com/megalomania0419/status/1565641587907997696
+  analysis: Wordle 440 (charm), 4g.2.1, ()
   verdict: deny # Definite Goofball!
 
 - name: polterguyst
@@ -34,6 +46,12 @@
   author_id: 308900763
   tweet: https://twitter.com/RepublicanDalek/status/1565005705727410178
   analysis: Wordle 438 (prize), 4g.3.1, ()
+  verdict: deny # Definite Goofball!
+
+- name: tmVRlXtrkCvqvfA
+  author_id: 1373720111136186369
+  tweet: https://twitter.com/tmVRlXtrkCvqvfA/status/1565364070068260864
+  analysis: Wordle 440 (charm), 3g1y.yellow4.white1, ()
   verdict: deny # Definite Goofball!
 
 - name: toon_mikwee
