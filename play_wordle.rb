@@ -11,6 +11,8 @@ DICTIONARY_FILE = DICTIONARY_FILE_LARGE
 # from https://gist.github.com/dracos/dd0668f281e685bad51479e5acaadb93
 # replaced with below file
 # TODO have a better strategy for each dictionary
+# Note: This "better strategy" work should be on hold until the other TODO (words
+#       shall not be penalized for having "too many" matches) is completed
 # sgb-words.txt: This is the universe of reasonable wordle answers
 # valid-wordle-words.txt: This is the universe of valid wordle guesses (direct from NYT)
 # It might make sense to have a third dictionary, for use only by absence_of_evidence().
@@ -585,13 +587,27 @@ def penultimate_twitter_absence_of_evidence(d, stats_hash)
 
   # calculate how many actual 4g matches there are per key
   # key=laved, all_4g_matches=[6, 2, 10, 0, 2]
-  # TODO words should not be penalized for having "too many" matches
-  #      e.g. Twitter would never find 10 alternatives, since max is 5
+  # defined distances between ith all-4g-matches and possible observed Twitter values
+  distances = [
+    [0, [0]],
+    [1, [1, 0]], # one valid word and nobody found it: defined as 1
+    [2, [1.5, 0.75, 0]],
+    [3, [2, 1, 0.5, 0]],
+    [4, [2.5, 1.25, 0.6, 0.3, 0]],
+    [5, [3, 1.5, 0.75, 0.37, 0.18, 0]],
+    [6, [3.5, 1.75, 0.85, 0.42, 0.21, 0, 0]],
+    [7, [4, 2, 1, 0.5, 0.25, 0, 0, 0]],
+    [8, [4.5, 2.25, 1.12, 0.56, 0.28, 0, 0, 0, 0]],
+    [9, [5, 2.5, 1.25, 0.6, 0.3, 0, 0, 0, 0, 0]],
+  ].to_h
   new_d = {}
   d.each do |key, _value|
+    puts "key=#{key}"
     matches = all_4g_matches(key)
     difference = [0, 0, 0, 0, 0]
-    (0...5).each {|i| difference[i] = matches[i] - max_4gs_seen[i]}
+    # (0...5).each {|i| difference[i] = matches[i] - max_4gs_seen[i]}
+    (0...5).each {|i| difference[i] = distances[[matches[i], 9].min][max_4gs_seen[i]].to_f}
+    puts "difference=#{difference}"
     new_d[key] = [difference.sum, difference, matches, max_4gs_seen]
   end
   new_d = new_d.sort_by {|_key, value| value[0]}.to_h
