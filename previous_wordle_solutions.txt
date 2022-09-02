@@ -437,7 +437,8 @@ clown
 irony
 ruder
 gauze
-chief # Wordle 436, 8/29/2022
+chief
 onset
 prize
 fungi
+charm # Wordle 440, 9/2/2022

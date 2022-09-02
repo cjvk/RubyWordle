@@ -22,6 +22,9 @@ module Configuration
   #         Uncomment to enable printing of ALL penultimate which match this pattern
   # @@print_this_penultimate_pattern = 'wgggw' # use normalized colors (g/y/w)
 
+  #         Uncomment to enable printing of ALL answers which match this key
+  # @@print_answers_matching_this_key = '4g.5.5'
+
   # Goofball processing: down to 423
 
 
@@ -54,6 +57,9 @@ module Configuration
   end
   def self.print_this_penultimate_pattern
     defined?(@@print_this_penultimate_pattern) ? @@print_this_penultimate_pattern : nil
+  end
+  def self.print_answers_matching_this_key
+    defined?(@@print_answers_matching_this_key) ? @@print_answers_matching_this_key : nil
   end
   def self.set_goofball_mode b
     @@goofball_mode = b
@@ -216,6 +222,12 @@ class Answer
   def author_id
     @author_id
   end
+  def pp
+    UI::padded_puts "tweet: #{generic_tweet_url}"
+    UI::padded_puts "author_id: #{author_id}"
+    UI::padded_puts "key: #{@key}"
+    puts ''
+  end
   def matches_key(key)
     @is_interesting != nil && @is_interesting && @key == key
   end
@@ -285,6 +297,10 @@ def twitter
     "wordle%20#{wordle_number}",   # "wordle 420"
     "%23wordle%20#{wordle_number}" # "#wordle 420"
   ]
+
+  # TODO is there a way to eliminate retweets?
+  # example original tweet: https://twitter.com/ilikep4pp4roni/status/1565602075337187328
+  # example retweet: https://twitter.com/JohnnyDee62/status/1565637313287307267
 
   search_queries.each do |search_query|
     next_token = ''
@@ -492,6 +508,15 @@ def twitter
   puts ''
   UI.padded_puts '----------------------------------------'
   puts ''
+
+  if Configuration.print_answers_matching_this_key != nil
+    matching_key = Configuration.print_answers_matching_this_key
+    UI::padded_puts "Printing all answers matching key #{matching_key}"
+    puts ''
+    answers.each {|answer| answer.pp if answer.matches_key(matching_key)}
+    UI.padded_puts '----------------------------------------'
+    UI::padded_puts ''
+  end
 
   {
     stats: stats,

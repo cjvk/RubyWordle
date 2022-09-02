@@ -9,6 +9,16 @@ DICTIONARY_FILE_SMALL = 'sgb-words-small.txt'
 DICTIONARY_FILE = DICTIONARY_FILE_LARGE
 
 # from https://gist.github.com/dracos/dd0668f281e685bad51479e5acaadb93
+# replaced with below file
+# TODO have a better strategy for each dictionary
+# sgb-words.txt: This is the universe of reasonable wordle answers
+# valid-wordle-words.txt: This is the universe of valid wordle guesses (direct from NYT)
+# It might make sense to have a third dictionary, for use only by absence_of_evidence().
+# It is... plausible... that such a dictionary (larger than sgb-words, smaller than valid)
+# would have better predictive value. But one cannot (should not) use an incomplete
+# dictionary when eliminating words.
+
+# produced via scrape_nyt.rb
 VALID_WORDLE_WORDS_FILE = 'valid-wordle-words.txt'
 
 def populate_valid_wordle_words
