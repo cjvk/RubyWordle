@@ -27,90 +27,8 @@ module Configuration
 
   # "Goofball mode", where denylist and allowlist is disabled, and singletons are not eliminated
   @@goofball_mode = false
+
   # username/author ID conversion sites: https://tweeterid.com/, https://commentpicker.com/twitter-id.php
-  # TODO move denylist and allowlists to a separate file?
-  @@author_id_denylist = [
-    # https://twitter.com/chryo29t/status/1563129697382195200: Definite Goofball!
-    ['140922619', 'chryo29t'], # Wordle 433 (irony), 4g.3.1: []
-    # https://twitter.com/FergalSweeney/status/1563808124817100801
-    ['2742981849', 'FergalSweeney'], # Wordle 435 (GAUZE), 4g.4.3: only 2 matches: gauje/gauge
-    # https://twitter.com/filafresh/status/1562290346259783680
-    ['23026561', 'filafresh'], # Wordle 430 (woven), 4g.5.1: []
-    # https://twitter.com/LoveSkate_Love/status/1564238522487574529: Definite Goofball!
-    ['799098238548643841', 'LoveSkate_Love'], # Wordle 436 (chief), 3g1y.yellow5.white2: []
-    # https://twitter.com/polterguyst/status/1563945348355473411: Definite Goofball!
-    ['1346120687233077249', 'polterguyst'], # Wordle 434 (ruder), 4g.4.1: []
-    # https://twitter.com/RepublicanDalek/status/1565005705727410178: Definite Goofball!
-    ['308900763', 'RepublicanDalek'], # Wordle 438 (prize), 4g.3.1: ()
-    # https://twitter.com/toon_mikwee/status/1564239878971424771: Possible Goofball
-    ['2267620176', 'toon_mikwee'], # Wordle 436 (chief), 4g.1.3: ["thief"]
-    # https://twitter.com/toukxa/status/1563677960917229568: Definite Goofball!
-    ['702337186893410304', 'toukxa'], # Wordle 433 (irony), 3g2y.yellow13: []
-    # https://twitter.com/Vat_of_useless/status/1554551230864560128
-    # I asked, they said 'lobby', I replied "wouldn't that be YGWWG", then they blocked me (!)
-    ['911760502333743104', 'Vat_of_useless'], # Wordle 409 (COYLY), YGWGG (impossible)
-    # https://twitter.com/visakrish/status/1563814700462514176
-    ['122248029', 'visakrish'], # Wordle 435 (GAUZE), 4g.2.1: impossible (only gauze matches "g.uze")
-    # https://twitter.com/6Wordle/status/1558951610197258241
-    # The account description says "I do wordle in 6/6 every day so even the 5/6 friends can be proud"
-    ['1487026288682418180', '6wordle'], # Wordle 421 (KHAKI), YGGYY (impossible).
-  ].to_h
-
-  @@author_id_allowlist = [
-    # https://twitter.com/anamayzubiria/status/1564715923390472197: Not a Goofball
-    ['OK', '60993797', 'anamayzubiria'], # Wordle 437 (onset), 3g1y.yellow5.white2: (owsen)
-    # https://twitter.com/awlgae_mm/status/1563899715347169281
-    ['OK', '1533447006', 'awlgae_mm'], # Wordle 435 (GAUZE), 4g.5.1: gauzy
-    # https://twitter.com/Backstreetsmac/status/1564730691841101824: Not a Goofball
-    ['OK', '38323083', 'Backstreetsmac'], # Wordle 437 (onset), 3g1y.yellow5.white3: (onces)
-    # https://twitter.com/C_Muteba/status/1565472253705392131: Not a Goofball
-    ['OK', '198585104', 'C_Muteba'], # Wordle 439 (fungi), 4g.1.2: (lungi/mungi/pungi)
-    # https://twitter.com/Dave_DSilent/status/1564758254193848320: Not a Goofball
-    ['OK', '1056203598', 'Dave_DSilent'], # Wordle 437 (onset), 4g.5.1: (onsen)
-    # https://twitter.com/Dope_Dan/status/1565393035139194882: Not a Goofball
-    ['OK', '166221335', 'Dope_Dan'], # Wordle 439 (fungi), 3g1y.yellow1.white4: (gundi)
-    # https://twitter.com/FeelUnusual/status/1565062742402293765: Not a Goofball
-    ['OK', '1337774146655293443', 'FeelUnusual'], # Wordle 438 (prize), 4g.1.1: (brize/frize/grize)
-    # https://twitter.com/FergalSweeney/status/1562375685892603904
-    ['OK', '2742981849', 'FergalSweeney'], # Wordle 431 (NEEDY), 3g1y.yellow1.white4, deedy/deely
-    # https://twitter.com/gortex2/status/1565101262735130625: Not a Goofball
-    ['OK', '242823233', 'gortex2'], # Wordle 438 (prize), 3g1y.yellow4.white2: (paire)
-    # https://twitter.com/HughRoberts05/status/1562385965490081792
-    ['OK', '315843621', 'HughRoberts05'], # Wordle 431 (NEEDY), 4g.3.2, neddy/nerdy
-    # https://twitter.com/inamy45/status/1564983467946811399: Not a Goofball
-    ['OK', '4728764066', 'inamy45'], # Wordle 438 (prize), 4g.2.1: (peize)
-    # https://twitter.com/inosffirehs/status/1563208536179351552
-    ['OK', '140688018', 'inosffirehs'], # Wordle 433 (IRONY), 4g.5.2: irons/irone
-    # https://twitter.com/jf_scapes/status/1564236330401398784: Not a Goofball
-    ['OK', '946614010077523968', 'jf_scapes'], # Wordle 436 (chief), 0g5y.: ["fiche"]
-    # https://twitter.com/JoshRey100/status/1562543624012713985
-    ['OK', '2168411925', 'JoshRey100'], # Wordle 431 was NEEDY, 3g1y.yellow5.white4, (neeld)
-    # https://twitter.com/kitchen38jp/status/1562701812947623936: Not a Goofball
-    ['OK', '265368603', 'kitchen38jp'], # Wordle 426 (shrug), 4g.5.1: (shrub)
-    # https://twitter.com/LysanderTheLion/status/1564586413538033664: Not a Goofball
-    ['OK', '1406775085264998402', 'LysanderTheLion'], # Wordle 437 (onset), 4g.5.1: (onsen)
-    # https://twitter.com/Madly_Total/status/1562238786037219328: Not a Goofball
-    ['OK', '1235603239598542848', 'Madly_Total'], # Wordle 428 (waste), 4g.1.4: (baste/caste/haste/paste/taste)
-    # https://twitter.com/MankyPanky8D/status/1562318621757476866
-    ['OK', '1558549097673412609', 'MankyPanky8D'], # Wordle 430 (woven), 4g.3.3: ["woken", "women", "woxen"]
-    # https://twitter.com/michelle4mmkh4/status/1562452851711811584
-    ['OK', '468854236', 'michelle4mmkh4'], # Wordle 431 (NEEDY), 4g.1.3, many -EEDY options
-    # https://twitter.com/moore_hype/status/1563595600880619520: Not a Goofball
-    ['OK', '989297528419078144', 'moore_hype'], # Wordle 424 (twice), 4g.4.1: (twine/twire/twite)
-    # https://twitter.com/mXaw7zyRa7ARsFL/status/1562130977576865792
-    ['OK', '1301656879102218240', 'mXaw7zyRa7ARsFL'], # Wordle 430 (WOVEN), 4g.1.3: coven/doven/hoven/roven
-    # https://twitter.com/pawadokai/status/1562675094094487553: Not a Goofball
-    ['OK', '53636369', 'pawadokai'], # Wordle 431 (needy), 3g1y.yellow5.white4: ["neeld"]
-    # https://twitter.com/RachelWLoewen/status/1564725419999363073: Not a Goofball
-    ['OK', '26732424', 'RachelWLoewen'], # Wordle 437 (onset), 4g.3.1: (oncet)
-    # https://twitter.com/rnkellystclair/status/1565415427643023360: Not a Goofball
-    ['OK', '17948846', 'rnkellystclair'], # Wordle 439 (fungi), 3g1y.yellow1.white4: (gundi)
-    # https://twitter.com/StormBlast2014/status/1562287971025375233
-    ['OK', '2153111274', 'StormBlast2014'], # Wordle 430 (WOVEN), 3g1y.yellow3.white1: "rowen"
-    # https://twitter.com/zoeloveswordle/status/1562295852831772672
-    ['OK', '1297960675923222529', 'zoeloveswordle'], # Wordle 430 (WOVEN), 4g.1.2: coven/doven/hoven/roven
-  ].map { |x| raise "allowlist length error" if x.length != 3; [x[1], x[2]] }.to_h
-
   # interesting Twitter handles and author IDs
   # habanerohiker / 45384296
   #         appears to have authored a bot (https://twitter.com/habanerohiker/status/1559163924548915201)
@@ -144,10 +62,18 @@ module Configuration
     @@goofball_mode
   end
   def self.author_id_denylist
-    @@goofball_mode ? {} : @@author_id_denylist
+    return {} if @@goofball_mode
+    YAML.load_file('author_id_denylist.yaml')
+      .map{|el| raise "problem!" if el['verdict'] != 'deny'; el}
+      .map{|el| [el['author_id'].to_s, el['name']]}
+      .to_h
   end
   def self.author_id_allowlist
-    @@goofball_mode ? {} : @@author_id_allowlist
+    return {} if @@goofball_mode
+    YAML.load_file('author_id_allowlist.yaml')
+      .map{|el| raise "problem!" if el['verdict'] != 'allow'; el}
+      .map{|el| [el['author_id'].to_s, el['name']]}
+      .to_h
   end
 end
 
@@ -525,11 +451,13 @@ def twitter
     if value == 1
       for answer in answers
         if answer.matches_key(key)
+          url = answer.generic_tweet_url
+          author_id = answer.author_id
           if Configuration.author_id_allowlist.include?(answer.author_id)
             author_allowlisted = true
-            Debug.log "keeping key #{key} with value 1. (#{answer.generic_tweet_url}) (author_id=#{answer.author_id})"
+            Debug.log "keeping key #{key} with value 1 (author allowlisted). (#{url}) (author_id=#{author_id})"
           else
-            Alert.alert "deleting key #{key} with value 1! (#{answer.generic_tweet_url}) (author_id=#{answer.author_id})"
+            Alert.alert "deleting key #{key} with value 1! (#{url}) (author_id=#{author_id})"
           end
           break
         end

@@ -1,0 +1,71 @@
+---
+
+- name: chryo29t
+  author_id: 140922619
+  tweet: https://twitter.com/chryo29t/status/1563129697382195200
+  analysis: Wordle 433 (irony), 4g.3.1, ()
+  verdict: deny # Definite Goofball!
+
+- name: FergalSweeney
+  author_id: 2742981849
+  tweet: https://twitter.com/FergalSweeney/status/1563808124817100801
+  analysis: Wordle 435 (GAUZE), 4g.4.3, (gauje/gauge)
+  verdict: deny # Possible Goofball
+
+- name: filafresh
+  author_id: 23026561
+  tweet: https://twitter.com/filafresh/status/1562290346259783680
+  analysis: Wordle 430 (woven), 4g.5.1, ()
+  verdict: deny # Definite Goofball!
+
+- name: LoveSkate_Love
+  author_id: 799098238548643841
+  tweet: https://twitter.com/LoveSkate_Love/status/1564238522487574529
+  analysis: Wordle 436 (chief), 3g1y.yellow5.white2, ()
+  verdict: deny # Definite Goofball!
+
+- name: polterguyst
+  author_id: 1346120687233077249
+  tweet: https://twitter.com/polterguyst/status/1563945348355473411
+  analysis: Wordle 434 (ruder), 4g.4.1, ()
+  verdict: deny # Definite Goofball!
+
+- name: RepublicanDalek
+  author_id: 308900763
+  tweet: https://twitter.com/RepublicanDalek/status/1565005705727410178
+  analysis: Wordle 438 (prize), 4g.3.1, ()
+  verdict: deny # Definite Goofball!
+
+- name: toon_mikwee
+  author_id: 2267620176
+  tweet: https://twitter.com/toon_mikwee/status/1564239878971424771
+  analysis: Wordle 436 (chief), 4g.1.3, (thief)
+  verdict: deny # Possible Goofball
+
+- name: toukxa
+  author_id: 702337186893410304
+  tweet: https://twitter.com/toukxa/status/1563677960917229568
+  analysis: Wordle 433 (irony), 3g2y.yellow13, ()
+  verdict: deny # Definite Goofball!
+
+- name: Vat_of_useless
+  author_id: 911760502333743104
+  tweet: https://twitter.com/Vat_of_useless/status/1554551230864560128
+  analysis: Wordle 409 (COYLY), YGWGG (impossible)
+  verdict: deny # Definite Goofball!
+  # additional note: I asked, they said 'lobby', I replied "wouldn't that be YGWWG"
+  # Then they blocked me (!)
+
+- name: visakrish
+  author_id: 122248029
+  tweet: https://twitter.com/visakrish/status/1563814700462514176
+  analysis: Wordle 435 (GAUZE), 4g.2.1, ()
+  verdict: deny # Definite Goofball!
+
+- name: 6wordle
+  author_id: 1487026288682418180
+  tweet: https://twitter.com/6Wordle/status/1558951610197258241
+  analysis: Wordle 421 (KHAKI), YGGYY (impossible).
+  verdict: deny # Definite Goofball!
+  # The account description says "I do wordle in 6/6 every day so even the 5/6 friends can be proud"
+

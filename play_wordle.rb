@@ -1,6 +1,7 @@
 #!/usr/bin/ruby -w
 
 require_relative 'twitter'
+require 'yaml'
 
 # copied from https://github.com/charlesreid1/five-letter-words
 DICTIONARY_FILE_LARGE = 'sgb-words.txt'
@@ -156,9 +157,6 @@ module UI
           print_a_dad_joke
         when 'test'
           calculate_constraint_cardinality
-        when 'test2'
-          puts "denylist = #{Configuration.author_id_denylist}"
-          puts "allowlist = #{Configuration.author_id_allowlist}"
         when 'goofball'
           goofball_analysis
         when 'help', 'h'
@@ -398,12 +396,16 @@ def goofball_analysis
     author_id = answer.author_id
     reasoning = "(#{valid_alternatives.join('/')})"
     prefix = !is_goofball ? "'OK', " : ''
+    verdict = is_goofball ? 'deny' : 'allow'
 
     # Goofball report
     puts "Author ID #{author_id} already in denylist" if Configuration.author_id_denylist.include?(author_id)
     puts "Author ID #{author_id} already in allowlist" if Configuration.author_id_allowlist.include?(author_id)
-    puts "# #{answer.generic_tweet_url}: #{title}"
-    puts "[#{prefix}'#{answer.author_id}', 'REPLACE_ME'], # Wordle #{nm} (#{sn}), #{key}: #{reasoning}"
+    puts '- name: REPLACE_ME'
+    puts "  author_id: #{author_id}"
+    puts "  tweet: #{answer.generic_tweet_url}"
+    puts "  analysis: Wordle #{nm} (#{sn}), #{key}, #{reasoning}"
+    puts "  verdict: #{verdict} # #{title}"
     puts ''
 
   end

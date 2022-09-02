@@ -1,0 +1,163 @@
+---
+
+- name: anamayzubiria
+  author_id: 60993797
+  tweet: https://twitter.com/anamayzubiria/status/1564715923390472197
+  analysis: Wordle 437 (onset), 3g1y.yellow5.white2, (owsen)
+  verdict: allow # Not a Goofball
+
+- name: awlgae_mm
+  author_id: 1533447006
+  tweet: https://twitter.com/awlgae_mm/status/1563899715347169281
+  analysis: Wordle 435 (GAUZE), 4g.5.1, gauzy
+  verdict: allow # Not a Goofball
+
+- name: Backstreetsmac
+  author_id: 38323083
+  tweet: https://twitter.com/Backstreetsmac/status/1564730691841101824
+  analysis: Wordle 437 (onset), 3g1y.yellow5.white3, (onces)
+  verdict: allow # Not a Goofball
+
+- name: C_Muteba
+  author_id: 198585104
+  tweet: https://twitter.com/C_Muteba/status/1565472253705392131
+  analysis: Wordle 439 (fungi), 4g.1.2, (lungi/mungi/pungi)
+  verdict: allow # Not a Goofball
+
+- name: Dave_DSilent
+  author_id: 1056203598
+  tweet: https://twitter.com/Dave_DSilent/status/1564758254193848320
+  analysis: Wordle 437 (onset), 4g.5.1, (onsen)
+  verdict: allow # Not a Goofball
+
+- name: DebbieW31319802
+  author_id: 1461528890459963397
+  tweet: https://twitter.com/DebbieW31319802/status/1565541672016089088
+  analysis: Wordle 439 (fungi), 4g.1.2, (lungi/mungi/pungi)
+  verdict: allow # Not a Goofball
+
+- name: Dope_Dan
+  author_id: 166221335
+  tweet: https://twitter.com/Dope_Dan/status/1565393035139194882
+  analysis: Wordle 439 (fungi), 3g1y.yellow1.white4, (gundi)
+  verdict: allow # Not a Goofball
+
+- name: FeelUnusual
+  author_id: 1337774146655293443
+  tweet: https://twitter.com/FeelUnusual/status/1565062742402293765
+  analysis: Wordle 438 (prize), 4g.1.1, (brize/frize/grize)
+  verdict: allow # Not a Goofball
+
+- name: FergalSweeney
+  author_id: 2742981849
+  tweet: https://twitter.com/FergalSweeney/status/1562375685892603904
+  analysis: Wordle 431 (NEEDY), 3g1y.yellow1.white4, deedy/deely
+  verdict: allow # Not a Goofball
+
+- name: gortex2
+  author_id: 242823233
+  tweet: https://twitter.com/gortex2/status/1565101262735130625
+  analysis: Wordle 438 (prize), 3g1y.yellow4.white2, (paire)
+  verdict: allow # Not a Goofball
+
+- name: HughRoberts05
+  author_id: 315843621
+  tweet: https://twitter.com/HughRoberts05/status/1562385965490081792
+  analysis: Wordle 431 (NEEDY), 4g.3.2, neddy/nerdy
+  verdict: allow # Not a Goofball
+
+- name: inamy45
+  author_id: 4728764066
+  tweet: https://twitter.com/inamy45/status/1564983467946811399
+  analysis: Wordle 438 (prize), 4g.2.1, (peize)
+  verdict: allow # Not a Goofball
+
+- name: inosffirehs
+  author_id: 140688018
+  tweet: https://twitter.com/inosffirehs/status/1563208536179351552
+  analysis: Wordle 433 (IRONY), 4g.5.2, irons/irone
+  verdict: allow # Not a Goofball
+
+- name: jf_scapes
+  author_id: 946614010077523968
+  tweet: https://twitter.com/jf_scapes/status/1564236330401398784
+  analysis: Wordle 436 (chief), 0g5y., ["fiche"]
+  verdict: allow # Not a Goofball
+
+- name: JoshRey100
+  author_id: 2168411925
+  tweet: https://twitter.com/JoshRey100/status/1562543624012713985
+  analysis: Wordle 431 was NEEDY, 3g1y.yellow5.white4, (neeld)
+  verdict: allow # Not a Goofball
+
+- name: kitchen38jp
+  author_id: 265368603
+  tweet: https://twitter.com/kitchen38jp/status/1562701812947623936
+  analysis: Wordle 426 (shrug), 4g.5.1, (shrub)
+  verdict: allow # Not a Goofball
+
+- name: LysanderTheLion
+  author_id: 1406775085264998402
+  tweet: https://twitter.com/LysanderTheLion/status/1564586413538033664
+  analysis: Wordle 437 (onset), 4g.5.1, (onsen)
+  verdict: allow # Not a Goofball
+
+- name: Madly_Total
+  author_id: 1235603239598542848
+  tweet: https://twitter.com/Madly_Total/status/1562238786037219328
+  analysis: Wordle 428 (waste), 4g.1.4, (baste/caste/haste/paste/taste)
+  verdict: allow # Not a Goofball
+
+- name: MankyPanky8D
+  author_id: 1558549097673412609
+  tweet: https://twitter.com/MankyPanky8D/status/1562318621757476866
+  analysis: Wordle 430 (woven), 4g.3.3, ["woken", "women", "woxen"]
+  verdict: allow # Not a Goofball
+
+- name: michelle4mmkh4
+  author_id: 468854236
+  tweet: https://twitter.com/michelle4mmkh4/status/1562452851711811584
+  analysis: Wordle 431 (NEEDY), 4g.1.3, many -EEDY options
+  verdict: allow # Not a Goofball
+
+- name: moore_hype
+  author_id: 989297528419078144
+  tweet: https://twitter.com/moore_hype/status/1563595600880619520
+  analysis: Wordle 424 (twice), 4g.4.1, (twine/twire/twite)
+  verdict: allow # Not a Goofball
+
+- name: mXaw7zyRa7ARsFL
+  author_id: 1301656879102218240
+  tweet: https://twitter.com/mXaw7zyRa7ARsFL/status/1562130977576865792
+  analysis: Wordle 430 (WOVEN), 4g.1.3, coven/doven/hoven/roven
+  verdict: allow # Not a Goofball
+
+- name: pawadokai
+  author_id: 53636369
+  tweet: https://twitter.com/pawadokai/status/1562675094094487553
+  analysis: Wordle 431 (needy), 3g1y.yellow5.white4, ["neeld"]
+  verdict: allow # Not a Goofball
+
+- name: RachelWLoewen
+  author_id: 26732424
+  tweet: https://twitter.com/RachelWLoewen/status/1564725419999363073
+  analysis: Wordle 437 (onset), 4g.3.1, (oncet)
+  verdict: allow # Not a Goofball
+
+- name: rnkellystclair
+  author_id: 17948846
+  tweet: https://twitter.com/rnkellystclair/status/1565415427643023360
+  analysis: Wordle 439 (fungi), 3g1y.yellow1.white4, (gundi)
+  verdict: allow # Not a Goofball
+
+- name: StormBlast2014
+  author_id: 2153111274
+  tweet: https://twitter.com/StormBlast2014/status/1562287971025375233
+  analysis: Wordle 430 (WOVEN), 3g1y.yellow3.white1, "rowen"
+  verdict: allow # Not a Goofball
+
+- name: zoeloveswordle
+  author_id: 1297960675923222529
+  tweet: https://twitter.com/zoeloveswordle/status/1562295852831772672
+  analysis: Wordle 430 (WOVEN), 4g.1.2, coven/doven/hoven/roven
+  verdict: allow # Not a Goofball
