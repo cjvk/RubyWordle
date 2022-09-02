@@ -174,6 +174,12 @@
   analysis: Wordle 439 (fungi), 3g1y.yellow1.white4, (gundi)
   verdict: allow # Not a Goofball
 
+- name: rtwilliams16
+  author_id: 754118327488970752
+  tweet: https://twitter.com/rtwilliams16/status/1565679498451947527
+  analysis: Wordle 440 (charm), 4g.5.3, (chara/chard/chare/chark/charr/chars/chart/chary)
+  verdict: allow # Not a Goofball
+
 - name: StormBlast2014
   author_id: 2153111274
   tweet: https://twitter.com/StormBlast2014/status/1562287971025375233

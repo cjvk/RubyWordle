@@ -13,6 +13,9 @@ module Configuration
   # Set to true to skip "long" functions
   @@instrumentation_only = false
 
+  #         dracos has ~2k fewer words than NYT, could perform better
+  @@absence_of_evidence_filename = DRACOS_VALID_WORDLE_WORDS_FILE
+
   #         Uncomment this to query a specific wordle number
   # @@wordle_number_override = 433
 
@@ -44,6 +47,9 @@ module Configuration
   end
   def self.instrumentation_only
     @@instrumentation_only
+  end
+  def self.absence_of_evidence_filename
+    @@absence_of_evidence_filename
   end
   def self.wordle_number_override
     defined?(@@wordle_number_override) ? @@wordle_number_override : nil

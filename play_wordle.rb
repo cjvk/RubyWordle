@@ -1,31 +1,24 @@
 #!/usr/bin/ruby -w
 
-require_relative 'twitter'
-require 'yaml'
-
 # copied from https://github.com/charlesreid1/five-letter-words
+# The purpose of this file is the universe of solutions
 DICTIONARY_FILE_LARGE = 'sgb-words.txt'
 DICTIONARY_FILE_SMALL = 'sgb-words-small.txt'
 DICTIONARY_FILE = DICTIONARY_FILE_LARGE
-
-# from https://gist.github.com/dracos/dd0668f281e685bad51479e5acaadb93
-# replaced with below file
-# TODO have a better strategy for each dictionary
-# Note: This "better strategy" work should be on hold until the other TODO (words
-#       shall not be penalized for having "too many" matches) is completed
-# sgb-words.txt: This is the universe of reasonable wordle answers
-# valid-wordle-words.txt: This is the universe of valid wordle guesses (direct from NYT)
-# It might make sense to have a third dictionary, for use only by absence_of_evidence().
-# It is... plausible... that such a dictionary (larger than sgb-words, smaller than valid)
-# would have better predictive value. But one cannot (should not) use an incomplete
-# dictionary when eliminating words.
-
-# produced via scrape_nyt.rb
+# produced via scrape_nyt.rb: the universe of legal guesses
 VALID_WORDLE_WORDS_FILE = 'valid-wordle-words.txt'
+# from https://gist.github.com/dracos/dd0668f281e685bad51479e5acaadb93
+# The purpose of this file is a smaller legal-guesses file,
+# which might perform better during absence-of-evidence analysis.
+DRACOS_VALID_WORDLE_WORDS_FILE = 'dracos-valid-wordle-words.txt'
 
-def populate_valid_wordle_words
+# moving this after the file declarations because Configuration needs it
+require_relative 'twitter'
+require 'yaml'
+
+def populate_valid_wordle_words(filename=VALID_WORDLE_WORDS_FILE)
   d = {}
-  File.foreach(VALID_WORDLE_WORDS_FILE).with_index do |line, line_num|
+  File.foreach(filename).with_index do |line, line_num|
     next if line.start_with?('#')
     d[line.chomp] = line_num
   end
@@ -602,12 +595,10 @@ def penultimate_twitter_absence_of_evidence(d, stats_hash)
   ].to_h
   new_d = {}
   d.each do |key, _value|
-    puts "key=#{key}"
-    matches = all_4g_matches(key)
+    matches = all_4g_matches(key, Configuration.absence_of_evidence_filename)
     difference = [0, 0, 0, 0, 0]
     # (0...5).each {|i| difference[i] = matches[i] - max_4gs_seen[i]}
     (0...5).each {|i| difference[i] = distances[[matches[i], 9].min][max_4gs_seen[i]].to_f}
-    puts "difference=#{difference}"
     new_d[key] = [difference.sum, difference, matches, max_4gs_seen]
   end
   new_d = new_d.sort_by {|_key, value| value[0]}.to_h
@@ -710,9 +701,9 @@ ALPHABET = [
   'n','o','p','q','r','s','t','u','v','w','x','y','z'
 ]
 
-def all_4g_matches(word)
+def all_4g_matches(word, filename)
   return_array = [0, 0, 0, 0, 0]
-  all_words = populate_valid_wordle_words
+  all_words = populate_valid_wordle_words(filename)
   (0...5).each do |i|
     ith_sum = 0
     temp_word = word.dup
@@ -986,8 +977,10 @@ def run_tests
   fail unless InterestingWordleResponses::determine_interestingness('gyyyy') == InterestingWordleResponses::WORDLE_1G4Y
   fail unless InterestingWordleResponses::determine_interestingness('yyyyy') == InterestingWordleResponses::WORDLE_0G5Y
 
-  fail unless all_4g_matches('hilly') == [9, 3, 1, 0, 2]
-  fail unless all_4g_matches('hills') == [18, 3, 0, 2, 2]
+  fail unless all_4g_matches('hilly', VALID_WORDLE_WORDS_FILE) == [9, 3, 1, 0, 2]
+  fail unless all_4g_matches('hills', VALID_WORDLE_WORDS_FILE) == [18, 3, 0, 2, 2]
+  fail unless all_4g_matches('hilly', DRACOS_VALID_WORDLE_WORDS_FILE) == [7, 2, 1, 0, 2]
+  fail unless all_4g_matches('hills', DRACOS_VALID_WORDLE_WORDS_FILE) == [18, 3, 0, 2, 2]
 
   fail unless WordleModes.determine_mode("#{WordleTweetColors::GREEN}#{WordleTweetColors::WHITE}") == 'Normal'
   fail unless WordleModes.determine_mode("#{WordleTweetColors::YELLOW}#{WordleTweetColors::WHITE}") == 'Normal'
