@@ -1,6 +1,7 @@
 #!/usr/bin/ruby -w
 
 # TODO Add more tests. When I change things, I only know when the code is run.
+#      Should tests be in their own file?
 #   1. test
 #   2. raise (-!--- response), twitter, filtering, absence-of-evidence
 #   3. goofball 444
@@ -13,20 +14,23 @@
 # TODO twitter() (returning a stats_hash) should cache the result?
 #
 # files, classes, modules
-# twitter.rb:
+# twitter.rb
 #   - All things pertaining to making the twitter call.
 #   - Might make sense to have the entire file be in a module.
 #   - Including Twitter::Configuration.
-# play_wordle.rb:
+# play_wordle.rb
 #   - The main entrypoint. "ruby play_wordle.rb", or "./play_wordle.rb"
 #   - Endeavor to move things out of this file, if possible.
+# wordle_colors.rb
+#   - modules WordleShareColors, WordleModes
+#   - encapsulating different colors and modes, generally the output will be a normalized 'ygwwg'
 #
 #
 #
 #
 # Current state:
 # modules: Alert, Debug, UI, CompactKeys, Distances, PreviousWordleSolutions
-#          Filter, Configuration, WordleTweetColors, InterestingWordleResponses
+#          Filter, Configuration, WordleShareColors, InterestingWordleResponses
 #          WordleModes
 # classes: Answer
 # files: play_wordle.rb, twitter.rb, scrape_nyt.rb (ignore problem_words.rb, mom_worst_word.rb)
@@ -44,6 +48,7 @@ VALID_WORDLE_WORDS_FILE = 'valid-wordle-words.txt'
 DRACOS_VALID_WORDLE_WORDS_FILE = 'dracos-valid-wordle-words.txt'
 
 # moving this after the file declarations because Configuration needs it
+require_relative 'wordle_core'
 require_relative 'twitter'
 require 'yaml'
 
@@ -657,7 +662,6 @@ def calculate_fingerprints
   fingerprints
 end
 
-# def score(stats_hash, fingerprint)
 def score(candidate_word, stats_hash, fingerprint)
   Debug.set_maybe(candidate_word == 'prawn')
   Debug.maybe_log 'score: ENTER'
@@ -1460,27 +1464,27 @@ def run_tests
   fail unless all_4g_matches('hilly', DRACOS_VALID_WORDLE_WORDS_FILE) == [7, 2, 1, 0, 2]
   fail unless all_4g_matches('hills', DRACOS_VALID_WORDLE_WORDS_FILE) == [18, 3, 0, 2, 2]
 
-  fail unless WordleModes.determine_mode("#{WordleTweetColors::GREEN}#{WordleTweetColors::WHITE}") == 'Normal'
-  fail unless WordleModes.determine_mode("#{WordleTweetColors::YELLOW}#{WordleTweetColors::WHITE}") == 'Normal'
-  fail unless WordleModes.determine_mode("#{WordleTweetColors::GREEN}#{WordleTweetColors::BLACK}") == 'Dark'
-  fail unless WordleModes.determine_mode("#{WordleTweetColors::YELLOW}#{WordleTweetColors::BLACK}") == 'Dark'
-  fail unless WordleModes.determine_mode("#{WordleTweetColors::ORANGE}#{WordleTweetColors::WHITE}") == 'Deborah'
-  fail unless WordleModes.determine_mode("#{WordleTweetColors::BLUE}#{WordleTweetColors::WHITE}") == 'Deborah'
-  fail unless WordleModes.determine_mode("#{WordleTweetColors::ORANGE}#{WordleTweetColors::BLACK}") == 'DeborahDark'
-  fail unless WordleModes.determine_mode("#{WordleTweetColors::BLUE}#{WordleTweetColors::BLACK}") == 'DeborahDark'
+  fail unless WordleModes.determine_mode("#{WordleShareColors::GREEN}#{WordleShareColors::WHITE}") == 'Normal'
+  fail unless WordleModes.determine_mode("#{WordleShareColors::YELLOW}#{WordleShareColors::WHITE}") == 'Normal'
+  fail unless WordleModes.determine_mode("#{WordleShareColors::GREEN}#{WordleShareColors::BLACK}") == 'Dark'
+  fail unless WordleModes.determine_mode("#{WordleShareColors::YELLOW}#{WordleShareColors::BLACK}") == 'Dark'
+  fail unless WordleModes.determine_mode("#{WordleShareColors::ORANGE}#{WordleShareColors::WHITE}") == 'Deborah'
+  fail unless WordleModes.determine_mode("#{WordleShareColors::BLUE}#{WordleShareColors::WHITE}") == 'Deborah'
+  fail unless WordleModes.determine_mode("#{WordleShareColors::ORANGE}#{WordleShareColors::BLACK}") == 'DeborahDark'
+  fail unless WordleModes.determine_mode("#{WordleShareColors::BLUE}#{WordleShareColors::BLACK}") == 'DeborahDark'
 
-  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::WHITE, 'Normal') == 'w'
-  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::YELLOW, 'Normal') == 'y'
-  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::GREEN, 'Normal') == 'g'
-  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::BLACK, 'Dark') == 'w'
-  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::YELLOW, 'Dark') == 'y'
-  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::GREEN, 'Dark') == 'g'
-  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::WHITE, 'Deborah') == 'w'
-  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::BLUE, 'Deborah') == 'y'
-  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::ORANGE, 'Deborah') == 'g'
-  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::BLACK, 'DeborahDark') == 'w'
-  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::BLUE, 'DeborahDark') == 'y'
-  fail unless WordleModes.unicode_to_normalized_string(WordleTweetColors::ORANGE, 'DeborahDark') == 'g'
+  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::WHITE, 'Normal') == 'w'
+  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::YELLOW, 'Normal') == 'y'
+  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::GREEN, 'Normal') == 'g'
+  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::BLACK, 'Dark') == 'w'
+  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::YELLOW, 'Dark') == 'y'
+  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::GREEN, 'Dark') == 'g'
+  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::WHITE, 'Deborah') == 'w'
+  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::BLUE, 'Deborah') == 'y'
+  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::ORANGE, 'Deborah') == 'g'
+  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::BLACK, 'DeborahDark') == 'w'
+  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::BLUE, 'DeborahDark') == 'y'
+  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::ORANGE, 'DeborahDark') == 'g'
 
   kdh = CompactKeys::KEY_COMPRESSION_HASH
   max_compact_keys_value = kdh.values.max

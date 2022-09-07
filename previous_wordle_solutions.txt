@@ -424,7 +424,7 @@ label
 hunky # Wordle 420, 8/13/2022
 khaki
 poker
-gruel
+gruel # First Wordle solved in 1
 twice
 twang
 shrug
