@@ -175,8 +175,8 @@ module Twitter
     wordle_day_0 = Date.civil(2021, 6, 19)
     difference_in_days = (now - wordle_day_0).to_i
     wordle_number = difference_in_days.to_s
-    if Twitter::Configuration.wordle_number_override != nil
-      wordle_number = Twitter::Configuration.wordle_number_override.to_s
+    if Configuration.wordle_number_override != nil
+      wordle_number = Configuration.wordle_number_override.to_s
       Debug.log_terse "using user-specified wordle number: #{wordle_number}"
     end
     answers = []
@@ -197,7 +197,7 @@ module Twitter
 
     search_queries.each do |search_query|
       next_token = ''
-      (0...Twitter::Configuration.pages).each do |page_num|
+      (0...Configuration.pages).each do |page_num|
         # https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent
 
         # quit early if nothing remaining
@@ -206,7 +206,7 @@ module Twitter
         # handle next token
         next_token_get_parameter = page_num == 0 ? "" : "&next_token=#{next_token}"
 
-        url = "https://api.twitter.com/2/tweets/search/recent?query=#{search_query}&tweet.fields=author_id,referenced_tweets&user.fields=id,username&expansions=author_id&max_results=#{Twitter::Configuration.results}#{next_token_get_parameter}"
+        url = "https://api.twitter.com/2/tweets/search/recent?query=#{search_query}&tweet.fields=author_id,referenced_tweets&user.fields=id,username&expansions=author_id&max_results=#{Configuration.results}#{next_token_get_parameter}"
 
         response = Faraday.get(url, nil, {'Accept' => 'application/json', 'Authorization' => "Bearer #{auth_token}"})
         parsed_json = JSON.parse(response.body)
@@ -231,7 +231,7 @@ module Twitter
           username = author_id_to_username[author_id]
           is_retweet = result['referenced_tweets'] != nil && result['referenced_tweets'][0]['type'] == 'retweeted'
 
-          Debug.set_maybe (Twitter::Configuration.debug_print_tweet_id != nil && Twitter::Configuration.debug_print_tweet_id == id)
+          Debug.set_maybe (Configuration.debug_print_tweet_id != nil && Configuration.debug_print_tweet_id == id)
           Debug.maybe_log "result=#{result}"
           total_twitter_posts += 1
           # skip those we've already seen
@@ -241,8 +241,8 @@ module Twitter
             unique_twitter_posts[id] = '1'
           end
           # check the denylist
-          if Twitter::Configuration.author_id_denylist.include?(author_id)
-            allowlisted_too = Twitter::Configuration.author_id_allowlist.include?(author_id)
+          if Configuration.author_id_denylist.include?(author_id)
+            allowlisted_too = Configuration.author_id_allowlist.include?(author_id)
             al_str = allowlisted_too ? ' (author allowlisted too!)' : ''
             Debug.log "skipping tweet (denylist) (#{Twitter::Answer.tweet_url id, username}) (author_id=#{author_id})#{al_str}"
             skipped_twitter_posts += 1
@@ -329,7 +329,7 @@ module Twitter
               next
             end
 
-            if guess_array[guess_array.length()-2] == Twitter::Configuration.print_this_penultimate_pattern
+            if guess_array[guess_array.length()-2] == Configuration.print_this_penultimate_pattern
               Debug.log '-------- TEXT: BEGIN     --------'
               Debug.log text
               Debug.log '-------- TEXT: END       --------'
@@ -374,14 +374,14 @@ module Twitter
     # remove entries if they have exactly one occurrence (possible goofballs)
     # stats.delete_if { |key, value| value == 1 }
     stats.delete_if do |key, value|
-      break if Twitter::Configuration.goofball_mode?
+      break if Configuration.goofball_mode?
       author_allowlisted = false
       if value == 1
         for answer in answers
           if answer.matches_key(key)
             url = answer.tweet_url
             author_id = answer.author_id
-            if Twitter::Configuration.author_id_allowlist.include?(answer.author_id)
+            if Configuration.author_id_allowlist.include?(answer.author_id)
               author_allowlisted = true
               Debug.log "keeping key #{key} with value 1 (author allowlisted). (#{url}) (author_id=#{author_id})"
             else
@@ -421,8 +421,8 @@ module Twitter
     UI.padded_puts '----------------------------------------'
     puts ''
 
-    if Twitter::Configuration.print_answers_matching_this_key != nil
-      matching_key = Twitter::Configuration.print_answers_matching_this_key
+    if Configuration.print_answers_matching_this_key != nil
+      matching_key = Configuration.print_answers_matching_this_key
       UI::padded_puts "Printing all answers matching key #{matching_key}"
       puts ''
       answers.each {|answer| answer.pp if answer.matches_key(matching_key)}

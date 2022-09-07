@@ -5,10 +5,8 @@
 #   1. test
 #   2. raise (-!--- response), twitter, filtering, absence-of-evidence
 #   3. goofball 444
-# TODO file Configuration?
 # TODO class StatsHash
 # TODO class Fingerprint? FingerprintHash?
-# TODO After moving things to module Twitter, change Twitter::Configuration back to Configuration?
 # TODO twitter() (returning a stats_hash) should cache the result?
 #
 # files, classes, modules
