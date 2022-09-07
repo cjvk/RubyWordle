@@ -444,91 +444,6 @@ module UI
   end
 end
 
-# TODO remove this
-DEFAULT_CONSTRAINT_CARDINALITY_WORD_LIST = [
-  # 'khaki', # Wordle 421
-  # 'gruel', # Wordle 423
-  # 'twice', # Wordle 424
-  # 'charm', # Wordle 440
-  # 'gully', # Wordle 441
-  'whoop', # Wordle 442
-]
-
-def wordle_response(guess, word)
-  # defensive copying
-  guess_copy = guess.dup
-  word_copy = word.dup
-  wordle_response = '-----'
-
-  # first green
-  (0...5).each do |i|
-    if guess_copy[i] == word_copy[i]
-      wordle_response[i] = 'g'
-      word_copy[i] = '-'
-    end
-  end
-  # then white
-  (0...5).each do |i|
-    next if wordle_response[i] != '-'
-    wordle_response[i] = 'w' if !word_copy.include?(guess_copy[i])
-  end
-  # everything else is yellow or white
-  (0...5).each do |i|
-    next if wordle_response[i] != '-'
-    if word_copy.include?(guess_copy[i])
-      wordle_response[i] = 'y'
-      index = word_copy.index(guess_copy[i])
-      word_copy[index] = '-'
-    else
-      wordle_response[i] = 'w'
-    end
-  end
-  wordle_response
-end
-
-module Distances
-  # i: Number of 4g matches from the fingerprint or 9, whichever is less
-  # j: Array[i]: distance if Twitter high-water-mark is i
-  DISTANCES_4G = [
-    [0, [0]],
-    [1, [1, 0]], # one valid word and nobody found it: defined as 1
-    [2, [1.5, 0.75, 0]],
-    [3, [2, 1, 0.5, 0]],
-    [4, [2.5, 1.25, 0.6, 0.3, 0]],
-    [5, [3, 1.5, 0.75, 0.37, 0.18, 0]],
-    [6, [3.5, 1.75, 0.85, 0.42, 0.21, 0, 0]],
-    [7, [4, 2, 1, 0.5, 0.25, 0, 0, 0]],
-    [8, [4.5, 2.25, 1.12, 0.56, 0.28, 0, 0, 0, 0]],
-    [9, [5, 2.5, 1.25, 0.6, 0.3, 0, 0, 0, 0, 0]],
-  ].to_h
-
-  def Distances::calc_4g_distance(max_4gs_from_twitter, max_4gs_from_fingerprint)
-    difference = [0, 0, 0, 0, 0]
-    (0...5).each {|i|
-      difference[i] = Distances::DISTANCES_4G[
-        [max_4gs_from_fingerprint[i], 9].min][max_4gs_from_twitter[i]
-      ].to_f}
-    difference.sum
-  end
-
-  # Array[i]: Penalty for key-not-present given i matching words in the dictionary
-  DISTANCES_NON_4G = [
-    0, # shouldn't occur
-    1, # by definition
-    1.75,
-    2.25,
-    2.5, # cap it at 4
-  ]
-
-  def Distances::calc_non_4g_distance(stats_hash, fingerprint)
-    fingerprint.dup
-      .delete_if{|k,v| k.start_with?('4g')}
-      .delete_if{|k,v| stats_hash.key?(k)}
-      .map{|k,v| Distances::DISTANCES_NON_4G[[v,4].min]}
-      .sum.to_f
-  end
-end
-
 def penultimate_twitter_absence_of_evidence(d, stats_hash)
   UI::padded_puts 'Absence of evidence is not evidence of absence!'
 
@@ -662,11 +577,6 @@ def penultimate_twitter(d, pattern, subpattern)
     UI::padded_puts "#{pattern} not yet supported"
   end
 end
-
-ALPHABET = [
-  'a','b','c','d','e','f','g','h','i','j','k','l','m',
-  'n','o','p','q','r','s','t','u','v','w','x','y','z'
-]
 
 def all_4g_matches(word, filename)
   return_array = [0, 0, 0, 0, 0]
@@ -912,92 +822,6 @@ def filter(d, word, response)
       raise 'unrecognized response character'
     end
   end
-end
-
-# TODO remove this
-def calculate_constraint_cardinality(word_list_to_check=DEFAULT_CONSTRAINT_CARDINALITY_WORD_LIST)
-  # The idea here is to precompute how many of each constraint there is
-  # for each word, to pattern-match later based on twitter
-
-  puts ''
-  puts 'UNDER CONSTRUCTION'
-  puts ''
-
-  valid_wordle_words = populate_valid_wordle_words
-  result_hash = {}
-  word_list_to_check.each do |word|
-    d = {}
-    valid_wordle_words.each do |guess, _line_num|
-      wordle_response = wordle_response(guess, word)
-      interestingness = InterestingWordleResponses::determine_interestingness(wordle_response)
-      case interestingness
-      when InterestingWordleResponses::WORDLE_4G, InterestingWordleResponses::WORDLE_3G1Y, InterestingWordleResponses::WORDLE_3G2Y, InterestingWordleResponses::WORDLE_2G3Y, InterestingWordleResponses::WORDLE_1G4Y, InterestingWordleResponses::WORDLE_0G5Y
-        _name, _subname, key = InterestingWordleResponses::calculate_name_subname_key(wordle_response, interestingness, 1)
-        key = key[0,4] if interestingness == InterestingWordleResponses::WORDLE_4G
-        d[key] = 0 if !d.key?(key)
-        d[key] = d[key] + 1
-      when InterestingWordleResponses::NOT_INTERESTING
-      else
-        raise "unknown interestingness"
-      end
-    end
-
-    result_hash[word] = d
-  end
-
-  word_of_interest = 'whoop'
-
-  result_hash[word_of_interest] = result_hash[word_of_interest].sort.to_h
-
-  stats_hash = Twitter::twitter[:stats]
-  stats_hash = stats_hash.sort.to_h # make it look like others
-
-  compact_result_hash = result_hash.map{|k,v| [k, v.map{|k2,v2| [CompactKeys::KEY_COMPRESSION_HASH[k2], v2]}.to_h]}
-  puts "result_hash=#{result_hash}"
-  puts ''
-  puts "compact_result_hash=#{compact_result_hash}"
-  puts ''
-  puts "stats_hash=#{stats_hash}"
-  puts ''
-
-  # transform stats_hash to be more "result-hashy"
-  # '4g.1.1 => 143, 4g.1.2 => 111, 4g.1.3'
-  # =>
-  # '4g.1 => 3'
-
-  max_4gs_seen = StatsHash::max_4gs(stats_hash)
-  transformed_stats_hash = stats_hash
-    .map{|k,v| [k,v]}.to_h # copy
-    .delete_if {|k,v| k.start_with?('4g')}
-  max_4gs_seen.each_with_index do |el, i|
-    key = "4g.#{i+1}"
-    value = el
-    transformed_stats_hash[key]=value if value != 0
-  end
-  transformed_stats_hash = transformed_stats_hash.sort.to_h
-
-  puts "transformed_stats_hash=#{transformed_stats_hash}"
-  puts ''
-
-  puts 'calculating delta from observed (Twitter) to actual (dictionary)'
-  num_keys_twitter = transformed_stats_hash.keys.length
-  num_keys_dictionary = result_hash[word_of_interest].keys.length
-  num_in_twitter_only = 0
-  transformed_stats_hash.keys.each{|k| num_in_twitter_only += 1 if !result_hash[word_of_interest].key?(k)}
-  num_in_dictionary_only = 0
-  result_hash[word_of_interest].keys.each{|k| num_in_dictionary_only += 1 if !transformed_stats_hash.key?(k)}
-  puts "num_keys_twitter=#{num_keys_twitter}, num_keys_dictionary=#{num_keys_dictionary}"
-  puts "num_in_twitter_only=#{num_in_twitter_only}, num_in_dictionary_only=#{num_in_dictionary_only}"
-  puts ''
-  puts "#{num_keys_twitter}/#{num_keys_dictionary} found on Twitter"
-  puts ''
-
-  # result_hash={"gully"=>{"3g1y.yellow4.white1"=>1, "4g.1"=>9, "3g1y.yellow3.white1"=>1, "4g.2"=>4, "4g.4"=>2, "4g.5"=>1, "4g.3"=>1, "3g1y.yellow3.white5"=>1}}
-  # result_hash: '4g.1' has 9 words
-  #
-  # stats_hash={"4g.1.1"=>143, "4g.1.2"=>111, "4g.1.3"=>24, "4g.2.1"=>8, "4g.2.2"=>3, "4g.3.1"=>8, "4g.4.1"=>21, "4g.4.2"=>7, "4g.5.1"=>5, "3g1y.yellow3.white1"=>22, "3g1y.yellow4.white1"=>16}
-  # note: ALERT: deleting key 4g.1.4 with value 1!
-  # stats_hash: '4g.1.1' had 143 users, 4g.1.2 had 111 users, 4g.1.3 had 24 users
 end
 
 Tests::run_tests

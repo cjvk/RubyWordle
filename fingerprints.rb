@@ -2,6 +2,50 @@
 
 # Sample fingerprint (clout)
 # {"4g.2"=>2, "4g.3"=>1, "4g.4"=>1, "3g1y.yellow4.white5"=>3, "4g.5"=>3, "4g.1"=>3, "3g1y.yellow2.white1"=>1}
+
+module Distances
+  # i: Number of 4g matches from the fingerprint or 9, whichever is less
+  # j: Array[i]: distance if Twitter high-water-mark is i
+  DISTANCES_4G = [
+    [0, [0]],
+    [1, [1, 0]], # one valid word and nobody found it: defined as 1
+    [2, [1.5, 0.75, 0]],
+    [3, [2, 1, 0.5, 0]],
+    [4, [2.5, 1.25, 0.6, 0.3, 0]],
+    [5, [3, 1.5, 0.75, 0.37, 0.18, 0]],
+    [6, [3.5, 1.75, 0.85, 0.42, 0.21, 0, 0]],
+    [7, [4, 2, 1, 0.5, 0.25, 0, 0, 0]],
+    [8, [4.5, 2.25, 1.12, 0.56, 0.28, 0, 0, 0, 0]],
+    [9, [5, 2.5, 1.25, 0.6, 0.3, 0, 0, 0, 0, 0]],
+  ].to_h
+
+  def Distances::calc_4g_distance(max_4gs_from_twitter, max_4gs_from_fingerprint)
+    difference = [0, 0, 0, 0, 0]
+    (0...5).each {|i|
+      difference[i] = Distances::DISTANCES_4G[
+        [max_4gs_from_fingerprint[i], 9].min][max_4gs_from_twitter[i]
+      ].to_f}
+    difference.sum
+  end
+
+  # Array[i]: Penalty for key-not-present given i matching words in the dictionary
+  DISTANCES_NON_4G = [
+    0, # shouldn't occur
+    1, # by definition
+    1.75,
+    2.25,
+    2.5, # cap it at 4
+  ]
+
+  def Distances::calc_non_4g_distance(stats_hash, fingerprint)
+    fingerprint.dup
+      .delete_if{|k,v| k.start_with?('4g')}
+      .delete_if{|k,v| stats_hash.key?(k)}
+      .map{|k,v| Distances::DISTANCES_NON_4G[[v,4].min]}
+      .sum.to_f
+  end
+end
+
 module Fingerprint
   def Fingerprint::max_4gs fingerprint
     (0...5).map{|i| fingerprint["4g.#{i+1}"] || 0}

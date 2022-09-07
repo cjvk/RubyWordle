@@ -203,3 +203,35 @@ def check_for_problematic_patterns(d)
   end
   UI::padded_puts 'No problematic patterns found!' if pp_dict.values.max <= 2
 end
+
+def wordle_response(guess, word)
+  # defensive copying
+  guess_copy = guess.dup
+  word_copy = word.dup
+  wordle_response = '-----'
+
+  # first green
+  (0...5).each do |i|
+    if guess_copy[i] == word_copy[i]
+      wordle_response[i] = 'g'
+      word_copy[i] = '-'
+    end
+  end
+  # then white
+  (0...5).each do |i|
+    next if wordle_response[i] != '-'
+    wordle_response[i] = 'w' if !word_copy.include?(guess_copy[i])
+  end
+  # everything else is yellow or white
+  (0...5).each do |i|
+    next if wordle_response[i] != '-'
+    if word_copy.include?(guess_copy[i])
+      wordle_response[i] = 'y'
+      index = word_copy.index(guess_copy[i])
+      word_copy[index] = '-'
+    else
+      wordle_response[i] = 'w'
+    end
+  end
+  wordle_response
+end
