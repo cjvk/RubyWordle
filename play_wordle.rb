@@ -184,12 +184,12 @@ module UI
           # fingerprints = calculate_fingerprints
           # compressed_fingerprints = compress(fingerprints)
           # save_fingerprints_to_file compressed_fingerprints
-        when 'full-precalculation'
+        when 'fingerprint-analysis'
           stats_hash = Twitter::twitter[:stats]
-          full_precalculation(d, stats_hash)
+          Fingerprint::fingerprint_analysis(d, stats_hash)
         when 'test'
           stats_hash = Twitter::twitter[:stats]
-          full_precalculation(d, stats_hash)
+          Fingerprint::fingerprint_analysis(d, stats_hash)
         when 'goofball'
           goofball_analysis
         when 'help', 'h'
@@ -453,141 +453,6 @@ DEFAULT_CONSTRAINT_CARDINALITY_WORD_LIST = [
   # 'gully', # Wordle 441
   'whoop', # Wordle 442
 ]
-
-def score(candidate_word, stats_hash, fingerprint)
-  Debug.set_maybe(candidate_word == 'prawn')
-  Debug.maybe_log 'score: ENTER'
-  # transform stats hash - map automatically makes a copy
-  max_4gs_from_twitter = StatsHash::max_4gs(stats_hash) # [1, 2, 0, 0, 1]
-  max_4gs_info = {
-    :keys => max_4gs_from_twitter
-      .map.with_index{ |ith_max, i| "4g.#{i+1}.#{ith_max}" }
-      .delete_if{ |key| key.end_with?('.0')},
-    :max_by_short_key => max_4gs_from_twitter
-      .map.with_index{ |ith_max, i| ["4g.#{i+1}", ith_max]}
-      .delete_if{ |_, ith_max| ith_max == 0}
-      .to_h
-  }
-  tsh = stats_hash
-    .map{|k,v| [k, [[:key, k], [:value, v]].to_h]}
-    .map{|k,data_hash| data_hash[:is4g] = k.start_with?('4g'); [k, data_hash]}
-    .map{|k,data_hash| data_hash[:short_key] = data_hash[:is4g] ? k[0,4] : k; [k, data_hash]}
-    .delete_if{|k,data_hash| data_hash[:is4g] && !max_4gs_info[:keys].include?(k)}
-
-  # TODO What is the point of this loop?
-  (0...5).each do |i|
-    next if max_4gs_from_twitter[i] == 0
-    pos = i+1
-    short_key = "4g.#{pos}"
-    key = "#{short_key}.#{max_4gs_from_twitter[i]}"
-  end
-  tsh = tsh
-
-  # Note: It may be possible to do first and second pass at the same time
-
-  # First pass:
-  #   Anything seen on Twitter _not_ in the fingerprint eliminates that word.
-  #   (This is, I believe, equivalent to the current processing).
-  tsh.each{|k,data_hash| return -1 if !fingerprint.key?(data_hash[:short_key])}
-
-  # TODO Delete if max-4gs-seen is higher than the fingerprint
-  # (start with alerting)
-  # TODO refactor this to use streams better
-  fingerprint.each do |short_key, value|
-    next if !short_key.start_with?('4g')
-    next if !max_4gs_info[:max_by_short_key].key?(short_key)
-    twitter_value = max_4gs_info[:max_by_short_key][short_key]
-
-    if ['whirl','taunt','chugs','witch','pooch','drown','drawn','tramp','heerd','amber','plunk','haunt','clock','whims','amble','knitx','sonic'].include?(candidate_word)
-      puts "score(): Hello World from #{candidate_word}, #{twitter_value}>#{value}" if twitter_value > value
-    end
-
-    if twitter_value > value
-      return -1
-    end
-  end
-
-
-  # At this point, all keys (short keys) from transformed-stats-hash (tsm)
-  # are also in fingerprint - otherwise would have exited early.
-
-  # Second pass
-  #   Calculate variables, normalized from 0-100, and weight them appropriately
-  scores = {}
-
-  # pct_keys
-  # pct_keys = stats_hash.length.to_f / fingerprint.length.to_f
-  Debug.maybe_log ''
-  Debug.maybe_log 'stats_hash'
-  Debug.maybe_log stats_hash
-  Debug.maybe_log ''
-  Debug.maybe_log 'tsh'
-  Debug.maybe_log tsh
-  Debug.maybe_log ''
-  # pct_keys = stats_hash.length.to_f / fingerprint.length.to_f
-  pct_keys = tsh.length.to_f / fingerprint.length.to_f
-  pct_keys_score = pct_keys * 100
-  scores[:pct_keys] = pct_keys_score
-  # cjvk
-
-  # distance_4g
-  # - worse to get 0/1 than 1/2
-  # - worse still to get 0/2 than either 0/1 or 1/2
-  # - Are we "double-counting"? If someone misses entirely (0/1), they get dinged here _and_ in pct
-  max_4gs_from_fingerprint = Fingerprint::max_4gs(fingerprint)
-  distance_4g = Distances::calc_4g_distance(max_4gs_from_twitter, max_4gs_from_fingerprint)
-  # simple conversion (for now) to a 0-100 score
-  arbitrary_max = 5.0
-  distance_4g_score = ([arbitrary_max-distance_4g, 0].max.to_f / arbitrary_max) * 100
-  scores[:distance_4g] = distance_4g_score
-
-  # distance_non_4g
-  # - Either they got it or didn't. This should penalize them extra for missing 0/2, 0/3, etc.
-  distance_non_4g = Distances::calc_non_4g_distance(stats_hash, fingerprint)
-  arbitrary_max = 5.0
-  distance_non_4g_score = ([arbitrary_max-distance_non_4g, 0].max.to_f / arbitrary_max) * 100
-  scores[:distance_non_4g] = distance_non_4g_score
-
-  weights = {
-    :pct_keys => 0.4,
-    :distance_4g => 0.4,
-    :distance_non_4g => 0.2,
-  }
-
-  Debug.maybe_log 'scores'
-  Debug.maybe_log scores
-  Debug.maybe_log ''
-  Debug.maybe_log 'score: EXIT'
-  Debug.set_maybe_false
-
-  # 100 * pct_keys
-  weights.map{|k, weight| scores[k] * weight}.sum
-end
-
-def full_precalculation(d, stats_hash)
-  fingerprints = reconstitute_fingerprints
-
-  d = d
-    .map{|word, line_num| [word, [[:word, word], [:line_num, line_num]].to_h]}
-    .map{|word, data_hash| data_hash[:fingerprint] = fingerprints[word]; [word, data_hash]}
-    .map{|word, data_hash| data_hash[:score] = score(word, stats_hash, data_hash[:fingerprint]); [word, data_hash]}
-    .delete_if{|word, data_hash| data_hash[:score] == -1}
-
-  puts ''
-  puts 'stats_hash:'
-  puts stats_hash
-  puts ''
-  puts "There are #{d.length} words remaining. Deleting everything with a score less than 50."
-  d.delete_if{|word, data_hash| data_hash[:score] < 50.0} # FIXME remove this
-  d = d.sort_by {|word, data_hash| -1 * data_hash[:score]}
-
-  puts ''
-  puts 'd:'
-  puts d
-
-  puts ''
-  puts ''
-end
 
 def wordle_response(guess, word)
   # defensive copying
