@@ -18,6 +18,12 @@
   analysis: Wordle 430 (woven), 4g.5.1, ()
   verdict: deny # Definite Goofball!
 
+- name: hollyh78
+  author_id: 1107402592378867713
+  tweet: https://twitter.com/hollyh78/status/1567363831294312448
+  analysis: Wordle 444 (taunt), 3g1y.yellow1.white3, ()
+  verdict: deny # Definite Goofball!
+
 - name: ka_ta_ck
   author_id: 112974516
   tweet: https://twitter.com/ka_ta_ck/status/1565696152011386881
@@ -36,10 +42,22 @@
   analysis: Wordle 440 (charm), 4g.2.1, ()
   verdict: deny # Definite Goofball!
 
+- name: naganotoshi3687
+  author_id: 177226123
+  tweet: https://twitter.com/naganotoshi3687/status/1567362368912654337
+  analysis: Wordle 444 (taunt), 2g3y.green12, ()
+  verdict: deny # Definite Goofball!
+
 - name: polterguyst
   author_id: 1346120687233077249
   tweet: https://twitter.com/polterguyst/status/1563945348355473411
   analysis: Wordle 434 (ruder), 4g.4.1, ()
+  verdict: deny # Definite Goofball!
+
+- name: r_a_poe
+  author_id: 960524838585683974
+  tweet: https://twitter.com/r_a_poe/status/1567207086320230402
+  analysis: Wordle 444 (taunt), 4g.5.3, ()
   verdict: deny # Definite Goofball!
 
 - name: RepublicanDalek

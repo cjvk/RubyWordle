@@ -1,6 +1,9 @@
 #!/usr/bin/ruby -w
 
 # TODO Add more tests. When I change things, I only know when the code is run.
+#   1. test
+#   2. raise (-!--- response), twitter, filtering, absence-of-evidence
+#   3. goofball 444
 # TODO class StatsHash
 # TODO class Fingerprint? FingerprintHash?
 # TODO Move things to different files?
