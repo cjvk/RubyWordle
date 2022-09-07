@@ -4,10 +4,30 @@
 #   1. test
 #   2. raise (-!--- response), twitter, filtering, absence-of-evidence
 #   3. goofball 444
+# TODO class Configuration
 # TODO class StatsHash
 # TODO class Fingerprint? FingerprintHash?
 # TODO Move things to different files?
 # TODO constants.rb?
+#
+# files, classes, modules
+# twitter.rb:
+#   - All things pertaining to making the twitter call.
+#   - Might make sense to have the entire file be in a module.
+#   - Including Twitter::Configuration.
+# play_wordle.rb:
+#   - The main entrypoint. "ruby play_wordle.rb", or "./play_wordle.rb"
+#   - Endeavor to move things out of this file, if possible.
+#
+#
+#
+#
+# Current state:
+# modules: Alert, Debug, UI, CompactKeys, Distances, PreviousWordleSolutions
+#          Filter, Configuration, WordleTweetColors, InterestingWordleResponses
+#          WordleModes
+# classes: Answer
+# files: play_wordle.rb, twitter.rb, scrape_nyt.rb (ignore problem_words.rb, mom_worst_word.rb)
 
 # copied from https://github.com/charlesreid1/five-letter-words
 # The purpose of this file is the universe of solutions

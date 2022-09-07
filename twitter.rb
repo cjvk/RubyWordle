@@ -1,6 +1,5 @@
 #!/usr/bin/ruby -w
 
-# require 'twitter'
 require 'faraday'
 require 'json'
 require 'date'
