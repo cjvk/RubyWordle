@@ -235,3 +235,148 @@ def wordle_response(guess, word)
   end
   wordle_response
 end
+
+module PreviousWordleSolutions
+  @@previous_wordle_solutions = {}
+
+  def self.all_solutions
+    if @@previous_wordle_solutions.empty?
+      line_num = 0
+      File.foreach('previous_wordle_solutions.txt') do |line|
+        next if line.start_with?('#')
+        @@previous_wordle_solutions[line[0..4]] = line_num
+        line_num += 1
+      end
+    end
+
+    @@previous_wordle_solutions
+  end
+
+  def self.check_word(word)
+    PreviousWordleSolutions.all_solutions[word]
+  end
+
+  def self.lookup_by_number(n)
+    PreviousWordleSolutions.all_solutions.key n
+  end
+end
+
+module Filter
+  def Filter::replace_ith_letter(word, i, letter)
+    word_copy = word.dup
+    word_copy[i] = letter
+    word_copy
+  end
+
+  def Filter::filter_4g(d, gray, count)
+    all_words = populate_valid_wordle_words
+
+    d.each_key do |key|
+      remaining_words = []
+      num_valid_alternatives = ALPHABET
+        .map{|c| replace_ith_letter(key, gray, c)}
+        .delete_if{|word_to_check| word_to_check == key || !all_words.key?(word_to_check)}
+        .map{|remaining_word| remaining_words.append(remaining_word); 1}
+        .to_a
+        .sum
+
+      if num_valid_alternatives < count
+        d.delete(key)
+      else
+        Debug.maybe_log "keeping #{key} (" + remaining_words.join(', ') + ')'
+      end
+    end
+  end
+
+  def Filter::filter_3g1y(d, yellow, gray)
+    all_words = populate_valid_wordle_words
+    d.each_key do |key|
+      remaining_words = []
+      # ensure yellow and gray are different
+      d.delete(key) if key[yellow] == key[gray]
+
+      # make a copy, save the yellow, and copy over the gray
+      key_copy = key.dup
+      letter_at_yellow = key_copy[yellow]
+      key_copy[yellow] = key_copy[gray] # moving the letter makes it get a yellow
+
+      num_valid_alternatives = ALPHABET
+        .map{|c| replace_ith_letter(key_copy, gray, c)}
+        .delete_if{|word_to_check| word_to_check[gray] == letter_at_yellow || !all_words.key?(word_to_check)}
+        .map{|remaining_word| remaining_words.append(remaining_word); 1}
+        .to_a
+        .sum
+
+      if num_valid_alternatives == 0
+        d.delete(key)
+      else
+        Debug.maybe_log "keeping #{key} (" + remaining_words.join(', ') + ')'
+      end
+    end
+  end
+
+  def Filter::filter_3g2y(d, yellow1, yellow2)
+    all_words = populate_valid_wordle_words
+    d.each_key do |key|
+      switched_word = key.dup
+      switched_word[yellow1] = key[yellow2]
+      switched_word[yellow2] = key[yellow1]
+      if key != switched_word and all_words.key?(switched_word)
+        Debug.maybe_log "keeping #{key} (#{switched_word})"
+      else
+        d.delete(key)
+      end
+    end
+  end
+
+  def Filter::filter_2g3y(d, green1, green2)
+    d.each_key do |key|
+      all_words = populate_valid_wordle_words
+      for i in 0...5
+        if i == green1 or i == green2
+          all_words.delete_if { |key2, value2| key2[i] != key[i] }
+        else # yellow
+          all_words.delete_if { |key2, value2| key2[i] == key[i] || key2.count(key2[i]) != key.count(key2[i]) }
+        end
+      end
+      if all_words.size == 0
+        d.delete(key)
+      else
+        Debug.maybe_log "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
+      end
+    end
+  end
+
+  def Filter::filter_1g4y(d, green)
+    d.each_key do |key|
+      all_words = populate_valid_wordle_words
+      for i in 0...5
+        if i == green
+          all_words.delete_if { |key2, value2| key2[i] != key[i] }
+        else # yellow
+          all_words.delete_if { |key2, value2| key2[i] == key[i] || key2.count(key2[i]) != key.count(key2[i]) }
+        end
+      end
+      if all_words.size == 0
+        d.delete(key)
+      else
+        Debug.maybe_log "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
+      end
+    end
+  end
+
+  def Filter::filter_0g5y(d)
+    d.each_key do |key|
+      all_words = populate_valid_wordle_words
+      for i in 0...5
+        # all yellows
+        all_words.delete_if { |key2, value2| key2[i] == key[i] || key2.count(key2[i]) != key.count(key2[i]) }
+      end
+      if all_words.size == 0
+        d.delete(key)
+      else
+        Debug.maybe_log "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
+      end
+    end
+  end
+end

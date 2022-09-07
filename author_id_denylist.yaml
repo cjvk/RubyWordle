@@ -42,6 +42,12 @@
   analysis: Wordle 440 (charm), 4g.2.1, ()
   verdict: deny # Definite Goofball!
 
+- name: momoxpii
+  author_id: 1328227476984762368
+  tweet: https://twitter.com/momoxpii/status/1567643038297587712
+  analysis: Wordle 444 (taunt), 3g2y.yellow23, ()
+  verdict: deny # Definite Goofball!
+
 - name: naganotoshi3687
   author_id: 177226123
   tweet: https://twitter.com/naganotoshi3687/status/1567362368912654337
