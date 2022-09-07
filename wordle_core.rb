@@ -236,6 +236,27 @@ def wordle_response(guess, word)
   wordle_response
 end
 
+def all_4g_matches(word, filename)
+  return_array = [0, 0, 0, 0, 0]
+  all_words = populate_valid_wordle_words(filename)
+  (0...5).each do |i|
+    ith_sum = 0
+    temp_word = word.dup
+    ALPHABET.each do |letter|
+      temp_word[i] = letter
+      ith_sum += 1 if temp_word != word && all_words.key?(temp_word)
+    end
+    return_array[i] = ith_sum
+  end
+  return_array
+end
+
+def num_green_or_yellow(word, response, letter)
+  num_green_or_yellow = 0
+  (0...5).each { |i| num_green_or_yellow += 1 if word[i] == letter && response[i] != '-' }
+  return num_green_or_yellow
+end
+
 module PreviousWordleSolutions
   @@previous_wordle_solutions = {}
 
@@ -262,6 +283,23 @@ module PreviousWordleSolutions
 end
 
 module Filter
+  def Filter::filter(d, word, response)
+    Debug.log_verbose "d.size: #{d.size()}"
+    for i in 0...5
+      letter = word[i]
+      case response[i]
+      when '!'
+        d.delete_if { |key, value| key[i] != letter }
+      when '?'
+        d.delete_if { |key, value| key[i] == letter || key.count(letter) < num_green_or_yellow(word, response, letter) }
+      when '-'
+        d.delete_if { |key, value| key[i] == letter || key.count(letter) != num_green_or_yellow(word, response, letter) }
+      else
+        raise 'unrecognized response character'
+      end
+    end
+  end
+
   def Filter::replace_ith_letter(word, i, letter)
     word_copy = word.dup
     word_copy[i] = letter

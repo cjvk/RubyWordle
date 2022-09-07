@@ -198,7 +198,7 @@ module UI
         else
           if choice.length == 5
             response = UI.prompt_for_input('Enter the response (!?-): ==> ', false)
-            filter(d, choice, response)
+            Filter::filter(d, choice, response)
             break
           else
             Alert.alert "unrecognized input (#{choice})"
@@ -463,18 +463,6 @@ def penultimate_twitter_absence_of_evidence(d, stats_hash)
   # defined distances between ith all-4g-matches and possible observed Twitter values
   # FIXME it is possible to see more matches on Twitter than mag-4gs if using
   #       a smaller dictionary (like dracos)
-  # distances = [
-  #   [0, [0]],
-  #   [1, [1, 0]], # one valid word and nobody found it: defined as 1
-  #   [2, [1.5, 0.75, 0]],
-  #   [3, [2, 1, 0.5, 0]],
-  #   [4, [2.5, 1.25, 0.6, 0.3, 0]],
-  #   [5, [3, 1.5, 0.75, 0.37, 0.18, 0]],
-  #   [6, [3.5, 1.75, 0.85, 0.42, 0.21, 0, 0]],
-  #   [7, [4, 2, 1, 0.5, 0.25, 0, 0, 0]],
-  #   [8, [4.5, 2.25, 1.12, 0.56, 0.28, 0, 0, 0, 0]],
-  #   [9, [5, 2.5, 1.25, 0.6, 0.3, 0, 0, 0, 0, 0]],
-  # ].to_h
   new_d = {}
   d.each do |key, _value|
     matches = all_4g_matches(key, Twitter::Configuration.absence_of_evidence_filename)
@@ -564,21 +552,6 @@ def penultimate_twitter(d, pattern, subpattern)
   end
 end
 
-def all_4g_matches(word, filename)
-  return_array = [0, 0, 0, 0, 0]
-  all_words = populate_valid_wordle_words(filename)
-  (0...5).each do |i|
-    ith_sum = 0
-    temp_word = word.dup
-    ALPHABET.each do |letter|
-      temp_word[i] = letter
-      ith_sum += 1 if temp_word != word && all_words.key?(temp_word)
-    end
-    return_array[i] = ith_sum
-  end
-  return_array
-end
-
 def penultimate(d)
   UI::padded_puts 'Choose a Twitter penultimate guess'
   UI::padded_puts '4 greens (4g)'
@@ -639,29 +612,6 @@ def hint(d)
     top_n_dict.each {|c, num_occurrences| count = count + 1 if word[c]}
     UI::padded_puts "#{word} is a GREAT guess" if count == top_n
     UI::padded_puts "#{word} is a good guess" if count == (top_n - 1)
-  end
-end
-
-def num_green_or_yellow(word, response, letter)
-  num_green_or_yellow = 0
-  (0...5).each { |i| num_green_or_yellow += 1 if word[i] == letter && response[i] != '-' }
-  return num_green_or_yellow
-end
-
-def filter(d, word, response)
-  Debug.log_verbose "d.size: #{d.size()}"
-  for i in 0...5
-    letter = word[i]
-    case response[i]
-    when '!'
-      d.delete_if { |key, value| key[i] != letter }
-    when '?'
-      d.delete_if { |key, value| key[i] == letter || key.count(letter) < num_green_or_yellow(word, response, letter) }
-    when '-'
-      d.delete_if { |key, value| key[i] == letter || key.count(letter) != num_green_or_yellow(word, response, letter) }
-    else
-      raise 'unrecognized response character'
-    end
   end
 end
 
