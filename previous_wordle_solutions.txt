@@ -442,3 +442,7 @@ onset
 prize
 fungi
 charm # Wordle 440, 9/2/2022
+gully
+inter
+whoop
+taunt

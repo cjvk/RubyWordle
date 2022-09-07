@@ -17,7 +17,7 @@ module Configuration
   @@absence_of_evidence_filename = DRACOS_VALID_WORDLE_WORDS_FILE
 
   #         Uncomment this to query a specific wordle number
-  # @@wordle_number_override = 433
+  @@wordle_number_override = 444 # taunt
 
   #         Uncomment this to enable debug printing for a specific tweet_id
   # @@debug_print_tweet_id = '1559163924548915201'
