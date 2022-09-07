@@ -1,7 +1,6 @@
 #!/usr/bin/ruby -w
 
 # TODO Add more tests. When I change things, I only know when the code is run.
-#      Should tests be in their own file?
 #   1. test
 #   2. raise (-!--- response), twitter, filtering, absence-of-evidence
 #   3. goofball 444
@@ -31,10 +30,11 @@
 # classes: Answer
 # files: play_wordle.rb, twitter.rb, scrape_nyt.rb (ignore problem_words.rb, mom_worst_word.rb)
 
+require 'yaml'
 require_relative 'constants'
 require_relative 'wordle_core'
 require_relative 'twitter'
-require 'yaml'
+require_relative 'tests'
 
 DICTIONARY_FILE = DICTIONARY_FILE_LARGE
 
@@ -54,12 +54,6 @@ def populate_all_words
   end
   ['pinot', 'ramen', 'apage', 'stear', 'stean', 'tased', 'tsade'].each { |word| d[word] = '-1' }
   d
-end
-
-def close(w1, w2)
-  diff = 0
-  (0...5).each {|i| diff += (w1[i]==w2[i] ? 0 : 1)}
-  diff == 1
 end
 
 module Alert
@@ -307,177 +301,145 @@ module UI
   def self.remaining_count_string(d)
     "There #{d.length==1?'is':'are'} #{d.size} matching word#{d.length==1?'':'s'} remaining."
   end
-end
 
-def check_for_problematic_patterns(d)
-  # e.g. Wordle 265 ("watch"), after raise-clout (-!---, ?---?)
-  # legal words remaining: watch, match, hatch, patch, batch, natch, tacky
-  # 6 words with _atch, plus tacky
-  pp_dict = {}
-  d.each do |key1, value1|
-    break if Twitter::Configuration.instrumentation_only
-    found = false
-    pp_dict.each do |key2, value2|
-      if close(key1, key2)
-        found = true
-        pp_dict[key2] = value2 + 1
-      end
-    end
-    pp_dict[key1] = 1 if !found
-  end
-  if Twitter::Configuration.instrumentation_only
-    Debug.log 'skipped problematic pattern loop, using hardcoded result'
-    pp_dict = {'hilly': 3, 'floss': 10} if Twitter::Configuration.instrumentation_only
-  end
-  UI::padded_puts 'Checking for problematic patterns...'
-  pp_dict.each do |key, value|
-    if value > 2
-      puts ''
-      UI::padded_puts 'PROBLEMATIC PATTERN ALERT'
-      UI::padded_puts "Found \"#{key}\" with #{value} matching words (print for details)"
-      puts ''
-      puts ''
-    end
-  end
-  UI::padded_puts 'No problematic patterns found!' if pp_dict.values.max <= 2
-end
+  def UI::goofball_analysis
+    wordle_number = UI.prompt_for_input("Enter daily wordle number (to check for goofballs): ==> ", false)
+    Twitter::Configuration.set_wordle_number_override wordle_number
 
-def goofball_analysis
-  wordle_number = UI.prompt_for_input("Enter daily wordle number (to check for goofballs): ==> ", false)
-  Twitter::Configuration.set_wordle_number_override wordle_number
+    Twitter::Configuration.set_goofball_mode true
+    twitter_result = Twitter::twitter
+    stats_hash = twitter_result[:stats]
+    answers = twitter_result[:answers]
+    Twitter::Configuration.set_goofball_mode false
+    wordle_number_solution = PreviousWordleSolutions.lookup_by_number(wordle_number.to_i)
 
-  Twitter::Configuration.set_goofball_mode true
-  twitter_result = Twitter::twitter
-  stats_hash = twitter_result[:stats]
-  answers = twitter_result[:answers]
-  Twitter::Configuration.set_goofball_mode false
-  wordle_number_solution = PreviousWordleSolutions.lookup_by_number(wordle_number.to_i)
-
-  singleton_keys = []
-  stats_hash.each do |key, value|
-    # look for matching answer
-    if value == 1
-      answers.each do |answer|
-        if answer.matches_key(key)
-          singleton_keys.append([key, answer])
-          break
+    singleton_keys = []
+    stats_hash.each do |key, value|
+      # look for matching answer
+      if value == 1
+        answers.each do |answer|
+          if answer.matches_key(key)
+            singleton_keys.append([key, answer])
+            break
+          end
+        end
+      elsif value == 2 # disable this if it gets too chatty
+        answers.each do |answer|
+          if answer.matches_key(key)
+            singleton_keys.append([key, answer])
+          end
         end
       end
-    elsif value == 2 # disable this if it gets too chatty
-      answers.each do |answer|
-        if answer.matches_key(key)
-          singleton_keys.append([key, answer])
+      if key == '4g.5.1' && false
+        answers.each do |answer|
+          if answer.matches_key(key)
+            puts "(#{answer.tweet_url} (#{answer.author_id}))"
+          end
         end
       end
     end
-    if key == '4g.5.1' && false
-      answers.each do |answer|
-        if answer.matches_key(key)
-          puts "(#{answer.tweet_url} (#{answer.author_id}))"
-        end
-      end
-    end
-  end
 
-  puts ''
-  puts ''
-  puts ''
-  UI.padded_puts '/--------------------------------------\\'
-  UI.padded_puts "|              Wordle #{wordle_number}              |"
-  UI.padded_puts '|            Goofball report           |'
-  UI.padded_puts '\--------------------------------------/'
-  puts ''
-
-  answers_and_verdicts = [] # [answer, key, reasoning, verdict, title]
-
-  singleton_keys.each do |el|
-    key = el[0]
-    answer = el[1]
-    penultimate = answer.penultimate
-    interestingness = InterestingWordleResponses::determine_interestingness(penultimate)
-    name, subname, _key = InterestingWordleResponses::calculate_name_subname_key(penultimate, interestingness)
-    count = name == '4g' ? key[5].to_i : 0
-    all_words = populate_valid_wordle_words
-    if interestingness == InterestingWordleResponses::WORDLE_4G
-      # special handling for 4g: Find actual high-water-mark, see if the reported
-      # count is reasonable. Will need to know the words too.
-      gray_index = subname[0].to_i - 1
-      valid_alternatives = ALPHABET
-        .map{|c| Filter::replace_ith_letter(wordle_number_solution, gray_index, c)}
-        .delete_if {|word_to_check| word_to_check == wordle_number_solution || !all_words.key?(word_to_check)}
-      is_goofball = (count > valid_alternatives.length)
-
-      if is_goofball
-        title = valid_alternatives.length == 0 ? 'Definite Goofball!' : 'Possible Goofball'
-      else
-        title = 'Not a Goofball'
-      end
-    else
-      # Everything besides 4g: Go through all available words, see what words get that match.
-      # In principle, this is very similar to Filter::filter_4g et al.
-      # have: wordle_number_solution, penultimate
-      # puts "non-4g analysis: wordle_number_solution=#{wordle_number_solution}, penultimate=#{penultimate}"
-      valid_alternatives = []
-      all_words.each do |key, _value|
-        actual_wordle_response = wordle_response(key, wordle_number_solution)
-        if actual_wordle_response == penultimate
-          valid_alternatives.append key
-        end
-      end
-      is_goofball = valid_alternatives.length == 0
-      title = is_goofball ? 'Definite Goofball!' : 'Not a Goofball'
-    end
-
-    reasoning = "(#{valid_alternatives.join('/')})"
-    verdict = is_goofball ? 'deny' : 'allow'
-
-    answers_and_verdicts.append(
-      [answer, key, reasoning, verdict, title]
-    )
-
-  end
-
-  print_goofball_report_entry = ->(answer, key, reasoning, verdict, title) {
-    nm = wordle_number
-    sn = wordle_number_solution
-    author_id = answer.author_id
-    username = answer.username
-
-    # Goofball report
-    puts "Author ID #{author_id} already in denylist" if Twitter::Configuration.author_id_denylist.include?(author_id)
-    puts "Author ID #{author_id} already in allowlist" if Twitter::Configuration.author_id_allowlist.include?(author_id)
-    puts "- name: #{username}"
-    puts "  author_id: #{author_id}"
-    puts "  tweet: #{answer.tweet_url}"
-    puts "  analysis: Wordle #{nm} (#{sn}), #{key}, #{reasoning}"
-    puts "  verdict: #{verdict} # #{title}"
     puts ''
-  }
+    puts ''
+    puts ''
+    UI.padded_puts '/--------------------------------------\\'
+    UI.padded_puts "|              Wordle #{wordle_number}              |"
+    UI.padded_puts '|            Goofball report           |'
+    UI.padded_puts '\--------------------------------------/'
+    puts ''
 
-  check_lists = ->(author_id) {
-    Twitter::Configuration.author_id_denylist.include?(author_id) \
-    || Twitter::Configuration.author_id_allowlist.include?(author_id)
-  }
+    answers_and_verdicts = [] # [answer, key, reasoning, verdict, title]
 
-  num_suppressed = 0
-  answers_and_verdicts
-    .map{|el| num_suppressed += 1 if check_lists.call(el[0].author_id); el}
-    .delete_if{|el| check_lists.call(el[0].author_id)}
-    .each{|el| print_goofball_report_entry.call(el[0], el[1], el[2], el[3], el[4])}
+    singleton_keys.each do |el|
+      key = el[0]
+      answer = el[1]
+      penultimate = answer.penultimate
+      interestingness = InterestingWordleResponses::determine_interestingness(penultimate)
+      name, subname, _key = InterestingWordleResponses::calculate_name_subname_key(penultimate, interestingness)
+      count = name == '4g' ? key[5].to_i : 0
+      all_words = populate_valid_wordle_words
+      if interestingness == InterestingWordleResponses::WORDLE_4G
+        # special handling for 4g: Find actual high-water-mark, see if the reported
+        # count is reasonable. Will need to know the words too.
+        gray_index = subname[0].to_i - 1
+        valid_alternatives = ALPHABET
+          .map{|c| Filter::replace_ith_letter(wordle_number_solution, gray_index, c)}
+          .delete_if {|word_to_check| word_to_check == wordle_number_solution || !all_words.key?(word_to_check)}
+        is_goofball = (count > valid_alternatives.length)
 
-  if num_suppressed > 0
-    if 'show' == UI::prompt_for_input("#{num_suppressed} entries suppressed ('show' to display) ==> ", false)
-      puts ''
-      answers_and_verdicts
-        .map{|el| el} # make a copy
-        .delete_if{|el| !check_lists.call(el[0].author_id)}
-        .each{|el| print_goofball_report_entry.call(el[0], el[1], el[2], el[3], el[4])}
+        if is_goofball
+          title = valid_alternatives.length == 0 ? 'Definite Goofball!' : 'Possible Goofball'
+        else
+          title = 'Not a Goofball'
+        end
+      else
+        # Everything besides 4g: Go through all available words, see what words get that match.
+        # In principle, this is very similar to Filter::filter_4g et al.
+        # have: wordle_number_solution, penultimate
+        # puts "non-4g analysis: wordle_number_solution=#{wordle_number_solution}, penultimate=#{penultimate}"
+        valid_alternatives = []
+        all_words.each do |key, _value|
+          actual_wordle_response = wordle_response(key, wordle_number_solution)
+          if actual_wordle_response == penultimate
+            valid_alternatives.append key
+          end
+        end
+        is_goofball = valid_alternatives.length == 0
+        title = is_goofball ? 'Definite Goofball!' : 'Not a Goofball'
+      end
+
+      reasoning = "(#{valid_alternatives.join('/')})"
+      verdict = is_goofball ? 'deny' : 'allow'
+
+      answers_and_verdicts.append(
+        [answer, key, reasoning, verdict, title]
+      )
+
     end
-  end
 
-  puts ''
-  puts '##################################################'
+    print_goofball_report_entry = ->(answer, key, reasoning, verdict, title) {
+      nm = wordle_number
+      sn = wordle_number_solution
+      author_id = answer.author_id
+      username = answer.username
+
+      # Goofball report
+      puts "Author ID #{author_id} already in denylist" if Twitter::Configuration.author_id_denylist.include?(author_id)
+      puts "Author ID #{author_id} already in allowlist" if Twitter::Configuration.author_id_allowlist.include?(author_id)
+      puts "- name: #{username}"
+      puts "  author_id: #{author_id}"
+      puts "  tweet: #{answer.tweet_url}"
+      puts "  analysis: Wordle #{nm} (#{sn}), #{key}, #{reasoning}"
+      puts "  verdict: #{verdict} # #{title}"
+      puts ''
+    }
+
+    check_lists = ->(author_id) {
+      Twitter::Configuration.author_id_denylist.include?(author_id) \
+      || Twitter::Configuration.author_id_allowlist.include?(author_id)
+    }
+
+    num_suppressed = 0
+    answers_and_verdicts
+      .map{|el| num_suppressed += 1 if check_lists.call(el[0].author_id); el}
+      .delete_if{|el| check_lists.call(el[0].author_id)}
+      .each{|el| print_goofball_report_entry.call(el[0], el[1], el[2], el[3], el[4])}
+
+    if num_suppressed > 0
+      if 'show' == UI::prompt_for_input("#{num_suppressed} entries suppressed ('show' to display) ==> ", false)
+        puts ''
+        answers_and_verdicts
+          .map{|el| el} # make a copy
+          .delete_if{|el| !check_lists.call(el[0].author_id)}
+          .each{|el| print_goofball_report_entry.call(el[0], el[1], el[2], el[3], el[4])}
+      end
+    end
+
+    puts ''
+    puts '##################################################'
+  end
 end
+
 
 def static_analysis(d, stats_hash)
   # TODO (big feature) do offline calculations for each word and constraint type (not only 4g)
@@ -673,12 +635,12 @@ def score(candidate_word, stats_hash, fingerprint)
     .delete_if{|k,data_hash| data_hash[:is4g] && !max_4gs_info[:keys].include?(k)}
   # .delete_if{|k,data_hash| data_hash[:is4g] && !keep_these_4gs_keys.include?(k)}
 
+  # TODO What is the point of this loop?
   (0...5).each do |i|
     next if max_4gs_from_twitter[i] == 0
     pos = i+1
     short_key = "4g.#{pos}"
     key = "#{short_key}.#{max_4gs_from_twitter[i]}"
-
   end
   tsh = tsh
 
@@ -1411,76 +1373,6 @@ def calculate_constraint_cardinality(word_list_to_check=DEFAULT_CONSTRAINT_CARDI
   # stats_hash: '4g.1.1' had 143 users, 4g.1.2 had 111 users, 4g.1.3 had 24 users
 end
 
-def run_tests
-  fail if num_green_or_yellow('abcde', '!----', 'a') != 1
-  fail if num_green_or_yellow('aaaaa', '!?---', 'a') != 2
-  fail if num_green_or_yellow('aaaaa', '??---', 'a') != 2
-  fail if num_green_or_yellow('xaaxx', '!!--!', 'c') != 0
-  fail if num_green_or_yellow('xaaxx', '?????', 'x') != 3
-  fail if num_green_or_yellow('xaaxx', '?????', 'a') != 2
-
-  fail if close('aaaaa', 'bbbbb')
-  fail if close('aaaaa', 'aaabb')
-  fail if close('abcde', 'abcde')
-  fail unless close('abcde', 'xbcde')
-  fail unless close('abcde', 'axcde')
-  fail unless close('abcde', 'abxde')
-  fail unless close('abcde', 'abcxe')
-  fail unless close('abcde', 'abcdx')
-
-  # wordle_response(guess, word)
-  fail unless wordle_response('saner', 'raise') == 'ygwyy'
-  fail unless wordle_response('sanee', 'raise') == 'ygwwg'
-  fail unless wordle_response('saaer', 'raise') == 'ygwyy'
-  fail unless wordle_response('saaer', 'raisa') == 'ygywy'
-  fail unless wordle_response('saaar', 'raisa') == 'ygywy'
-
-  fail unless InterestingWordleResponses::determine_interestingness('ggggg') == InterestingWordleResponses::NOT_INTERESTING
-  fail unless InterestingWordleResponses::determine_interestingness('ggggw') == InterestingWordleResponses::WORDLE_4G
-  fail unless InterestingWordleResponses::determine_interestingness('ggwgg') == InterestingWordleResponses::WORDLE_4G
-  fail unless InterestingWordleResponses::determine_interestingness('wgggg') == InterestingWordleResponses::WORDLE_4G
-  fail unless InterestingWordleResponses::determine_interestingness('gggwy') == InterestingWordleResponses::WORDLE_3G1Y
-  fail unless InterestingWordleResponses::determine_interestingness('gggyy') == InterestingWordleResponses::WORDLE_3G2Y
-  fail unless InterestingWordleResponses::determine_interestingness('ggyyy') == InterestingWordleResponses::WORDLE_2G3Y
-  fail unless InterestingWordleResponses::determine_interestingness('gyyyy') == InterestingWordleResponses::WORDLE_1G4Y
-  fail unless InterestingWordleResponses::determine_interestingness('yyyyy') == InterestingWordleResponses::WORDLE_0G5Y
-
-  fail unless all_4g_matches('hilly', VALID_WORDLE_WORDS_FILE) == [9, 3, 1, 0, 2]
-  fail unless all_4g_matches('hills', VALID_WORDLE_WORDS_FILE) == [18, 3, 0, 2, 2]
-  fail unless all_4g_matches('hilly', DRACOS_VALID_WORDLE_WORDS_FILE) == [7, 2, 1, 0, 2]
-  fail unless all_4g_matches('hills', DRACOS_VALID_WORDLE_WORDS_FILE) == [18, 3, 0, 2, 2]
-
-  fail unless WordleModes.determine_mode("#{WordleShareColors::GREEN}#{WordleShareColors::WHITE}") == 'Normal'
-  fail unless WordleModes.determine_mode("#{WordleShareColors::YELLOW}#{WordleShareColors::WHITE}") == 'Normal'
-  fail unless WordleModes.determine_mode("#{WordleShareColors::GREEN}#{WordleShareColors::BLACK}") == 'Dark'
-  fail unless WordleModes.determine_mode("#{WordleShareColors::YELLOW}#{WordleShareColors::BLACK}") == 'Dark'
-  fail unless WordleModes.determine_mode("#{WordleShareColors::ORANGE}#{WordleShareColors::WHITE}") == 'Deborah'
-  fail unless WordleModes.determine_mode("#{WordleShareColors::BLUE}#{WordleShareColors::WHITE}") == 'Deborah'
-  fail unless WordleModes.determine_mode("#{WordleShareColors::ORANGE}#{WordleShareColors::BLACK}") == 'DeborahDark'
-  fail unless WordleModes.determine_mode("#{WordleShareColors::BLUE}#{WordleShareColors::BLACK}") == 'DeborahDark'
-
-  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::WHITE, 'Normal') == 'w'
-  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::YELLOW, 'Normal') == 'y'
-  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::GREEN, 'Normal') == 'g'
-  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::BLACK, 'Dark') == 'w'
-  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::YELLOW, 'Dark') == 'y'
-  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::GREEN, 'Dark') == 'g'
-  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::WHITE, 'Deborah') == 'w'
-  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::BLUE, 'Deborah') == 'y'
-  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::ORANGE, 'Deborah') == 'g'
-  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::BLACK, 'DeborahDark') == 'w'
-  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::BLUE, 'DeborahDark') == 'y'
-  fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::ORANGE, 'DeborahDark') == 'g'
-
-  kdh = CompactKeys::KEY_COMPRESSION_HASH
-  max_compact_keys_value = kdh.values.max
-  min_compact_keys_value = kdh.values.min
-  fail unless kdh['4g.1'] == 0
-  fail unless min_compact_keys_value == 0
-  # this also guarantees that all keys are unique
-  (min_compact_keys_value..max_compact_keys_value).each {|v| fail unless kdh.has_value?(v)}
-end
-
-run_tests
+Tests::run_tests
 d = populate_all_words
 UI.play(d)

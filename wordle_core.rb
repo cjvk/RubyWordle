@@ -165,3 +165,41 @@ module InterestingWordleResponses
   end
 end
 
+def close(w1, w2)
+  diff = 0
+  (0...5).each {|i| diff += (w1[i]==w2[i] ? 0 : 1)}
+  diff == 1
+end
+
+def check_for_problematic_patterns(d)
+  # e.g. Wordle 265 ("watch"), after raise-clout (-!---, ?---?)
+  # legal words remaining: watch, match, hatch, patch, batch, natch, tacky
+  # 6 words with _atch, plus tacky
+  pp_dict = {}
+  d.each do |key1, _value1|
+    break if Twitter::Configuration.instrumentation_only
+    found = false
+    pp_dict.each do |key2, value2|
+      if close(key1, key2)
+        found = true
+        pp_dict[key2] = value2 + 1
+      end
+    end
+    pp_dict[key1] = 1 if !found
+  end
+  if Twitter::Configuration.instrumentation_only
+    Debug.log 'skipped problematic pattern loop, using hardcoded result'
+    pp_dict = {'hilly': 3, 'floss': 10} if Twitter::Configuration.instrumentation_only
+  end
+  UI::padded_puts 'Checking for problematic patterns...'
+  pp_dict.each do |key, value|
+    if value > 2
+      puts ''
+      UI::padded_puts 'PROBLEMATIC PATTERN ALERT'
+      UI::padded_puts "Found \"#{key}\" with #{value} matching words (print for details)"
+      puts ''
+      puts ''
+    end
+  end
+  UI::padded_puts 'No problematic patterns found!' if pp_dict.values.max <= 2
+end
