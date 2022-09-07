@@ -16,11 +16,11 @@
 # play_wordle.rb
 #   - The main entrypoint. "ruby play_wordle.rb", or "./play_wordle.rb"
 #   - Endeavor to move things out of this file, if possible.
-# wordle_colors.rb
-#   - modules WordleShareColors, WordleModes
-#   - encapsulating different colors and modes, generally the output will be a normalized 'ygwwg'
-#
-#
+# wordle_core.rb
+#   - everything purely wordle-related, from unicode colors to problematic patterns
+# constants.rb: currently contains dictionary filenames
+# tests.rb: all unit tests
+# fingerprints.rb: all things fingerprint-related: compression, re-generation, save, read-from-file
 #
 #
 # Current state:
@@ -34,6 +34,7 @@ require 'yaml'
 require_relative 'constants'
 require_relative 'wordle_core'
 require_relative 'twitter'
+require_relative 'fingerprints'
 require_relative 'tests'
 
 DICTIONARY_FILE = DICTIONARY_FILE_LARGE
@@ -177,8 +178,11 @@ module UI
         when 'dad'
           print_a_dad_joke
         when 'generate-fingerprints'
-          fingerprints = calculate_fingerprints
-          _compressed_fingerprints = compress(fingerprints)
+          puts 'running this takes a long time, ~20 minutes'
+          puts 'typically it is only necessary after re-scraping of NYT'
+          puts 'if you still want to run this, uncomment the code'
+          # fingerprints = calculate_fingerprints
+          # compressed_fingerprints = compress(fingerprints)
           # save_fingerprints_to_file compressed_fingerprints
         when 'full-precalculation'
           stats_hash = Twitter::twitter[:stats]
@@ -225,7 +229,7 @@ module UI
       Debug.set_maybe(choice2 == 'y')
 
       # Idea is to only filter on the max 4g seen
-      max_4gs_seen = max_4gs_seen_on_twitter(stats_hash)
+      max_4gs_seen = StatsHash::max_4gs(stats_hash)
 
       stats_hash.each do |key, _value|
         if Twitter::Configuration.instrumentation_only
@@ -440,50 +444,7 @@ module UI
   end
 end
 
-module CompactKeys
-  # examples for: key, name, subname
-  # 4g.3.1, 4g, 3.1
-  # 3g1y.yellow3.white2, 3g1y, yellow3.white2
-  # 3g2y.yellow23, 3g2y, yellow23
-  # 2g3y.green23, 2g3y, green23
-  # 1g4y.green3, 1g4y, green3
-  # 0g5y., 0g5y, ''
-  #
-  # Going to be storing counts
-  KEY_COMPRESSION_HASH = [
-    # long form, compact form
-    ['4g.1', 0], ['4g.2', 1], ['4g.3', 2], ['4g.4', 3], ['4g.5', 4],
-    ['3g1y.yellow1.white2', 5], ['3g1y.yellow1.white3', 6], ['3g1y.yellow1.white4', 7], ['3g1y.yellow1.white5', 8],
-    ['3g1y.yellow2.white1', 9], ['3g1y.yellow2.white3',10], ['3g1y.yellow2.white4',11], ['3g1y.yellow2.white5',12],
-    ['3g1y.yellow3.white1',13], ['3g1y.yellow3.white2',14], ['3g1y.yellow3.white4',15], ['3g1y.yellow3.white5',16],
-    ['3g1y.yellow4.white1',17], ['3g1y.yellow4.white2',18], ['3g1y.yellow4.white3',19], ['3g1y.yellow4.white5',20],
-    ['3g1y.yellow5.white1',21], ['3g1y.yellow5.white2',22], ['3g1y.yellow5.white3',23], ['3g1y.yellow5.white4',24],
-    ['3g2y.yellow12', 25], ['3g2y.yellow13', 26], ['3g2y.yellow14', 27], ['3g2y.yellow15', 28],
-    ['3g2y.yellow23', 29], ['3g2y.yellow24', 30], ['3g2y.yellow25', 31],
-    ['3g2y.yellow34', 32], ['3g2y.yellow35', 33],
-    ['3g2y.yellow45', 34],
-    ['2g3y.green12', 35], ['2g3y.green13', 36], ['2g3y.green14', 37], ['2g3y.green15', 38],
-    ['2g3y.green23', 39], ['2g3y.green24', 40], ['2g3y.green25', 41],
-    ['2g3y.green34', 42], ['2g3y.green35', 43],
-    ['2g3y.green45', 44],
-    ['1g4y.green1', 45], ['1g4y.green2', 46], ['1g4y.green3', 47], ['1g4y.green4', 48], ['1g4y.green5', 49],
-    ['0g5y.', 50]
-  ].to_h
-
-  def CompactKeys::compact_key(key, interestingness)
-    # This may be a useless function
-    case interestingness
-    when InterestingWordleResponses::WORDLE_4G
-
-    when InterestingWordleResponses::WORDLE_3G1Y, InterestingWordleResponses::WORDLE_3G2Y, InterestingWordleResponses::WORDLE_2G3Y, InterestingWordleResponses::WORDLE_1G4Y, InterestingWordleResponses::WORDLE_0G5Y
-    when InterestingWordleResponses::NOT_INTERESTING
-      raise "compact_key should not be called when not interesting"
-    else
-      raise "compact_key called with unknown interestingness"
-    end
-  end
-end
-
+# TODO remove this
 DEFAULT_CONSTRAINT_CARDINALITY_WORD_LIST = [
   # 'khaki', # Wordle 421
   # 'gruel', # Wordle 423
@@ -493,78 +454,11 @@ DEFAULT_CONSTRAINT_CARDINALITY_WORD_LIST = [
   'whoop', # Wordle 442
 ]
 
-def compress(fingerprints)
-  fingerprints.map{ |word, fingerprint|
-    [word, fingerprint.map{|k,v| [CompactKeys::KEY_COMPRESSION_HASH[k], v]}.to_h]
-  }.to_h
-end
-
-def decompress(compressed_fingerprints)
-  compressed_fingerprints.map{ |word, compressed_fingerprint| [
-    word, compressed_fingerprint.map { |compressed_key, v| [
-      CompactKeys::KEY_COMPRESSION_HASH.key(compressed_key), v
-    ]}.to_h
-  ]}.to_h
-end
-
-def save_fingerprints_to_file(compressed_fingerprints)
-  puts "uncomment in code to re-generate the file (this will overwrite!)"
-  # File.write('compressed_fingerprints.yaml', compressed_fingerprints.to_yaml)
-end
-
-def read_fingerprints_from_file
-  YAML.load_file('compressed_fingerprints.yaml')
-end
-
-# Sample fingerprint (clout)
-# {"4g.2"=>2, "4g.3"=>1, "4g.4"=>1, "3g1y.yellow4.white5"=>3, "4g.5"=>3, "4g.1"=>3, "3g1y.yellow2.white1"=>1}
-def reconstitute_fingerprints
-  decompress(read_fingerprints_from_file)
-end
-
-def calculate_fingerprints
-  # This function takes about 10 minutes to run. Unless there is a new type of
-  # interestingness, or unless the dictionary changes, it should not need to be run.
-  valid_wordle_words = populate_valid_wordle_words
-  fingerprints = {}
-  source_words = populate_all_words
-  num_processed = 0
-  source_words.each do |word, _|
-    temp = {}
-    valid_wordle_words.each do |guess, _|
-      # convert wordle response (wgggg) to '4g.1'
-      wordle_response = wordle_response(guess, word)
-      interestingness = InterestingWordleResponses::determine_interestingness(wordle_response)
-      case interestingness
-      when InterestingWordleResponses::WORDLE_4G, InterestingWordleResponses::WORDLE_3G1Y, InterestingWordleResponses::WORDLE_3G2Y, InterestingWordleResponses::WORDLE_2G3Y, InterestingWordleResponses::WORDLE_1G4Y, InterestingWordleResponses::WORDLE_0G5Y
-        _, _, key = InterestingWordleResponses::calculate_name_subname_key(wordle_response, interestingness, 1)
-        key = key[0,4] if interestingness == InterestingWordleResponses::WORDLE_4G
-        temp[key] = 0 if !temp.key?(key)
-        temp[key] = temp[key] + 1
-      when InterestingWordleResponses::NOT_INTERESTING
-      else
-        raise "unknown interestingness"
-      end
-    end
-    fingerprints[word] = temp
-    num_processed += 1
-    # can do ~90 in 10 seconds (5400 in 10 minutes)
-    # break if num_processed >= 575
-    if num_processed % 575 == 0
-      print 'sleeping for a minute every so often... '
-      sleep 60
-      puts 'resuming!'
-    end
-    break if num_processed >= 50 # comment this line if you want to run "for real"
-  end
-  fingerprints
-end
-
 def score(candidate_word, stats_hash, fingerprint)
   Debug.set_maybe(candidate_word == 'prawn')
   Debug.maybe_log 'score: ENTER'
   # transform stats hash - map automatically makes a copy
-  max_4gs_from_twitter = max_4gs_seen_on_twitter(stats_hash) # [1, 2, 0, 0, 1]
+  max_4gs_from_twitter = StatsHash::max_4gs(stats_hash) # [1, 2, 0, 0, 1]
   max_4gs_info = {
     :keys => max_4gs_from_twitter
       .map.with_index{ |ith_max, i| "4g.#{i+1}.#{ith_max}" }
@@ -574,16 +468,11 @@ def score(candidate_word, stats_hash, fingerprint)
       .delete_if{ |_, ith_max| ith_max == 0}
       .to_h
   }
-  # keep_these_4gs_keys_plus = max_4gs_from_twitter
-  #   .map.with_index {|ith_max, i| ["4g.#{i+1}.#{ith_max}", "4g.#{i+1}", ith_max]}
-  #   .delete_if{|el| el[0].end_with?('.0')}
-  # keep_these_4gs_keys = keep_these_4gs_keys_plus.map{|el| el[0]}
   tsh = stats_hash
     .map{|k,v| [k, [[:key, k], [:value, v]].to_h]}
     .map{|k,data_hash| data_hash[:is4g] = k.start_with?('4g'); [k, data_hash]}
     .map{|k,data_hash| data_hash[:short_key] = data_hash[:is4g] ? k[0,4] : k; [k, data_hash]}
     .delete_if{|k,data_hash| data_hash[:is4g] && !max_4gs_info[:keys].include?(k)}
-  # .delete_if{|k,data_hash| data_hash[:is4g] && !keep_these_4gs_keys.include?(k)}
 
   # TODO What is the point of this loop?
   (0...5).each do |i|
@@ -603,32 +492,19 @@ def score(candidate_word, stats_hash, fingerprint)
 
   # TODO Delete if max-4gs-seen is higher than the fingerprint
   # (start with alerting)
+  # TODO refactor this to use streams better
   fingerprint.each do |short_key, value|
     next if !short_key.start_with?('4g')
     next if !max_4gs_info[:max_by_short_key].key?(short_key)
     twitter_value = max_4gs_info[:max_by_short_key][short_key]
 
     if ['whirl','taunt','chugs','witch','pooch','drown','drawn','tramp','heerd','amber','plunk','haunt','clock','whims','amble','knitx','sonic'].include?(candidate_word)
-      puts "Hello World from #{candidate_word}, #{twitter_value}>#{value}" if twitter_value > value
+      puts "score(): Hello World from #{candidate_word}, #{twitter_value}>#{value}" if twitter_value > value
     end
 
     if twitter_value > value
       return -1
     end
-
-
-    # tsh.each do |key, data_hash|
-    #   next if data_hash[:short_key] != short_key
-    #   twitter_value = 0
-    #   keep_these_4gs_keys_plus.each do |el|
-    #     short_key = el[1]
-    #     if short_key == data_hash[:short_key]
-    #       twitter_value = el[2]
-    #       break
-    #     end
-    #   end
-    #   puts "Hello World from #{candidate_word}, #{twitter_value}>#{value}" if twitter_value > value
-    # end
   end
 
 
@@ -658,11 +534,7 @@ def score(candidate_word, stats_hash, fingerprint)
   # - worse to get 0/1 than 1/2
   # - worse still to get 0/2 than either 0/1 or 1/2
   # - Are we "double-counting"? If someone misses entirely (0/1), they get dinged here _and_ in pct
-  max_4gs_from_fingerprint = [0, 0, 0, 0, 0]
-  (0...5).each do |i|
-    ith_4g_key = "4g.#{i+1}"
-    max_4gs_from_fingerprint[i] = fingerprint[ith_4g_key] if fingerprint.key?(ith_4g_key)
-  end
+  max_4gs_from_fingerprint = Fingerprint::max_4gs(fingerprint)
   distance_4g = Distances::calc_4g_distance(max_4gs_from_twitter, max_4gs_from_fingerprint)
   # simple conversion (for now) to a 0-100 score
   arbitrary_max = 5.0
@@ -693,59 +565,17 @@ def score(candidate_word, stats_hash, fingerprint)
 end
 
 def full_precalculation(d, stats_hash)
-  # First pass
-  #   Anything seen on Twitter _not_ in the ith word's precalculated entry
-  #   eliminates that word. (This is, I believe, equivalent to the current
-  #   processing).
-  # Second pass
-  #   Rank based on absence of evidence. Consider holistically, not just
-  #   the current max-4gs-seen array. How to include the count from the
-  #   dictionary properly? Seems like the count will be different between
-  #   the 4g and everything else. But maybe not (at least for the non-count
-  #   ranking).
-  #
-  # It is likely possible to do both "first pass" and "second pass" at the
-  # same time, from the same ranking function. Consider the remaining
-  # dictionary of letters: {word1 => line_num1, word2 => line_num2}.
-  # Perform a map where the word
-
-  compressed_fingerprints = read_fingerprints_from_file
-  fingerprints = decompress(compressed_fingerprints)
-
-  # set d for now
-  # d = {
-  #   'whoop' => 'unused',
-  #   'about' => 'unused',
-  #   'above' => 'unused',
-  #   'after' => 'unused',
-  #   'along' => 'unused',
-  #   'among' => 'unused',
-  #   'raise' => 'unused',
-  #   'clout' => 'unused',
-  #   'windy' => 'unused',
-  #   'blimp' => 'unused',
-  #   'fight' => 'unused',
-  #   'taunt' => 'unused',
-  #   'sonic' => 'unused', # good alternative for Wordle 444 (taunt)
-  # }
-
-  # puts ''
-  # puts 'd:'
-  # puts d
+  fingerprints = reconstitute_fingerprints
 
   d = d
     .map{|word, line_num| [word, [[:word, word], [:line_num, line_num]].to_h]}
-    .map{|word, data_hash| data_hash[:fingerprints] = fingerprints[word]; [word, data_hash]}
-    .map{|word, data_hash| data_hash[:score] = score(word, stats_hash, data_hash[:fingerprints]); [word, data_hash]}
-  # puts ''
-  # puts 'd:'
-  # puts d
+    .map{|word, data_hash| data_hash[:fingerprint] = fingerprints[word]; [word, data_hash]}
+    .map{|word, data_hash| data_hash[:score] = score(word, stats_hash, data_hash[:fingerprint]); [word, data_hash]}
+    .delete_if{|word, data_hash| data_hash[:score] == -1}
 
   puts ''
   puts 'stats_hash:'
   puts stats_hash
-
-  d.delete_if{|word, data_hash| data_hash[:score] == -1}
   puts ''
   puts "There are #{d.length} words remaining. Deleting everything with a score less than 50."
   d.delete_if{|word, data_hash| data_hash[:score] < 50.0} # FIXME remove this
@@ -789,25 +619,6 @@ def wordle_response(guess, word)
     end
   end
   wordle_response
-end
-
-def max_4gs_seen_on_twitter(stats_hash)
-  # calculate the max 4g's seen per letter
-  # [1, 0, 1, 0, 0] means the first and third letters had 4g matches, and only 4g.1.1 and 4g.3.1
-  max_4gs_seen = [0, 0, 0, 0, 0]
-  stats_hash.each do |key, value|
-    # sample (key, value): ('4g.3.1', 7) indicating the 3rd letter was white 1 time, for 7 people
-    key_array = key.split('.', 2)
-    if key_array[0] == '4g'
-      letter_position = key_array[1][0].to_i
-      num_incorrect_4gs = key_array[1][2].to_i
-      _num_people = value
-      if num_incorrect_4gs > max_4gs_seen[letter_position-1]
-        max_4gs_seen[letter_position-1] = num_incorrect_4gs
-      end
-    end
-  end
-  max_4gs_seen
 end
 
 module Distances
@@ -865,7 +676,7 @@ def penultimate_twitter_absence_of_evidence(d, stats_hash)
   #   3. Do a text-based comparison (for now)
 
   # get max 4gs seen
-  max_4gs_seen = max_4gs_seen_on_twitter stats_hash
+  max_4gs_seen = StatsHash::max_4gs stats_hash
 
   # calculate how many actual 4g matches there are per key
   # key=laved, all_4g_matches=[6, 2, 10, 0, 2]
@@ -1238,6 +1049,7 @@ def filter(d, word, response)
   end
 end
 
+# TODO remove this
 def calculate_constraint_cardinality(word_list_to_check=DEFAULT_CONSTRAINT_CARDINALITY_WORD_LIST)
   # The idea here is to precompute how many of each constraint there is
   # for each word, to pattern-match later based on twitter
@@ -1288,7 +1100,7 @@ def calculate_constraint_cardinality(word_list_to_check=DEFAULT_CONSTRAINT_CARDI
   # =>
   # '4g.1 => 3'
 
-  max_4gs_seen = max_4gs_seen_on_twitter(stats_hash)
+  max_4gs_seen = StatsHash::max_4gs(stats_hash)
   transformed_stats_hash = stats_hash
     .map{|k,v| [k,v]}.to_h # copy
     .delete_if {|k,v| k.start_with?('4g')}

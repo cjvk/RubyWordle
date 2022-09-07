@@ -69,6 +69,36 @@ module Tests
     fail unless min_compact_keys_value == 0
     # this also guarantees that all keys are unique
     (min_compact_keys_value..max_compact_keys_value).each {|v| fail unless kdh.has_value?(v)}
+
+    clout_fingerprint = {
+      "4g.1"=>3,
+      "4g.2"=>2,
+      "4g.3"=>1,
+      "4g.4"=>1,
+      "4g.5"=>3,
+      "3g1y.yellow4.white5"=>3,
+      "3g1y.yellow2.white1"=>1
+    }
+    fail unless Fingerprint::max_4gs(clout_fingerprint) == [3, 2, 1, 1, 3]
+    goofy_fingerprint = {
+      "4g.1"=>4,
+      "4g.4"=>10,
+      "4g.5"=>1,
+      "3g1y.yellow4.white1"=>1,
+      "3g1y.yellow1.white4"=>2,
+      "3g1y.yellow1.white5"=>1
+    }
+    fail unless Fingerprint::max_4gs(goofy_fingerprint) == [4, 0, 0, 10, 1]
+    wordle_444_stats_hash = {
+      "4g.1.1"=>108,
+      "4g.1.2"=>56,
+      "4g.1.3"=>41,
+      "4g.1.4"=>5,
+      "4g.3.1"=>64,
+      "3g1y.yellow2.white1"=>7,
+      "3g1y.yellow4.white5"=>4
+    }
+    fail unless StatsHash::max_4gs(wordle_444_stats_hash) == [4, 0, 1, 0, 0]
   end
 end
 
