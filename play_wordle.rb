@@ -4,11 +4,13 @@
 #   1. test
 #   2. raise (-!--- response), twitter, filtering, absence-of-evidence
 #   3. goofball 444
-# TODO class Configuration
+# TODO file Configuration?
 # TODO class StatsHash
 # TODO class Fingerprint? FingerprintHash?
 # TODO Move things to different files?
 # TODO constants.rb?
+# TODO After moving things to module Twitter, change Twitter::Configuration back to Configuration?
+# TODO twitter() (returning a stats_hash) should cache the result?
 #
 # files, classes, modules
 # twitter.rb:
@@ -241,7 +243,7 @@ module UI
       max_4gs_seen = max_4gs_seen_on_twitter(stats_hash)
 
       stats_hash.each do |key, _value|
-        if Configuration.instrumentation_only
+        if Twitter::Configuration.instrumentation_only
           Debug.log "instrumentation_only mode, skipping penultimate_twitter() call for key #{key}..."
           next
         end
@@ -322,7 +324,7 @@ def check_for_problematic_patterns(d)
   # 6 words with _atch, plus tacky
   pp_dict = {}
   d.each do |key1, value1|
-    break if Configuration.instrumentation_only
+    break if Twitter::Configuration.instrumentation_only
     found = false
     pp_dict.each do |key2, value2|
       if close(key1, key2)
@@ -332,9 +334,9 @@ def check_for_problematic_patterns(d)
     end
     pp_dict[key1] = 1 if !found
   end
-  if Configuration.instrumentation_only
+  if Twitter::Configuration.instrumentation_only
     Debug.log 'skipped problematic pattern loop, using hardcoded result'
-    pp_dict = {'hilly': 3, 'floss': 10} if Configuration.instrumentation_only
+    pp_dict = {'hilly': 3, 'floss': 10} if Twitter::Configuration.instrumentation_only
   end
   UI::padded_puts 'Checking for problematic patterns...'
   pp_dict.each do |key, value|
@@ -351,13 +353,13 @@ end
 
 def goofball_analysis
   wordle_number = UI.prompt_for_input("Enter daily wordle number (to check for goofballs): ==> ", false)
-  Configuration.set_wordle_number_override wordle_number
+  Twitter::Configuration.set_wordle_number_override wordle_number
 
-  Configuration.set_goofball_mode true
+  Twitter::Configuration.set_goofball_mode true
   twitter_result = twitter
   stats_hash = twitter_result[:stats]
   answers = twitter_result[:answers]
-  Configuration.set_goofball_mode false
+  Twitter::Configuration.set_goofball_mode false
   wordle_number_solution = PreviousWordleSolutions.lookup_by_number(wordle_number.to_i)
 
   singleton_keys = []
@@ -451,8 +453,8 @@ def goofball_analysis
     username = answer.username
 
     # Goofball report
-    puts "Author ID #{author_id} already in denylist" if Configuration.author_id_denylist.include?(author_id)
-    puts "Author ID #{author_id} already in allowlist" if Configuration.author_id_allowlist.include?(author_id)
+    puts "Author ID #{author_id} already in denylist" if Twitter::Configuration.author_id_denylist.include?(author_id)
+    puts "Author ID #{author_id} already in allowlist" if Twitter::Configuration.author_id_allowlist.include?(author_id)
     puts "- name: #{username}"
     puts "  author_id: #{author_id}"
     puts "  tweet: #{answer.tweet_url}"
@@ -462,7 +464,8 @@ def goofball_analysis
   }
 
   check_lists = ->(author_id) {
-    Configuration.author_id_denylist.include?(author_id) || Configuration.author_id_allowlist.include?(author_id)
+    Twitter::Configuration.author_id_denylist.include?(author_id) \
+    || Twitter::Configuration.author_id_allowlist.include?(author_id)
   }
 
   num_suppressed = 0
@@ -841,7 +844,9 @@ def full_precalculation(d, stats_hash)
   puts stats_hash
 
   d.delete_if{|word, data_hash| data_hash[:score] == -1}
-  d.delete_if{|word, data_hash| data_hash[:score] <= 50.0} # FIXME remove this
+  puts ''
+  puts "There are #{d.length} words remaining. Deleting everything with a score less than 50."
+  d.delete_if{|word, data_hash| data_hash[:score] < 50.0} # FIXME remove this
   d = d.sort_by {|word, data_hash| -1 * data_hash[:score]}
 
   puts ''
@@ -979,7 +984,7 @@ def penultimate_twitter_absence_of_evidence(d, stats_hash)
   # ].to_h
   new_d = {}
   d.each do |key, _value|
-    matches = all_4g_matches(key, Configuration.absence_of_evidence_filename)
+    matches = all_4g_matches(key, Twitter::Configuration.absence_of_evidence_filename)
     difference = [0, 0, 0, 0, 0]
     # (0...5).each {|i| difference[i] = matches[i] - max_4gs_seen[i]}
     (0...5).each {|i| difference[i] = Distances::DISTANCES_4G[[matches[i], 9].min][max_4gs_seen[i]].to_f}
@@ -1136,16 +1141,18 @@ module Filter
     all_words = populate_valid_wordle_words
 
     d.each_key do |key|
+      remaining_words = []
       num_valid_alternatives = ALPHABET
         .map{|c| replace_ith_letter(key, gray, c)}
-        .map{|word_to_check| (word_to_check != key && all_words.key?(word_to_check)) ? 1 : 0}
+        .delete_if{|word_to_check| word_to_check == key || !all_words.key?(word_to_check)}
+        .map{|remaining_word| remaining_words.append(remaining_word); 1}
         .to_a
         .sum
 
       if num_valid_alternatives < count
         d.delete(key)
       else
-        Debug.maybe_log "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
+        Debug.maybe_log "keeping #{key} (" + remaining_words.join(', ') + ')'
       end
     end
   end
@@ -1153,6 +1160,7 @@ module Filter
   def Filter::filter_3g1y(d, yellow, gray)
     all_words = populate_valid_wordle_words
     d.each_key do |key|
+      remaining_words = []
       # ensure yellow and gray are different
       d.delete(key) if key[yellow] == key[gray]
 
@@ -1163,14 +1171,15 @@ module Filter
 
       num_valid_alternatives = ALPHABET
         .map{|c| replace_ith_letter(key_copy, gray, c)}
-        .map{|word_to_check| (word_to_check[gray] != letter_at_yellow && all_words.key?(word_to_check)) ? 1 : 0}
+        .delete_if{|word_to_check| word_to_check[gray] == letter_at_yellow || !all_words.key?(word_to_check)}
+        .map{|remaining_word| remaining_words.append(remaining_word); 1}
         .to_a
         .sum
 
       if num_valid_alternatives == 0
         d.delete(key)
       else
-        Debug.maybe_log "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
+        Debug.maybe_log "keeping #{key} (" + remaining_words.join(', ') + ')'
       end
     end
   end

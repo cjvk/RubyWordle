@@ -4,89 +4,94 @@ require 'faraday'
 require 'json'
 require 'date'
 
-module Configuration
-  # Twitter API calls
-  @@results = 100
-  @@pages = 5
+module Twitter
 
-  # Set to true to skip "long" functions
-  @@instrumentation_only = false
+  module Configuration
+    # Twitter API calls
+    @@results = 100
+    @@pages = 5
 
-  #         dracos has ~2k fewer words than NYT, could perform better
-  @@absence_of_evidence_filename = DRACOS_VALID_WORDLE_WORDS_FILE
+    # Set to true to skip "long" functions
+    @@instrumentation_only = false
 
-  #         Uncomment this to query a specific wordle number
-  @@wordle_number_override = 444 # taunt
+    #         dracos has ~2k fewer words than NYT, could perform better
+    @@absence_of_evidence_filename = DRACOS_VALID_WORDLE_WORDS_FILE
 
-  #         Uncomment this to enable debug printing for a specific tweet_id
-  # @@debug_print_tweet_id = '1559163924548915201'
+    #         Uncomment this to query a specific wordle number
+    @@wordle_number_override = 444 # taunt
 
-  #         Uncomment to enable printing of ALL penultimate which match this pattern
-  # @@print_this_penultimate_pattern = 'wgggw' # use normalized colors (g/y/w)
+    #         Uncomment this to enable debug printing for a specific tweet_id
+    # @@debug_print_tweet_id = '1559163924548915201'
 
-  #         Uncomment to enable printing of ALL answers which match this key
-  # @@print_answers_matching_this_key = '4g.5.5'
+    #         Uncomment to enable printing of ALL penultimate which match this pattern
+    # @@print_this_penultimate_pattern = 'wgggw' # use normalized colors (g/y/w)
 
-  # Goofball processing: down to 423
+    #         Uncomment to enable printing of ALL answers which match this key
+    # @@print_answers_matching_this_key = '4g.5.5'
+
+    # Goofball processing: down to 423
 
 
-  # "Goofball mode", where denylist and allowlist is disabled, and singletons are not eliminated
-  @@goofball_mode = false
+    # "Goofball mode", where denylist and allowlist is disabled, and singletons are not eliminated
+    @@goofball_mode = false
 
-  # username/author ID conversion sites: https://tweeterid.com/, https://commentpicker.com/twitter-id.php
-  # interesting Twitter handles and author IDs
-  # habanerohiker / 45384296
-  #         appears to have authored a bot (https://twitter.com/habanerohiker/status/1559163924548915201)
+    # username/author ID conversion sites: https://tweeterid.com/, https://commentpicker.com/twitter-id.php
+    # interesting Twitter handles and author IDs
+    # habanerohiker / 45384296
+    #         appears to have authored a bot (https://twitter.com/habanerohiker/status/1559163924548915201)
 
-  def self.results
-    @@results
+    def self.results
+      @@results
+    end
+    def self.pages
+      @@pages
+    end
+    def self.instrumentation_only
+      @@instrumentation_only
+    end
+    def self.absence_of_evidence_filename
+      @@absence_of_evidence_filename
+    end
+    def self.wordle_number_override
+      defined?(@@wordle_number_override) ? @@wordle_number_override : nil
+    end
+    def self.set_wordle_number_override new_wordle_number
+      Debug.log "Setting wordle_number_override to: #{new_wordle_number}"
+      @@wordle_number_override = new_wordle_number
+    end
+    def self.debug_print_tweet_id
+      defined?(@@debug_print_tweet_id) ? @@debug_print_tweet_id : nil
+    end
+    def self.print_this_penultimate_pattern
+      defined?(@@print_this_penultimate_pattern) ? @@print_this_penultimate_pattern : nil
+    end
+    def self.print_answers_matching_this_key
+      defined?(@@print_answers_matching_this_key) ? @@print_answers_matching_this_key : nil
+    end
+    def self.set_goofball_mode b
+      @@goofball_mode = b
+    end
+    def self.goofball_mode?
+      @@goofball_mode
+    end
+    def self.author_id_denylist
+      return {} if @@goofball_mode
+      YAML.load_file('author_id_denylist.yaml')
+        .map{|el| raise "problem!" if el['verdict'] != 'deny'; el}
+        .map{|el| [el['author_id'].to_s, el['name']]}
+        .to_h
+    end
+    def self.author_id_allowlist
+      return {} if @@goofball_mode
+      YAML.load_file('author_id_allowlist.yaml')
+        .map{|el| raise "problem!" if el['verdict'] != 'allow'; el}
+        .map{|el| [el['author_id'].to_s, el['name']]}
+        .to_h
+    end
   end
-  def self.pages
-    @@pages
-  end
-  def self.instrumentation_only
-    @@instrumentation_only
-  end
-  def self.absence_of_evidence_filename
-    @@absence_of_evidence_filename
-  end
-  def self.wordle_number_override
-    defined?(@@wordle_number_override) ? @@wordle_number_override : nil
-  end
-  def self.set_wordle_number_override new_wordle_number
-    Debug.log "Setting wordle_number_override to: #{new_wordle_number}"
-    @@wordle_number_override = new_wordle_number
-  end
-  def self.debug_print_tweet_id
-    defined?(@@debug_print_tweet_id) ? @@debug_print_tweet_id : nil
-  end
-  def self.print_this_penultimate_pattern
-    defined?(@@print_this_penultimate_pattern) ? @@print_this_penultimate_pattern : nil
-  end
-  def self.print_answers_matching_this_key
-    defined?(@@print_answers_matching_this_key) ? @@print_answers_matching_this_key : nil
-  end
-  def self.set_goofball_mode b
-    @@goofball_mode = b
-  end
-  def self.goofball_mode?
-    @@goofball_mode
-  end
-  def self.author_id_denylist
-    return {} if @@goofball_mode
-    YAML.load_file('author_id_denylist.yaml')
-      .map{|el| raise "problem!" if el['verdict'] != 'deny'; el}
-      .map{|el| [el['author_id'].to_s, el['name']]}
-      .to_h
-  end
-  def self.author_id_allowlist
-    return {} if @@goofball_mode
-    YAML.load_file('author_id_allowlist.yaml')
-      .map{|el| raise "problem!" if el['verdict'] != 'allow'; el}
-      .map{|el| [el['author_id'].to_s, el['name']]}
-      .to_h
-  end
+
 end
+
 
 #############################################################################
 #
@@ -287,8 +292,8 @@ def twitter
   wordle_day_0 = Date.civil(2021, 6, 19)
   difference_in_days = (now - wordle_day_0).to_i
   wordle_number = difference_in_days.to_s
-  if Configuration.wordle_number_override != nil
-    wordle_number = Configuration.wordle_number_override.to_s
+  if Twitter::Configuration.wordle_number_override != nil
+    wordle_number = Twitter::Configuration.wordle_number_override.to_s
     Debug.log_terse "using user-specified wordle number: #{wordle_number}"
   end
   answers = []
@@ -309,7 +314,7 @@ def twitter
 
   search_queries.each do |search_query|
     next_token = ''
-    (0...Configuration.pages).each do |page_num|
+    (0...Twitter::Configuration.pages).each do |page_num|
       # https://developer.twitter.com/en/docs/twitter-api/tweets/search/api-reference/get-tweets-search-recent
 
       # quit early if nothing remaining
@@ -318,7 +323,7 @@ def twitter
       # handle next token
       next_token_get_parameter = page_num == 0 ? "" : "&next_token=#{next_token}"
 
-      url = "https://api.twitter.com/2/tweets/search/recent?query=#{search_query}&tweet.fields=author_id,referenced_tweets&user.fields=id,username&expansions=author_id&max_results=#{Configuration.results}#{next_token_get_parameter}"
+      url = "https://api.twitter.com/2/tweets/search/recent?query=#{search_query}&tweet.fields=author_id,referenced_tweets&user.fields=id,username&expansions=author_id&max_results=#{Twitter::Configuration.results}#{next_token_get_parameter}"
 
       response = Faraday.get(url, nil, {'Accept' => 'application/json', 'Authorization' => "Bearer #{auth_token}"})
       parsed_json = JSON.parse(response.body)
@@ -343,7 +348,7 @@ def twitter
         username = author_id_to_username[author_id]
         is_retweet = result['referenced_tweets'] != nil && result['referenced_tweets'][0]['type'] == 'retweeted'
 
-        Debug.set_maybe (Configuration.debug_print_tweet_id != nil && Configuration.debug_print_tweet_id == id)
+        Debug.set_maybe (Twitter::Configuration.debug_print_tweet_id != nil && Twitter::Configuration.debug_print_tweet_id == id)
         Debug.maybe_log "result=#{result}"
         total_twitter_posts += 1
         # skip those we've already seen
@@ -353,8 +358,8 @@ def twitter
           unique_twitter_posts[id] = '1'
         end
         # check the denylist
-        if Configuration.author_id_denylist.include?(author_id)
-          allowlisted_too = Configuration.author_id_allowlist.include?(author_id)
+        if Twitter::Configuration.author_id_denylist.include?(author_id)
+          allowlisted_too = Twitter::Configuration.author_id_allowlist.include?(author_id)
           al_str = allowlisted_too ? ' (author allowlisted too!)' : ''
           Debug.log "skipping tweet (denylist) (#{Answer.tweet_url id, username}) (author_id=#{author_id})#{al_str}"
           skipped_twitter_posts += 1
@@ -441,7 +446,7 @@ def twitter
             next
           end
 
-          if guess_array[guess_array.length()-2] == Configuration.print_this_penultimate_pattern
+          if guess_array[guess_array.length()-2] == Twitter::Configuration.print_this_penultimate_pattern
             Debug.log '-------- TEXT: BEGIN     --------'
             Debug.log text
             Debug.log '-------- TEXT: END       --------'
@@ -486,14 +491,14 @@ def twitter
   # remove entries if they have exactly one occurrence (possible goofballs)
   # stats.delete_if { |key, value| value == 1 }
   stats.delete_if do |key, value|
-    break if Configuration.goofball_mode?
+    break if Twitter::Configuration.goofball_mode?
     author_allowlisted = false
     if value == 1
       for answer in answers
         if answer.matches_key(key)
           url = answer.tweet_url
           author_id = answer.author_id
-          if Configuration.author_id_allowlist.include?(answer.author_id)
+          if Twitter::Configuration.author_id_allowlist.include?(answer.author_id)
             author_allowlisted = true
             Debug.log "keeping key #{key} with value 1 (author allowlisted). (#{url}) (author_id=#{author_id})"
           else
@@ -533,8 +538,8 @@ def twitter
   UI.padded_puts '----------------------------------------'
   puts ''
 
-  if Configuration.print_answers_matching_this_key != nil
-    matching_key = Configuration.print_answers_matching_this_key
+  if Twitter::Configuration.print_answers_matching_this_key != nil
+    matching_key = Twitter::Configuration.print_answers_matching_this_key
     UI::padded_puts "Printing all answers matching key #{matching_key}"
     puts ''
     answers.each {|answer| answer.pp if answer.matches_key(matching_key)}
