@@ -177,7 +177,7 @@ module UI
         when 'penultimate'
           penultimate(d)
         when 'twitter'
-          stats_hash = twitter[:stats]
+          stats_hash = Twitter::twitter[:stats]
           UI.print_remaining_count(d)
           if UI.maybe_filter_twitter(d, stats_hash)
             UI.maybe_absence_of_evidence(d, stats_hash)
@@ -189,10 +189,10 @@ module UI
           _compressed_fingerprints = compress(fingerprints)
           # save_fingerprints_to_file compressed_fingerprints
         when 'full-precalculation'
-          stats_hash = twitter[:stats]
+          stats_hash = Twitter::twitter[:stats]
           full_precalculation(d, stats_hash)
         when 'test'
-          stats_hash = twitter[:stats]
+          stats_hash = Twitter::twitter[:stats]
           full_precalculation(d, stats_hash)
         when 'goofball'
           goofball_analysis
@@ -349,7 +349,7 @@ def goofball_analysis
   Twitter::Configuration.set_wordle_number_override wordle_number
 
   Twitter::Configuration.set_goofball_mode true
-  twitter_result = twitter
+  twitter_result = Twitter::twitter
   stats_hash = twitter_result[:stats]
   answers = twitter_result[:answers]
   Twitter::Configuration.set_goofball_mode false
@@ -1362,7 +1362,7 @@ def calculate_constraint_cardinality(word_list_to_check=DEFAULT_CONSTRAINT_CARDI
 
   result_hash[word_of_interest] = result_hash[word_of_interest].sort.to_h
 
-  stats_hash = twitter[:stats]
+  stats_hash = Twitter::twitter[:stats]
   stats_hash = stats_hash.sort.to_h # make it look like others
 
   compact_result_hash = result_hash.map{|k,v| [k, v.map{|k2,v2| [CompactKeys::KEY_COMPRESSION_HASH[k2], v2]}.to_h]}
