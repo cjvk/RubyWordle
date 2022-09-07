@@ -3,6 +3,7 @@
 require 'faraday'
 require 'json'
 require 'date'
+require_relative 'constants'
 
 def print_a_dad_joke
   url = 'https://icanhazdadjoke.com/'
