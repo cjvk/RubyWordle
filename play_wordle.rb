@@ -440,56 +440,6 @@ module UI
   end
 end
 
-
-def static_analysis(d, stats_hash)
-  # TODO (big feature) do offline calculations for each word and constraint type (not only 4g)
-  #
-  # 4g   : Can represent as below, 5-tuple [3, 1, 5, 0, 3]
-  # 3g1y : This is a 2-D array. Array[i][j] = number which match ith as yellow and jth as white
-  #        Array[i][i] is undefined because i != j
-  #                         [
-  #                          [-, 0, 0, 2, 0], # e.g. 2 words give a yggwg result
-  #                          [0, -, 1, 0, 0], # and 1 word gives a gywgg result
-  #                          [2, 0, -, 0, 0],
-  #                          [0, 0, 1, -, 0],
-  #                          [0, 0, 0, 0, -],
-  #                         ]
-  # 3g2y : Also a 2-D array. Elements i and j are both the yellow positions.
-  # 2g3y : Also a 2-D array. Elements i and j are now the green positions.
-  # 1g4y : This is a 1-D array. Element i indicates the green position.
-  # 0g5y : This is just a simple count.
-  #
-  # So there are a total of 71 numbers on which to match.
-  #
-  # Thoughts: Only the 4g array includes count. So while we can measure 4g here and on
-  #           Twitter, the only deduction we could make is (for example) if there are
-  #           many words which result in a gggyw, and nobody on Twitter gets that
-  #           pattern, then we should rank it lower.
-  # Plan:     Start writing and executing the "calculate_constraint_cardinality" code.
-  #           Do the first 10 in the word list, and also the most recent 10 Wordle
-  #           answers. See how things look in terms of matchups.
-
-  # TODO
-  # Precalculate compact constraint cardinalities for all words in the 5757 dictionary
-  # (plus the stragglers I suppose). The cardinalities are computed against the NYT
-  # dictionary. I suppose when it is re-scraped, it must be re-generated. (Wonder how
-  # long it takes). After calling twitter(), instead of doing filtering as it is now,
-  # iterate through the remaining words (e.g. could be all 5757 + stragglers), and
-  # calculate a "distance" or "score". The calculate_score() function would first
-  # look for keys in the twitter response which are not in the precalculated
-  # fingerprint. If it finds any, can exit early with "NO_MATCH" or something. If
-  # it does not find any, then twitter.keys.length / fingerprint.keys.length is
-  # the first pass of how well it matches. Additional passes can weight this based
-  # on counts. Counts for the 4gs can be handled differently than for the others.
-  # But for example, if there are 3 words which yield 0g5y, and _nobody_ finds them,
-  # this seems quite a good signal.
-  #
-  # Precalculation: Have a class which does the precalculation, then convert to compact
-  #                 format for storage. When created from the file, take out of compact
-  #                 format.
-
-end
-
 module CompactKeys
   # examples for: key, name, subname
   # 4g.3.1, 4g, 3.1
