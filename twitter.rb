@@ -13,7 +13,6 @@ def print_a_dad_joke
 end
 
 module Twitter
-
   module Configuration
     # Twitter API calls
     @@results = 100
@@ -436,8 +435,8 @@ module Twitter
       answers: answers
     }
   end
-end
 
-def is_probably_a_wordle_post?(text, wordle_number)
-  !! (text =~ /Wordle #{wordle_number} [123456X]\/6/)
+  def Twitter::is_probably_a_wordle_post?(text, wordle_number)
+    !! (text =~ /Wordle #{wordle_number} [123456X]\/6/)
+  end
 end
