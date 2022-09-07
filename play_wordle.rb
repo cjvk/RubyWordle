@@ -163,12 +163,12 @@ module UI
         when 'p', 'pa'
           UI.print_remaining_words(d, choice == 'p' ? 30 : nil)
         when 'hint'
-          hint(d)
+          Commands::hint(d)
         when 'q'
           puts ''
           return
         when 'penultimate'
-          penultimate(d)
+          Commands::penultimate(d)
         when 'twitter'
           stats_hash = Twitter::twitter[:stats]
           UI.print_remaining_count(d)
@@ -213,7 +213,7 @@ module UI
     choice = UI.prompt_for_input('Would you like to make deductions based on absence of evidence? (y/n) ==> ', false)
     case choice
     when 'y'
-      penultimate_twitter_absence_of_evidence(d, stats_hash)
+      Commands::penultimate_twitter_absence_of_evidence(d, stats_hash)
     when 'n'
     else
       Alert.alert "unrecognized input (#{choice}), skipping"
@@ -249,7 +249,7 @@ module UI
           end
         end
 
-        penultimate_twitter(d, key_array[0], key_array[1])
+        Commands::penultimate_twitter(d, key_array[0], key_array[1])
         UI.print_remaining_count(d) # moving this here, to show filtering as it goes
       end
     when 'n'
@@ -444,174 +444,176 @@ module UI
   end
 end
 
-def penultimate_twitter_absence_of_evidence(d, stats_hash)
-  UI::padded_puts 'Absence of evidence is not evidence of absence!'
+module Commands
+  def Commands::penultimate_twitter_absence_of_evidence(d, stats_hash)
+    UI::padded_puts 'Absence of evidence is not evidence of absence!'
 
-  # 4g-based analysis
-  # sample entry in stash_hash: key=4g.3.1, value=7
-  # Translation: The 3rd letter was white one time, for seven people
-  # Plan
-  #   1. Normalize the knowledge in stats_hash
-  #   2. For remaining words in d, find how many matching words there are in valid-wordle-words.txt
-  #   3. Do a text-based comparison (for now)
+    # 4g-based analysis
+    # sample entry in stash_hash: key=4g.3.1, value=7
+    # Translation: The 3rd letter was white one time, for seven people
+    # Plan
+    #   1. Normalize the knowledge in stats_hash
+    #   2. For remaining words in d, find how many matching words there are in valid-wordle-words.txt
+    #   3. Do a text-based comparison (for now)
 
-  # get max 4gs seen
-  max_4gs_seen = StatsHash::max_4gs stats_hash
+    # get max 4gs seen
+    max_4gs_seen = StatsHash::max_4gs stats_hash
 
-  # calculate how many actual 4g matches there are per key
-  # key=laved, all_4g_matches=[6, 2, 10, 0, 2]
-  # defined distances between ith all-4g-matches and possible observed Twitter values
-  # FIXME it is possible to see more matches on Twitter than mag-4gs if using
-  #       a smaller dictionary (like dracos)
-  new_d = {}
-  d.each do |key, _value|
-    matches = all_4g_matches(key, Twitter::Configuration.absence_of_evidence_filename)
-    difference = [0, 0, 0, 0, 0]
-    # (0...5).each {|i| difference[i] = matches[i] - max_4gs_seen[i]}
-    (0...5).each {|i| difference[i] = Distances::DISTANCES_4G[[matches[i], 9].min][max_4gs_seen[i]].to_f}
-    new_d[key] = [difference.sum, difference, matches, max_4gs_seen]
-  end
-  new_d = new_d.sort_by {|_key, value| value[0]}.to_h
-
-  puts ''
-  UI::padded_puts '/------------------------------------------------------\\'
-  UI::padded_puts "|              Absence of Evidence report              |"
-  UI::padded_puts '\------------------------------------------------------/'
-  UI::padded_puts ''
-  UI::padded_puts "max 4gs seen on Twitter: #{max_4gs_seen}"
-
-  page_size = 10
-  current_difference = -1
-  absence_of_evidence_string = ->(key, value, maybe_alert) {
-    "key=#{key}, difference=#{value[0]}, all-4g-matches=#{value[2]}, seen-on-twitter=#{value[3]}#{maybe_alert}"
-  }
-  (0...10).each do |page_number|
-    current_difference = -1
-    break if (page_number * page_size) > new_d.length
-    new_d.each_with_index do |(key, value), index|
-      next if index < page_number * page_size
-      break if index >= (page_number+1) * page_size
-      solution_number = PreviousWordleSolutions.check_word(key)
-      maybe_alert = solution_number ? " -------- Alert! Wordle #{solution_number} solution was #{key} --------" : ''
-      if value[0] != current_difference
-        UI::padded_puts "-------- Difference #{value[0]} --------"
-        current_difference = value[0]
-      end
-      UI::padded_puts absence_of_evidence_string.call(key, value, maybe_alert)
+    # calculate how many actual 4g matches there are per key
+    # key=laved, all_4g_matches=[6, 2, 10, 0, 2]
+    # defined distances between ith all-4g-matches and possible observed Twitter values
+    # FIXME it is possible to see more matches on Twitter than mag-4gs if using
+    #       a smaller dictionary (like dracos)
+    new_d = {}
+    d.each do |key, _value|
+      matches = all_4g_matches(key, Twitter::Configuration.absence_of_evidence_filename)
+      difference = [0, 0, 0, 0, 0]
+      # (0...5).each {|i| difference[i] = matches[i] - max_4gs_seen[i]}
+      (0...5).each {|i| difference[i] = Distances::DISTANCES_4G[[matches[i], 9].min][max_4gs_seen[i]].to_f}
+      new_d[key] = [difference.sum, difference, matches, max_4gs_seen]
     end
-    while true do
-      more = [0, new_d.length - ((page_number+1) * page_size)].max
-      user_input = UI.prompt_for_input("Enter a word to see its score, 'next', or (q)uit (#{more} more): ==> ", false)
-      break if (user_input == 'q' || user_input == 'next')
-      if new_d.key?(user_input)
-        key = user_input
-        value = new_d[key]
+    new_d = new_d.sort_by {|_key, value| value[0]}.to_h
+
+    puts ''
+    UI::padded_puts '/------------------------------------------------------\\'
+    UI::padded_puts "|              Absence of Evidence report              |"
+    UI::padded_puts '\------------------------------------------------------/'
+    UI::padded_puts ''
+    UI::padded_puts "max 4gs seen on Twitter: #{max_4gs_seen}"
+
+    page_size = 10
+    current_difference = -1
+    absence_of_evidence_string = ->(key, value, maybe_alert) {
+      "key=#{key}, difference=#{value[0]}, all-4g-matches=#{value[2]}, seen-on-twitter=#{value[3]}#{maybe_alert}"
+    }
+    (0...10).each do |page_number|
+      current_difference = -1
+      break if (page_number * page_size) > new_d.length
+      new_d.each_with_index do |(key, value), index|
+        next if index < page_number * page_size
+        break if index >= (page_number+1) * page_size
         solution_number = PreviousWordleSolutions.check_word(key)
         maybe_alert = solution_number ? " -------- Alert! Wordle #{solution_number} solution was #{key} --------" : ''
+        if value[0] != current_difference
+          UI::padded_puts "-------- Difference #{value[0]} --------"
+          current_difference = value[0]
+        end
         UI::padded_puts absence_of_evidence_string.call(key, value, maybe_alert)
       end
+      while true do
+        more = [0, new_d.length - ((page_number+1) * page_size)].max
+        user_input = UI.prompt_for_input("Enter a word to see its score, 'next', or (q)uit (#{more} more): ==> ", false)
+        break if (user_input == 'q' || user_input == 'next')
+        if new_d.key?(user_input)
+          key = user_input
+          value = new_d[key]
+          solution_number = PreviousWordleSolutions.check_word(key)
+          maybe_alert = solution_number ? " -------- Alert! Wordle #{solution_number} solution was #{key} --------" : ''
+          UI::padded_puts absence_of_evidence_string.call(key, value, maybe_alert)
+        end
+      end
+      break if user_input == 'q'
     end
-    break if user_input == 'q'
+
+    puts ''
+    UI::padded_puts 'Exiting absence-of-evidence...'
+    puts ''
   end
 
-  puts ''
-  UI::padded_puts 'Exiting absence-of-evidence...'
-  puts ''
-end
-
-def penultimate_twitter(d, pattern, subpattern)
-  UI::padded_puts "penultimate_twitter called, pattern=#{pattern}, subpattern=#{subpattern}"
-  case pattern
-  when '4g' # 4g.3.2 = 8
-    subpattern_array = subpattern.split('.')
-    raise 'Error: unexpected length (4g subpattern)' if subpattern_array.length() != 2
-    gray = subpattern_array[0].to_i - 1
-    count = subpattern_array[1].to_i
-    Filter::filter_4g(d, gray, count)
-  when '3g1y' # 3g1y.yellow3.white4 = 3
-    subpattern_array = subpattern.split('.')
-    raise 'unexpected length (3g1y subpattern)' if subpattern_array.length() != 2
-    yellow = subpattern_array[0][6].to_i - 1
-    gray = subpattern_array[1][5].to_i - 1
-    Filter::filter_3g1y(d, yellow, gray)
-  when '3g2y' # 3g2y.yellow24
-    yellow1 = subpattern[6].to_i - 1
-    yellow2 = subpattern[7].to_i - 1
-    Filter::filter_3g2y(d, yellow1, yellow2)
-  when '2g3y' # 2g3y.green24
-    green1 = subpattern[5].to_i - 1
-    green2 = subpattern[6].to_i - 1
-    Filter::filter_2g3y(d, green1, green2)
-  when '1g4y' # 1g4y.green3
-    green = subpattern[5].to_i - 1
-    Filter::filter_1g4y(d, green)
-  when '0g5y' # 0g5y.
-    Filter::filter_0g5y(d)
-  else
-    UI::padded_puts "#{pattern} not yet supported"
+  def Commands::penultimate_twitter(d, pattern, subpattern)
+    UI::padded_puts "penultimate_twitter called, pattern=#{pattern}, subpattern=#{subpattern}"
+    case pattern
+    when '4g' # 4g.3.2 = 8
+      subpattern_array = subpattern.split('.')
+      raise 'Error: unexpected length (4g subpattern)' if subpattern_array.length() != 2
+      gray = subpattern_array[0].to_i - 1
+      count = subpattern_array[1].to_i
+      Filter::filter_4g(d, gray, count)
+    when '3g1y' # 3g1y.yellow3.white4 = 3
+      subpattern_array = subpattern.split('.')
+      raise 'unexpected length (3g1y subpattern)' if subpattern_array.length() != 2
+      yellow = subpattern_array[0][6].to_i - 1
+      gray = subpattern_array[1][5].to_i - 1
+      Filter::filter_3g1y(d, yellow, gray)
+    when '3g2y' # 3g2y.yellow24
+      yellow1 = subpattern[6].to_i - 1
+      yellow2 = subpattern[7].to_i - 1
+      Filter::filter_3g2y(d, yellow1, yellow2)
+    when '2g3y' # 2g3y.green24
+      green1 = subpattern[5].to_i - 1
+      green2 = subpattern[6].to_i - 1
+      Filter::filter_2g3y(d, green1, green2)
+    when '1g4y' # 1g4y.green3
+      green = subpattern[5].to_i - 1
+      Filter::filter_1g4y(d, green)
+    when '0g5y' # 0g5y.
+      Filter::filter_0g5y(d)
+    else
+      UI::padded_puts "#{pattern} not yet supported"
+    end
   end
-end
 
-def penultimate(d)
-  UI::padded_puts 'Choose a Twitter penultimate guess'
-  UI::padded_puts '4 greens (4g)'
-  UI::padded_puts '3 greens and 1 yellow (3g1y)'
-  UI::padded_puts '3 greens and 2 yellows (3g2y)'
-  UI::padded_puts '2 greens and 3 yellows (2g3y)'
-  UI::padded_puts '1 green and 4 yellows (1g4y)'
-  UI::padded_puts '0 greens and 5 yellows (0g5y)'
-  choice = UI.prompt_for_input('==> ', false)
-  case choice
-  when '4g'
-    gray = UI.prompt_for_input('Enter the position of the gray (1-5): ==> ', false).to_i - 1
-    count = UI.prompt_for_input('Enter the count: ==> ', false).to_i
-    Filter::filter_4g(d, gray, count)
-  when '3g1y'
-    yellow = UI.prompt_for_input('Enter the position of the yellow (1-5): ==> ', false).to_i - 1
-    gray = UI.prompt_for_input('Enter the position of the gray (1-5): ==> ', false).to_i - 1
-    Filter::filter_3g1y(d, yellow, gray)
-  when '3g2y'
-    yellows = UI.prompt_for_input('Enter the positions of the two yellows (1-5): ==> ', false)
-    yellow1 = yellows[0].to_i - 1
-    yellow2 = yellows[1].to_i - 1
-    Filter::filter_3g2y(d, yellow1, yellow2)
-  when '2g3y'
-    greens = UI.prompt_for_input('Enter the positions of the two greens (1-5): ==> ', false)
-    green1 = greens[0].to_i - 1
-    green2 = greens[1].to_i - 1
-    Filter::filter_2g3y(d, green1, green2)
-  when '1g4y'
-    green = UI.prompt_for_input('Enter the position of the green (1-5): ==> ', false).to_i - 1
-    Filter::filter_1g4y(d, green)
-  when '0g5y'
-    Filter::filter_0g5y(d)
+  def Commands::penultimate(d)
+    UI::padded_puts 'Choose a Twitter penultimate guess'
+    UI::padded_puts '4 greens (4g)'
+    UI::padded_puts '3 greens and 1 yellow (3g1y)'
+    UI::padded_puts '3 greens and 2 yellows (3g2y)'
+    UI::padded_puts '2 greens and 3 yellows (2g3y)'
+    UI::padded_puts '1 green and 4 yellows (1g4y)'
+    UI::padded_puts '0 greens and 5 yellows (0g5y)'
+    choice = UI.prompt_for_input('==> ', false)
+    case choice
+    when '4g'
+      gray = UI.prompt_for_input('Enter the position of the gray (1-5): ==> ', false).to_i - 1
+      count = UI.prompt_for_input('Enter the count: ==> ', false).to_i
+      Filter::filter_4g(d, gray, count)
+    when '3g1y'
+      yellow = UI.prompt_for_input('Enter the position of the yellow (1-5): ==> ', false).to_i - 1
+      gray = UI.prompt_for_input('Enter the position of the gray (1-5): ==> ', false).to_i - 1
+      Filter::filter_3g1y(d, yellow, gray)
+    when '3g2y'
+      yellows = UI.prompt_for_input('Enter the positions of the two yellows (1-5): ==> ', false)
+      yellow1 = yellows[0].to_i - 1
+      yellow2 = yellows[1].to_i - 1
+      Filter::filter_3g2y(d, yellow1, yellow2)
+    when '2g3y'
+      greens = UI.prompt_for_input('Enter the positions of the two greens (1-5): ==> ', false)
+      green1 = greens[0].to_i - 1
+      green2 = greens[1].to_i - 1
+      Filter::filter_2g3y(d, green1, green2)
+    when '1g4y'
+      green = UI.prompt_for_input('Enter the position of the green (1-5): ==> ', false).to_i - 1
+      Filter::filter_1g4y(d, green)
+    when '0g5y'
+      Filter::filter_0g5y(d)
+    end
   end
-end
 
-def hint(d)
-  UI::padded_puts "remaining: #{d.size}"
+  def Commands::hint(d)
+    UI::padded_puts "remaining: #{d.size}"
 
-  # letter_usage stores, for each letter, the number of remaining words with that letter
-  letter_usage = {}
-  (97..122).each { |c| letter_usage[c.chr] = 0 }
-  d.each {|word, line_num| letter_usage.each {|c, num_so_far| letter_usage[c] = num_so_far + 1 if word[c] } }
+    # letter_usage stores, for each letter, the number of remaining words with that letter
+    letter_usage = {}
+    (97..122).each { |c| letter_usage[c.chr] = 0 }
+    d.each {|word, line_num| letter_usage.each {|c, num_so_far| letter_usage[c] = num_so_far + 1 if word[c] } }
 
-  # top_n_dict will contain the top N keys from letter_usage, by count
-  top_n = 3
-  top_n_dict = {}
-  for _i in 0...top_n
-    next_largest = letter_usage.max_by{|k,v| (v==d.size||top_n_dict.has_key?(k)) ? 0 : v}
-    top_n_dict[next_largest[0]]=next_largest[1]
-  end
-  UI::padded_puts top_n_dict
+    # top_n_dict will contain the top N keys from letter_usage, by count
+    top_n = 3
+    top_n_dict = {}
+    for _i in 0...top_n
+      next_largest = letter_usage.max_by{|k,v| (v==d.size||top_n_dict.has_key?(k)) ? 0 : v}
+      top_n_dict[next_largest[0]]=next_largest[1]
+    end
+    UI::padded_puts top_n_dict
 
-  # for all remaining words, they are a great guess if all of the "top N" characters are contained
-  # and they are a "good" guess if all but one of the top N characters occur
-  d.each do |word, line_num|
-    count = 0
-    top_n_dict.each {|c, num_occurrences| count = count + 1 if word[c]}
-    UI::padded_puts "#{word} is a GREAT guess" if count == top_n
-    UI::padded_puts "#{word} is a good guess" if count == (top_n - 1)
+    # for all remaining words, they are a great guess if all of the "top N" characters are contained
+    # and they are a "good" guess if all but one of the top N characters occur
+    d.each do |word, line_num|
+      count = 0
+      top_n_dict.each {|c, num_occurrences| count = count + 1 if word[c]}
+      UI::padded_puts "#{word} is a GREAT guess" if count == top_n
+      UI::padded_puts "#{word} is a good guess" if count == (top_n - 1)
+    end
   end
 end
 
