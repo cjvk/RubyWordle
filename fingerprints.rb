@@ -96,21 +96,18 @@ module Fingerprint
     #   (This is, I believe, equivalent to the current processing).
     tsh.each{|k,data_hash| return -1 if !fingerprint.key?(data_hash[:short_key])}
 
-    # TODO refactor this to use streams better
-    fingerprint.each do |short_key, value|
-      next if !short_key.start_with?('4g')
-      next if !statshash.max_4gs_by_short_key.key?(short_key)
+    fingerprint
+      .dup
+      .delete_if{|short_key, count| !short_key.start_with?('4g')}
+      .delete_if{|short_key, count| !statshash.max_4gs_by_short_key.key?(short_key)}
+      .each do |short_key, count|
+
       twitter_value = statshash.max_4gs_by_short_key[short_key]
-
       if ['whirl','taunt','chugs','witch','pooch','drown','drawn','tramp','heerd','amber','plunk','haunt','clock','whims','amble','knitx','sonic'].include?(candidate_word)
-        puts "score(): Hello World from #{candidate_word}, #{twitter_value}>#{value}" if twitter_value > value
+        puts "score(): Hello World from #{candidate_word}, #{twitter_value}>#{count}" if twitter_value > count
       end
-
-      if twitter_value > value
-        return -1
-      end
+      return -1 if twitter_value > count
     end
-
 
     # At this point, all keys (short keys) from transformed-stats-hash (tsm)
     # are also in fingerprint - otherwise would have exited early.
