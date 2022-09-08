@@ -59,18 +59,20 @@ module Fingerprint
       .map{|word, data_hash| data_hash[:fingerprint] = fingerprints[word]; [word, data_hash]}
       .map{|word, data_hash| data_hash[:score] = score(word, stats_hash, data_hash[:fingerprint]); [word, data_hash]}
       .delete_if{|word, data_hash| data_hash[:score] == -1}
+      .sort_by {|word, data_hash| -1 * data_hash[:score]}
 
+    max_to_print = 30
     puts ''
     puts 'stats_hash:'
     puts stats_hash
     puts ''
-    puts "There are #{d.length} words remaining. Deleting everything with a score less than 50."
-    d.delete_if{|word, data_hash| data_hash[:score] < 50.0} # FIXME remove this
-    d = d.sort_by {|word, data_hash| -1 * data_hash[:score]}
+    puts "There are #{d.length} words remaining. Showing score to a maximum of #{max_to_print}."
 
     puts ''
-    puts 'd:'
-    puts d
+    d.each.with_index do |(word, data_hash), index|
+      break if index >= max_to_print
+      puts "#{index+1}: #{word} has a score of #{'%.1f' % data_hash[:score]}"
+    end
 
     puts ''
     puts ''
