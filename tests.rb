@@ -114,7 +114,6 @@ module Tests
     ].each do |h|
       fail unless Filter::filter_4g({h[:word] => ''}, h[:g], h[:count]).length == h[:expected]
     end
-    fail unless ALPHABET.length == 26
 
     # 3g1y
     [
@@ -123,7 +122,6 @@ module Tests
     ].each do |h|
       fail unless Filter::filter_3g1y({h[:word] => ''}, h[:y], h[:g]).length == h[:expected]
     end
-    fail unless ALPHABET.length == 26
 
     # 3g2y
     [
@@ -132,7 +130,6 @@ module Tests
     ].each do |h|
       fail unless Filter::filter_3g2y({h[:word] => ''}, h[:y1], h[:y2]).length == h[:expected]
     end
-    fail unless ALPHABET.length == 26
 
     # 2g3y
     [
@@ -141,7 +138,6 @@ module Tests
     ].each do |h|
       fail unless Filter::filter_2g3y({h[:word] => ''}, h[:g1], h[:g2]).length == h[:expected]
     end
-    fail unless ALPHABET.length == 26
 
     # 1g4y
     [
@@ -151,7 +147,6 @@ module Tests
     ].each do |h|
       fail unless Filter::filter_1g4y({h[:word] => ''}, h[:g]).length == h[:expected]
     end
-    fail unless ALPHABET.length == 26
 
     # 0g5y
     [
@@ -162,7 +157,6 @@ module Tests
     ].each do |h|
       fail unless Filter::filter_0g5y({h[:word] => ''}).length == h[:expected]
     end
-    fail unless ALPHABET.length == 26
   end
 end
 
