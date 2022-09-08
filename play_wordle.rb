@@ -463,10 +463,12 @@ module Commands
     UI::padded_puts '\------------------------------------------------------/'
     UI::padded_puts ''
     UI::padded_puts "max 4gs seen on Twitter: #{max_4gs_seen}"
+    puts ''
 
     page_size = 10
     absence_of_evidence_string = ->(key, value, maybe_alert) {
-      "#{key} has a score of #{'%.1f' % value[0]} (Twitter: #{value[3]}, max4g: #{value[2]})#{maybe_alert}"
+      maybe_word_details = Debug::THRESHOLD >= Debug::LOG_LEVEL_VERBOSE ? " (#{value[2]})" : ''
+      "#{key} has a distance of #{'%.1f' % value[0]}#{maybe_word_details}#{maybe_alert}"
     }
     (0...10).each do |page_number|
       break if (page_number * page_size) > new_d.length

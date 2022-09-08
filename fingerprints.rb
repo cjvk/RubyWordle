@@ -62,16 +62,27 @@ module Fingerprint
       .sort_by {|word, data_hash| -1 * data_hash[:score]}
 
     max_to_print = 30
-    puts ''
-    puts 'stats_hash:'
-    puts stats_hash
-    puts ''
-    puts "There are #{d.length} words remaining. Showing score to a maximum of #{max_to_print}."
 
     puts ''
+    UI::padded_puts '/------------------------------------------------------\\'
+    UI::padded_puts "|              Fingerprint analysis report             |"
+    UI::padded_puts '\------------------------------------------------------/'
+    UI::padded_puts ''
+    UI::padded_puts "stats_hash: #{stats_hash}"
+    puts ''
+    UI::padded_puts "There are #{d.length} words remaining. Showing score to a maximum of #{max_to_print}."
+    puts ''
+
     d.each.with_index do |(word, data_hash), index|
       break if index >= max_to_print
-      puts "#{index+1}: #{word} has a score of #{'%.1f' % data_hash[:score]}"
+      maybe_solution_number = PreviousWordleSolutions.check_word(word)
+      maybe_alert = maybe_solution_number ?
+        " -------- Alert! Wordle #{maybe_solution_number} solution was #{word} --------" :
+        ''
+      UI::padded_puts "#{index+1}: #{word} has a score of #{'%.1f' % data_hash[:score]}#{maybe_alert}"
+      if Debug::THRESHOLD >= Debug::LOG_LEVEL_VERBOSE && index < 5
+        UI::padded_puts "         #{word} fingerprint: #{data_hash[:fingerprint]}"
+      end
     end
 
     puts ''
