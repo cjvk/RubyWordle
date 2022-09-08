@@ -105,6 +105,64 @@ module Tests
     fail unless statshash.max_4gs == [4, 0, 1, 0, 0]
     fail unless statshash.max_4gs_keys == ['4g.1.4', '4g.3.1']
     fail unless statshash.max_4gs_by_short_key == {'4g.1' => 4, '4g.3' => 1}
+
+    # 4g
+    [
+      {:word => 'hills', :g => 0, :count => 5, :expected => 1},
+      {:word => 'hills', :g => 1, :count => 3, :expected => 1},
+      {:word => 'hills', :g => 1, :count => 4, :expected => 0},
+    ].each do |h|
+      fail unless Filter::filter_4g({h[:word] => ''}, h[:g], h[:count]).length == h[:expected]
+    end
+    fail unless ALPHABET.length == 26
+
+    # 3g1y
+    [
+      {:word => 'bills', :y => 0, :g => 4, :expected => 1}, # expecting SILLY
+      {:word => 'corns', :y => 0, :g => 4, :expected => 0}, # expecting _not_ SORNS
+    ].each do |h|
+      fail unless Filter::filter_3g1y({h[:word] => ''}, h[:y], h[:g]).length == h[:expected]
+    end
+    fail unless ALPHABET.length == 26
+
+    # 3g2y
+    [
+      {:word => 'raise', :y1 => 0, :y2 => 1, :expected => 1}, # expecting ARISE
+      {:word => 'raise', :y1 => 0, :y2 => 4, :expected => 0},
+    ].each do |h|
+      fail unless Filter::filter_3g2y({h[:word] => ''}, h[:y1], h[:y2]).length == h[:expected]
+    end
+    fail unless ALPHABET.length == 26
+
+    # 2g3y
+    [
+      {:word => 'great', :g1 => 0, :g2 => 1, :expected => 1}, # expecting GRATE
+      {:word => 'raise', :g1 => 0, :g2 => 4, :expected => 0},
+    ].each do |h|
+      fail unless Filter::filter_2g3y({h[:word] => ''}, h[:g1], h[:g2]).length == h[:expected]
+    end
+    fail unless ALPHABET.length == 26
+
+    # 1g4y
+    [
+      {:word => 'strap', :g => 2, :expected => 1}, # expecting PARTS
+      {:word => 'raise', :g => 0, :expected => 1}, # REAIS
+      {:word => 'raise', :g => 2, :expected => 0},
+    ].each do |h|
+      fail unless Filter::filter_1g4y({h[:word] => ''}, h[:g]).length == h[:expected]
+    end
+    fail unless ALPHABET.length == 26
+
+    # 0g5y
+    [
+      {:word => 'strap', :expected => 1}, # TRAPS
+      {:word => 'raise', :expected => 1}, # AESIR, SERAI, SERIA
+      {:word => 'strip', :expected => 1}, # TRIPS
+      {:word => 'folly', :expected => 0},
+    ].each do |h|
+      fail unless Filter::filter_0g5y({h[:word] => ''}).length == h[:expected]
+    end
+    fail unless ALPHABET.length == 26
   end
 end
 

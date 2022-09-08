@@ -79,10 +79,13 @@ module Fingerprint
   end
 
   def Fingerprint::score(candidate_word, stats_hash, fingerprint)
-    Debug.set_maybe(candidate_word == 'prawn')
+    previous_maybe = Debug.maybe?
+    # Debug.set_maybe(candidate_word == 'corns')
     Debug.maybe_log 'score: ENTER'
+    Debug.maybe_log "stats_hash=#{stats_hash}"
     statshash = StatsHash.new(stats_hash)
     max_4gs_from_twitter = statshash.max_4gs # [1, 2, 0, 0, 1]
+    Debug.maybe_log "statshash.max_4gs=#{max_4gs_from_twitter}"
     # transform stats hash - map automatically makes a copy
     # delete_if is to ensure apples-to-apples comparison with the fingerprint
     tsh = stats_hash
@@ -90,12 +93,17 @@ module Fingerprint
       .map{|k,data_hash| data_hash[:is4g] = k.start_with?('4g'); [k, data_hash]}
       .map{|k,data_hash| data_hash[:short_key] = data_hash[:is4g] ? k[0,4] : k; [k, data_hash]}
       .delete_if{|k,data_hash| data_hash[:is4g] && !statshash.max_4gs_keys.include?(k)}
+    Debug.maybe_log "just created transformed stats hash: #{tsh}"
+    Debug.maybe_log "fingerprint=#{fingerprint}"
 
     # Note: It may be possible to do first and second pass at the same time
 
     # First pass:
     #   Anything seen on Twitter _not_ in the fingerprint eliminates that word.
     #   (This is, I believe, equivalent to the current processing).
+    Debug.maybe_log ''
+    Debug.maybe_log "filtering #{candidate_word} based on keys in Twitter but not in the fingerprint..."
+
     tsh.each{|k,data_hash| return -1 if !fingerprint.key?(data_hash[:short_key])}
 
     fingerprint
@@ -108,6 +116,7 @@ module Fingerprint
       if ['whirl','taunt','chugs','witch','pooch','drown','drawn','tramp','heerd','amber','plunk','haunt','clock','whims','amble','knitx','sonic'].include?(candidate_word)
         puts "score(): Hello World from #{candidate_word}, #{twitter_value}>#{count}" if twitter_value > count
       end
+      Debug.maybe_log 'about to filter based on 4g Twitter count'
       return -1 if twitter_value > count
     end
 
@@ -161,7 +170,7 @@ module Fingerprint
     Debug.maybe_log scores
     Debug.maybe_log ''
     Debug.maybe_log 'score: EXIT'
-    Debug.set_maybe_false
+    Debug.set_maybe previous_maybe
 
     # 100 * pct_keys
     weights.map{|k, weight| scores[k] * weight}.sum

@@ -5,6 +5,10 @@
 #   2. raise (-!--- response), twitter, filtering, absence-of-evidence
 #   3. goofball 444
 # TODO twitter() (returning a stats_hash) should cache the result?
+# TODO populate_valid_wordle_words_read_only(): prepopulate this one and have it available for use
+#      make sure the function which returns it always checks the number of keys
+#      also have a unit test for that (in case of re-generating from NYT)
+# TODO refactor to make alphabet() instead of direct access to ALPHABET
 
 require 'yaml'
 require_relative 'constants'

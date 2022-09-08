@@ -447,3 +447,4 @@ inter
 whoop
 taunt
 leery
+class

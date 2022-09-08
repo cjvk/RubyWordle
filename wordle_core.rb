@@ -324,9 +324,11 @@ module Filter
         Debug.maybe_log "keeping #{key} (" + remaining_words.join(', ') + ')'
       end
     end
+    d
   end
 
   def Filter::filter_3g1y(d, yellow, gray)
+    # yellow and grey are 0-indexed
     all_words = populate_valid_wordle_words
     d.each_key do |key|
       remaining_words = []
@@ -336,11 +338,13 @@ module Filter
       # make a copy, save the yellow, and copy over the gray
       key_copy = key.dup
       letter_at_yellow = key_copy[yellow]
+      letter_at_gray = key_copy[gray]
       key_copy[yellow] = key_copy[gray] # moving the letter makes it get a yellow
 
-      num_valid_alternatives = ALPHABET
+      num_valid_alternatives = ALPHABET.dup
+        .delete_if{|c| c == letter_at_yellow || c == letter_at_gray}
         .map{|c| replace_ith_letter(key_copy, gray, c)}
-        .delete_if{|word_to_check| word_to_check[gray] == letter_at_yellow || !all_words.key?(word_to_check)}
+        .delete_if{|word_to_check| !all_words.key?(word_to_check)}
         .map{|remaining_word| remaining_words.append(remaining_word); 1}
         .to_a
         .sum
@@ -351,6 +355,7 @@ module Filter
         Debug.maybe_log "keeping #{key} (" + remaining_words.join(', ') + ')'
       end
     end
+    d
   end
 
   def Filter::filter_3g2y(d, yellow1, yellow2)
@@ -365,6 +370,7 @@ module Filter
         d.delete(key)
       end
     end
+    d
   end
 
   def Filter::filter_2g3y(d, green1, green2)
@@ -383,6 +389,7 @@ module Filter
         Debug.maybe_log "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
       end
     end
+    d
   end
 
   def Filter::filter_1g4y(d, green)
@@ -401,6 +408,7 @@ module Filter
         Debug.maybe_log "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
       end
     end
+    d
   end
 
   def Filter::filter_0g5y(d)
@@ -416,5 +424,6 @@ module Filter
         Debug.maybe_log "keeping #{key} (" + all_words.map { |k, v| "#{k}" }.join(', ') + ')'
       end
     end
+    d
   end
 end
