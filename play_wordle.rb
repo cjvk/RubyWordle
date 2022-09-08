@@ -465,22 +465,16 @@ module Commands
     UI::padded_puts "max 4gs seen on Twitter: #{max_4gs_seen}"
 
     page_size = 10
-    current_difference = -1
     absence_of_evidence_string = ->(key, value, maybe_alert) {
-      "key=#{key}, difference=#{value[0]}, all-4g-matches=#{value[2]}, seen-on-twitter=#{value[3]}#{maybe_alert}"
+      "#{key} has a score of #{'%.1f' % value[0]} (Twitter: #{value[3]}, max4g: #{value[2]})#{maybe_alert}"
     }
     (0...10).each do |page_number|
-      current_difference = -1
       break if (page_number * page_size) > new_d.length
       new_d.each_with_index do |(key, value), index|
         next if index < page_number * page_size
         break if index >= (page_number+1) * page_size
         solution_number = PreviousWordleSolutions.check_word(key)
         maybe_alert = solution_number ? " -------- Alert! Wordle #{solution_number} solution was #{key} --------" : ''
-        if value[0] != current_difference
-          UI::padded_puts "-------- Difference #{value[0]} --------"
-          current_difference = value[0]
-        end
         UI::padded_puts absence_of_evidence_string.call(key, value, maybe_alert)
       end
       while true do
