@@ -189,7 +189,7 @@ class StatsHash
       stats_hash
         .dup
         .delete_if{|key, _| !key.start_with?(short_key)}
-        .map{|key, _| key[5].to_i} # "4g.5.2"[5] is count
+        .map{|key, _| key[5].to_i} # "4g.5.2"[5] is the count
         .max || 0}
   end
   def max_4gs_keys
