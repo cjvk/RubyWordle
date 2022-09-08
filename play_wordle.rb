@@ -4,30 +4,7 @@
 #   1. test
 #   2. raise (-!--- response), twitter, filtering, absence-of-evidence
 #   3. goofball 444
-# TODO class Fingerprint? FingerprintHash?
 # TODO twitter() (returning a stats_hash) should cache the result?
-#
-# files, classes, modules
-# twitter.rb
-#   - All things pertaining to making the twitter call.
-#   - Might make sense to have the entire file be in a module.
-#   - Including Twitter::Configuration.
-# play_wordle.rb
-#   - The main entrypoint. "ruby play_wordle.rb", or "./play_wordle.rb"
-#   - Endeavor to move things out of this file, if possible.
-# wordle_core.rb
-#   - everything purely wordle-related, from unicode colors to problematic patterns
-# constants.rb: currently contains dictionary filenames
-# tests.rb: all unit tests
-# fingerprints.rb: all things fingerprint-related: compression, re-generation, save, read-from-file
-#
-#
-# Current state:
-# modules: Alert, Debug, UI, CompactKeys, Distances, PreviousWordleSolutions
-#          Filter, Configuration, WordleShareColors, InterestingWordleResponses
-#          WordleModes
-# classes: Answer
-# files: play_wordle.rb, twitter.rb, scrape_nyt.rb (ignore problem_words.rb, mom_worst_word.rb)
 
 require 'yaml'
 require_relative 'constants'
