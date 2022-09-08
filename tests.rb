@@ -80,6 +80,7 @@ module Tests
       "3g1y.yellow2.white1"=>1
     }
     fail unless Fingerprint::max_4gs(clout_fingerprint) == [3, 2, 1, 1, 3]
+
     goofy_fingerprint = {
       "4g.1"=>4,
       "4g.4"=>10,
@@ -89,6 +90,7 @@ module Tests
       "3g1y.yellow1.white5"=>1
     }
     fail unless Fingerprint::max_4gs(goofy_fingerprint) == [4, 0, 0, 10, 1]
+
     wordle_444_stats_hash = {
       "4g.1.1"=>108,
       "4g.1.2"=>56,
@@ -98,7 +100,11 @@ module Tests
       "3g1y.yellow2.white1"=>7,
       "3g1y.yellow4.white5"=>4
     }
-    fail unless StatsHash::max_4gs(wordle_444_stats_hash) == [4, 0, 1, 0, 0]
+    fail unless StatsHash.max_4gs(wordle_444_stats_hash) == [4, 0, 1, 0, 0]
+    statshash = StatsHash.new(wordle_444_stats_hash)
+    fail unless statshash.max_4gs == [4, 0, 1, 0, 0]
+    fail unless statshash.max_4gs_keys == ['4g.1.4', '4g.3.1']
+    fail unless statshash.max_4gs_by_short_key == {'4g.1' => 4, '4g.3' => 1}
   end
 end
 

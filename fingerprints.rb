@@ -79,31 +79,15 @@ module Fingerprint
   def Fingerprint::score(candidate_word, stats_hash, fingerprint)
     Debug.set_maybe(candidate_word == 'prawn')
     Debug.maybe_log 'score: ENTER'
+    statshash = StatsHash.new(stats_hash)
+    max_4gs_from_twitter = statshash.max_4gs # [1, 2, 0, 0, 1]
     # transform stats hash - map automatically makes a copy
-    max_4gs_from_twitter = StatsHash::max_4gs(stats_hash) # [1, 2, 0, 0, 1]
-    max_4gs_info = {
-      :keys => max_4gs_from_twitter
-        .map.with_index{ |ith_max, i| "4g.#{i+1}.#{ith_max}" }
-        .delete_if{ |key| key.end_with?('.0')},
-      :max_by_short_key => max_4gs_from_twitter
-        .map.with_index{ |ith_max, i| ["4g.#{i+1}", ith_max]}
-        .delete_if{ |_, ith_max| ith_max == 0}
-        .to_h
-    }
+    # delete_if is to ensure apples-to-apples comparison with the fingerprint
     tsh = stats_hash
       .map{|k,v| [k, [[:key, k], [:value, v]].to_h]}
       .map{|k,data_hash| data_hash[:is4g] = k.start_with?('4g'); [k, data_hash]}
       .map{|k,data_hash| data_hash[:short_key] = data_hash[:is4g] ? k[0,4] : k; [k, data_hash]}
-      .delete_if{|k,data_hash| data_hash[:is4g] && !max_4gs_info[:keys].include?(k)}
-
-    # TODO What is the point of this loop?
-    (0...5).each do |i|
-      next if max_4gs_from_twitter[i] == 0
-      pos = i+1
-      short_key = "4g.#{pos}"
-      key = "#{short_key}.#{max_4gs_from_twitter[i]}"
-    end
-    tsh = tsh
+      .delete_if{|k,data_hash| data_hash[:is4g] && !statshash.max_4gs_keys.include?(k)}
 
     # Note: It may be possible to do first and second pass at the same time
 
@@ -112,13 +96,11 @@ module Fingerprint
     #   (This is, I believe, equivalent to the current processing).
     tsh.each{|k,data_hash| return -1 if !fingerprint.key?(data_hash[:short_key])}
 
-    # TODO Delete if max-4gs-seen is higher than the fingerprint
-    # (start with alerting)
     # TODO refactor this to use streams better
     fingerprint.each do |short_key, value|
       next if !short_key.start_with?('4g')
-      next if !max_4gs_info[:max_by_short_key].key?(short_key)
-      twitter_value = max_4gs_info[:max_by_short_key][short_key]
+      next if !statshash.max_4gs_by_short_key.key?(short_key)
+      twitter_value = statshash.max_4gs_by_short_key[short_key]
 
       if ['whirl','taunt','chugs','witch','pooch','drown','drawn','tramp','heerd','amber','plunk','haunt','clock','whims','amble','knitx','sonic'].include?(candidate_word)
         puts "score(): Hello World from #{candidate_word}, #{twitter_value}>#{value}" if twitter_value > value
@@ -187,17 +169,47 @@ module Fingerprint
   end
 end
 
-module StatsHash
-  def StatsHash::max_4gs stats_hash
+class StatsHash
+  def initialize(stats_hash)
+    @stats_hash = stats_hash
+    # [0, 1, 2, 0, 1]
+    @max_4gs = StatsHash.max_4gs @stats_hash
+    # ['4g.2.1', '4g.3.2', '4g.5.1']
+    @max_4gs_keys = StatsHash.max_4gs_keys @max_4gs
+    # {'4g.2' => 1, '4g.3' => 2, '4g.5' => 1}
+    @max_4gs_by_short_key = StatsHash.max_4gs_by_short_key @max_4gs
+  end
+  def max_4gs
+    @max_4gs
+  end
+  def self.max_4gs stats_hash
     (0...5)
       .map{|i| "4g.#{i+1}"}
       .map{|short_key|
       stats_hash
         .dup
         .delete_if{|key, _| !key.start_with?(short_key)}
-        .map{|key, _| key[5].to_i}
+        .map{|key, _| key[5].to_i} # "4g.5.2"[5] is count
         .max || 0}
   end
+  def max_4gs_keys
+    @max_4gs_keys
+  end
+  def self.max_4gs_keys max_4gs
+    max_4gs
+      .map.with_index{ |ith_max, i| "4g.#{i+1}.#{ith_max}" }
+      .delete_if{ |key| key.end_with?('.0')}
+  end
+  def max_4gs_by_short_key
+    @max_4gs_by_short_key
+  end
+  def self.max_4gs_by_short_key max_4gs
+    max_4gs
+      .map.with_index{ |ith_max, i| ["4g.#{i+1}", ith_max]}
+      .delete_if{ |_, ith_max| ith_max == 0}
+      .to_h
+  end
+
   # This was formerly known as "def max_4gs_seen_on_twitter"
   def StatsHash::max_4gs_old stats_hash
     # calculate the max 4g's seen per letter

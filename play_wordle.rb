@@ -4,7 +4,6 @@
 #   1. test
 #   2. raise (-!--- response), twitter, filtering, absence-of-evidence
 #   3. goofball 444
-# TODO class StatsHash
 # TODO class Fingerprint? FingerprintHash?
 # TODO twitter() (returning a stats_hash) should cache the result?
 #
@@ -229,7 +228,7 @@ module UI
       Debug.set_maybe(choice2 == 'y')
 
       # Idea is to only filter on the max 4g seen
-      max_4gs_seen = StatsHash::max_4gs(stats_hash)
+      max_4gs_seen = StatsHash.max_4gs(stats_hash)
 
       stats_hash.each do |key, _value|
         if Twitter::Configuration.instrumentation_only
@@ -457,7 +456,7 @@ module Commands
     #   3. Do a text-based comparison (for now)
 
     # get max 4gs seen
-    max_4gs_seen = StatsHash::max_4gs stats_hash
+    max_4gs_seen = StatsHash.max_4gs stats_hash
 
     # calculate how many actual 4g matches there are per key
     # key=laved, all_4g_matches=[6, 2, 10, 0, 2]
