@@ -170,7 +170,13 @@ module Twitter
     end
   end
 
+  @@memoized_twitter_result = nil
   def Twitter::twitter
+    return twitter_internal if Configuration.goofball_mode?
+    @@memoized_twitter_result = twitter_internal if @@memoized_twitter_result == nil
+    @@memoized_twitter_result
+  end
+  def Twitter::twitter_internal
     now = Date.today
     wordle_day_0 = Date.civil(2021, 6, 19)
     difference_in_days = (now - wordle_day_0).to_i

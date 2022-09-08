@@ -4,11 +4,9 @@
 #   1. test
 #   2. raise (-!--- response), twitter, filtering, absence-of-evidence
 #   3. goofball 444
-# TODO twitter() (returning a stats_hash) should cache the result?
 # TODO populate_valid_wordle_words_read_only(): prepopulate this one and have it available for use
 #      make sure the function which returns it always checks the number of keys
 #      also have a unit test for that (in case of re-generating from NYT)
-# TODO refactor to make alphabet() instead of direct access to ALPHABET
 
 require 'yaml'
 require_relative 'constants'
@@ -19,7 +17,16 @@ require_relative 'tests'
 
 DICTIONARY_FILE = DICTIONARY_FILE_LARGE
 
+VALID_WORDLE_WORDS = {}
 def populate_valid_wordle_words(filename=VALID_WORDLE_WORDS_FILE)
+  if !VALID_WORDLE_WORDS.key?(filename)
+    VALID_WORDLE_WORDS[filename] = populate_valid_wordle_words_internal(filename)
+    VALID_WORDLE_WORDS[filename].freeze
+  end
+  VALID_WORDLE_WORDS[filename]
+end
+
+def populate_valid_wordle_words_internal(filename)
   d = {}
   File.foreach(filename).with_index do |line, line_num|
     next if line.start_with?('#')

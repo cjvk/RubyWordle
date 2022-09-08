@@ -374,8 +374,33 @@ module Filter
   end
 
   def Filter::filter_2g3y(d, green1, green2)
+    d.delete_if do |word, _|
+      matches = populate_valid_wordle_words.dup
+        .map{|guess, _| [guess, wordle_response(guess, word)]}
+        .map{|guess, wordle_response| [guess, InterestingWordleResponses::determine_interestingness(wordle_response)]}
+        .delete_if{|guess, interestingness| interestingness != InterestingWordleResponses::WORDLE_2G3Y}
+        .map{|guess, interestingness| guess}
+
+      Debug.maybe_log "keeping #{word} (" + matches.map { |k, v| "#{k}" }.join(', ') + ')' if matches.size > 0
+      matches.size == 0
+    end
+  end
+  def Filter::filter_2g3y_version_2(d, green1, green2)
+    yellows = (0...5).to_a.delete_if{|i| i==green1 || i==green2}
+    d.delete_if do |key, _|
+      # [1, 3, 4]
+      matches = populate_valid_wordle_words.dup
+        .delete_if{|key2, _| key[green1] != key2[green1] || key[green2] != key2[green2]}
+        .delete_if{|key2, _| yellows.map{|y| (key[y]==key2[y]||key2.count(key2[y])!=key.count(key2[y]))?1:0}.max==1}
+        .map{|key2, _| key2}
+
+      Debug.maybe_log "keeping #{key} (" + matches.map { |k, v| "#{k}" }.join(', ') + ')' if matches.size > 0
+      matches.size == 0
+    end
+  end
+  def Filter::filter_2g3y_version_1(d, green1, green2)
     d.each_key do |key|
-      all_words = populate_valid_wordle_words
+      all_words = populate_valid_wordle_words.dup
       for i in 0...5
         if i == green1 or i == green2
           all_words.delete_if { |key2, value2| key2[i] != key[i] }
@@ -394,7 +419,7 @@ module Filter
 
   def Filter::filter_1g4y(d, green)
     d.each_key do |key|
-      all_words = populate_valid_wordle_words
+      all_words = populate_valid_wordle_words.dup
       for i in 0...5
         if i == green
           all_words.delete_if { |key2, value2| key2[i] != key[i] }
@@ -413,7 +438,7 @@ module Filter
 
   def Filter::filter_0g5y(d)
     d.each_key do |key|
-      all_words = populate_valid_wordle_words
+      all_words = populate_valid_wordle_words.dup
       for i in 0...5
         # all yellows
         all_words.delete_if { |key2, value2| key2[i] == key[i] || key2.count(key2[i]) != key.count(key2[i]) }
