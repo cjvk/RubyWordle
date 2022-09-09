@@ -258,16 +258,19 @@ def num_green_or_yellow(word, response, letter)
 end
 
 module PreviousWordleSolutions
-  @@previous_wordle_solutions = {}
+  @@previous_wordle_solutions = nil
 
   def self.all_solutions
-    if @@previous_wordle_solutions.empty?
+    if @@previous_wordle_solutions == nil
+      @@previous_wordle_solutions = {}
       line_num = 0
       File.foreach('previous_wordle_solutions.txt') do |line|
         next if line.start_with?('#')
         @@previous_wordle_solutions[line[0..4]] = line_num
         line_num += 1
       end
+
+      @@previous_wordle_solutions.freeze
     end
 
     @@previous_wordle_solutions

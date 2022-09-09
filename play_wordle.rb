@@ -4,6 +4,12 @@
 #   2. raise (-!--- response), twitter, filtering, absence-of-evidence
 #   3. goofball 444
 
+# TODO enable Twitter search for "all" (not just "recent").
+#      - run goofball testing back to... Wordle 400?
+#      - ... and then do comparison testing of filtering vs fingerprint-analysis
+#      - ... and then do scoring
+# TODO enable scoring on a per-dictionary basis?
+
 require 'yaml'
 require_relative 'constants'
 require_relative 'wordle_core'

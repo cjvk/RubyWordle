@@ -157,6 +157,10 @@ module Tests
     ].each do |h|
       fail unless Filter::filter_0g5y({h[:word] => ''}).length == h[:expected]
     end
+
+    previous_solutions = PreviousWordleSolutions.all_solutions
+    fail unless previous_solutions.length > 0
+    fail unless previous_solutions.values.max == previous_solutions.keys.length - 1
   end
 end
 
