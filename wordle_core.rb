@@ -165,6 +165,14 @@ module InterestingWordleResponses
   end
 end
 
+def today_wordle_number
+  now = Date.today
+  wordle_day_0 = Date.civil(2021, 6, 19)
+  difference_in_days = (now - wordle_day_0).to_i
+  wordle_number = difference_in_days.to_s
+  wordle_number
+end
+
 def close(w1, w2)
   diff = 0
   (0...5).each {|i| diff += (w1[i]==w2[i] ? 0 : 1)}

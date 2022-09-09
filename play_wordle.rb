@@ -180,6 +180,8 @@ module UI
         when 'test'
           stats_hash = Twitter::twitter[:stats]
           Fingerprint::fingerprint_analysis(d, stats_hash)
+        when 'regression'
+          regression_analysis(d)
         when 'goofball'
           goofball_analysis
         when 'help', 'h'
@@ -210,6 +212,34 @@ module UI
     end
   end
 
+  def self.filter_twitter(d, stats_hash)
+    # Idea is to only filter on the max 4g seen
+    max_4gs_seen = StatsHash.max_4gs(stats_hash)
+
+    stats_hash.each do |key, _value|
+      if Twitter::Configuration.instrumentation_only
+        Debug.log "instrumentation_only mode, skipping penultimate_twitter() call for key #{key}..."
+        next
+      end
+      key_array = key.split('.', 2)
+
+      # doesn't make sense to filter first on 4g.3.1 if 4g.3.2 is coming next
+      if key_array[0] == '4g'
+        key_array2 = key_array[1].split('.')
+        array_position = key_array2[0].to_i - 1
+        count = key_array2[1].to_i
+        if max_4gs_seen[array_position] != count
+          UI::padded_puts "skipping filtering for key #{key} due to higher count still to come..."
+          next
+        end
+      end
+
+      Commands::penultimate_twitter(d, key_array[0], key_array[1])
+      UI.print_remaining_count(d) # moving this here, to show filtering as it goes
+    end
+    d
+  end
+
   def self.maybe_filter_twitter(d, stats_hash)
     choice = UI.prompt_for_input 'Would you like to proceed with filtering? (y/n)'
     case choice
@@ -218,30 +248,7 @@ module UI
       previous_maybe = Debug.maybe?
       Debug.set_maybe(choice2 == 'y')
 
-      # Idea is to only filter on the max 4g seen
-      max_4gs_seen = StatsHash.max_4gs(stats_hash)
-
-      stats_hash.each do |key, _value|
-        if Twitter::Configuration.instrumentation_only
-          Debug.log "instrumentation_only mode, skipping penultimate_twitter() call for key #{key}..."
-          next
-        end
-        key_array = key.split('.', 2)
-
-        # doesn't make sense to filter first on 4g.3.1 if 4g.3.2 is coming next
-        if key_array[0] == '4g'
-          key_array2 = key_array[1].split('.')
-          array_position = key_array2[0].to_i - 1
-          count = key_array2[1].to_i
-          if max_4gs_seen[array_position] != count
-            UI::padded_puts "skipping filtering for key #{key} due to higher count still to come..."
-            next
-          end
-        end
-
-        Commands::penultimate_twitter(d, key_array[0], key_array[1])
-        UI.print_remaining_count(d) # moving this here, to show filtering as it goes
-      end
+      filter_twitter(d, stats_hash)
     when 'n'
     else
       Alert.alert "unrecognized input (#{choice}), skipping"
@@ -430,7 +437,35 @@ module UI
     end
 
     puts ''
+    puts 'Exiting because wordle_number_override was set manually...'
+    puts ''
     puts '##################################################'
+    exit
+  end
+
+  def UI::regression_analysis(d)
+    six_days_ago = (today_wordle_number.to_i - 6).to_s
+    range = "(#{six_days_ago}-#{today_wordle_number})"
+    wordle_number = UI.prompt_for_input("Enter daily wordle number for regression #{range}:==> ", false)
+    exit if wordle_number.to_i.to_s != wordle_number
+    Twitter::Configuration.set_wordle_number_override wordle_number
+
+    stats_hash = Twitter::twitter[:stats]
+    a = filter_twitter(d.dup, stats_hash).keys
+    b = Fingerprint::fingerprint_analysis(d.dup, stats_hash).keys
+
+    puts ''
+    UI::padded_puts '/------------------------------------------------------\\'
+    UI::padded_puts "|        Regression analysis report (Wordle #{wordle_number})       |"
+    UI::padded_puts '\------------------------------------------------------/'
+    puts ''
+    UI::padded_puts "length comparison: #{a.length == b.length ? 'OK' : 'FAIL'}"
+    UI::padded_puts "remaining word comparison: #{(a.size == b.size && a&b==a) ? 'OK' : 'FAIL'}"
+    puts ''
+    UI::padded_puts 'Exiting because wordle_number_override was set manually...'
+    puts ''
+
+    exit
   end
 end
 

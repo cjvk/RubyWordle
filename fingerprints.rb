@@ -87,6 +87,8 @@ module Fingerprint
 
     puts ''
     puts ''
+
+    d.to_h
   end
 
   def Fingerprint::score(candidate_word, stats_hash, fingerprint)

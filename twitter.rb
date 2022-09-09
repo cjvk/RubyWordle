@@ -24,6 +24,8 @@ module Twitter
     #   - 158k remaining over 19 days = 8.31k/day
     # 9/9/2022 11:24am: 342,310
     # 9/9/2022 11:26am: 343,306
+    # 9/9/2022 12:26pm: 345,298
+    # 9/9/2022  1:47pm: 346,295
 
     # Twitter API calls
     @@results = 100
@@ -187,11 +189,9 @@ module Twitter
     @@memoized_twitter_result = twitter_internal if @@memoized_twitter_result == nil
     @@memoized_twitter_result
   end
+
   def Twitter::twitter_internal
-    now = Date.today
-    wordle_day_0 = Date.civil(2021, 6, 19)
-    difference_in_days = (now - wordle_day_0).to_i
-    wordle_number = difference_in_days.to_s
+    wordle_number = today_wordle_number
     if Configuration.wordle_number_override != nil
       wordle_number = Configuration.wordle_number_override.to_s
       Debug.log_terse "using user-specified wordle number: #{wordle_number}"
