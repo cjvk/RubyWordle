@@ -4,8 +4,6 @@
 #   2. raise (-!--- response), twitter, filtering, absence-of-evidence
 #   3. goofball 444
 
-# TODO enable caching of "non-today" twitter results (not current wordle number)
-# TODO enable Twitter search for "all" (not just "recent").
 #      - run goofball testing back to... Wordle 400?
 #      - ... and then do comparison testing of filtering vs fingerprint-analysis
 #      - ... and then do scoring

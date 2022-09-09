@@ -233,6 +233,8 @@ module Twitter
         # handle next token
         next_token_get_parameter = page_num == 0 ? "" : "&next_token=#{next_token}"
 
+        # recent/ is available for "anyone", but /2/tweets/search/all is only for academic research
+        # recent is from the last seven days
         url = "https://api.twitter.com/2/tweets/search/recent?query=#{search_query}&tweet.fields=author_id,referenced_tweets&user.fields=id,username&expansions=author_id&max_results=#{Configuration.results}#{next_token_get_parameter}"
 
         response = Faraday.get(url, nil, {'Accept' => 'application/json', 'Authorization' => "Bearer #{auth_token}"})

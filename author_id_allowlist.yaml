@@ -108,6 +108,12 @@
   analysis: Wordle 436 (chief), 0g5y., ["fiche"]
   verdict: allow # Not a Goofball
 
+- name: Jimbo_on_Tbreds
+  author_id: 2470385140
+  tweet: https://twitter.com/Jimbo_on_Tbreds/status/1568303676531572736
+  analysis: Wordle 447 (theme), 4g.5.1, (thema)
+  verdict: allow # Not a Goofball
+
 - name: JoshRey100
   author_id: 2168411925
   tweet: https://twitter.com/JoshRey100/status/1562543624012713985
@@ -118,6 +124,12 @@
   author_id: 265368603
   tweet: https://twitter.com/kitchen38jp/status/1562701812947623936
   analysis: Wordle 426 (shrug), 4g.5.1, (shrub)
+  verdict: allow # Not a Goofball
+
+- name: _LOVE_TAEKOOK
+  author_id: 1367006871874392067
+  tweet: https://twitter.com/_LOVE_TAEKOOK/status/1568302100404109313
+  analysis: Wordle 447 (theme), 3g1y.yellow5.white4, (therm)
   verdict: allow # Not a Goofball
 
 - name: LysanderTheLion
@@ -150,6 +162,18 @@
   analysis: Wordle 424 (twice), 4g.4.1, (twine/twire/twite)
   verdict: allow # Not a Goofball
 
+- name: muaaz0
+  author_id: 217082811
+  tweet: https://twitter.com/muaaz0/status/1568297419577647106
+  analysis: Wordle 447 (theme), 4g.5.1, (thema)
+  verdict: allow # Not a Goofball
+
+- name: muddybike
+  author_id: 205091914
+  tweet: https://twitter.com/muddybike/status/1568299700167622656
+  analysis: Wordle 447 (theme), 3g1y.yellow2.white1, (steme)
+  verdict: allow # Not a Goofball
+
 - name: mXaw7zyRa7ARsFL
   author_id: 1301656879102218240
   tweet: https://twitter.com/mXaw7zyRa7ARsFL/status/1562130977576865792
@@ -168,6 +192,12 @@
   analysis: Wordle 437 (onset), 4g.3.1, (oncet)
   verdict: allow # Not a Goofball
 
+- name: rannibow
+  author_id: 1545873469564502019
+  tweet: https://twitter.com/rannibow/status/1568299019092520967
+  analysis: Wordle 447 (theme), 4g.4.3, (thebe/there/these/thete)
+  verdict: allow # Not a Goofball
+
 - name: rnkellystclair
   author_id: 17948846
   tweet: https://twitter.com/rnkellystclair/status/1565415427643023360
@@ -184,6 +214,18 @@
   author_id: 2153111274
   tweet: https://twitter.com/StormBlast2014/status/1562287971025375233
   analysis: Wordle 430 (WOVEN), 3g1y.yellow3.white1, "rowen"
+  verdict: allow # Not a Goofball
+
+- name: Thara_tan
+  author_id: 942445694266179584
+  tweet: https://twitter.com/Thara_tan/status/1568155129794428928
+  analysis: Wordle 447 (theme), 4g.4.3, (thebe/there/these/thete)
+  verdict: allow # Not a Goofball
+
+- name: Woodstoc45
+  author_id: 1202000226
+  tweet: https://twitter.com/Woodstoc45/status/1568167028460032000
+  analysis: Wordle 447 (theme), 3g1y.yellow5.white4, (therm)
   verdict: allow # Not a Goofball
 
 - name: zoeloveswordle
