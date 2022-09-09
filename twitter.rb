@@ -14,6 +14,17 @@ end
 
 module Twitter
   module Configuration
+    # Twitter API capacity
+    # My project is at "Essential access" level, which gives 500k tweets/month
+    #   - https://developer.twitter.com/en/docs/twitter-api/tweet-caps
+    #   - https://developer.twitter.com/en/portal/dashboard
+    #   - My usage resets on 28th of the month
+    #   - Generally speaking, I get 500/30 = 16.67k/day
+    # 9/9/2022: My usage today is 342,310/500k (68%), with 19 days remaining
+    #   - 158k remaining over 19 days = 8.31k/day
+    # 9/9/2022 11:24am: 342,310
+    # 9/9/2022 11:26am: 343,306
+
     # Twitter API calls
     @@results = 100
     @@pages = 5
@@ -185,6 +196,16 @@ module Twitter
       wordle_number = Configuration.wordle_number_override.to_s
       Debug.log_terse "using user-specified wordle number: #{wordle_number}"
     end
+
+    # check for previously-cached result
+    if !Configuration.goofball_mode?
+      # do not cache in goofball mode, because the results are different
+      filename = "saved_twitter_result_wordle#{wordle_number}.yaml"
+      if File.exist?(filename)
+        return YAML.load_file(filename)
+      end
+    end
+
     answers = []
     total_twitter_posts = 0
     unique_twitter_posts = {}
@@ -436,10 +457,18 @@ module Twitter
       UI::padded_puts ''
     end
 
-    {
+    return_value = {
       stats: stats,
       answers: answers
     }
+
+    # cache result, except in goofball mode
+    if !Configuration.goofball_mode?
+      filename = "saved_twitter_result_wordle#{wordle_number}.yaml"
+      File.write(filename, return_value.to_yaml)
+    end
+
+    return_value
   end
 
   def Twitter::is_probably_a_wordle_post?(text, wordle_number)

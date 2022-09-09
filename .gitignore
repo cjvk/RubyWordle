@@ -1,5 +1,6 @@
 # private files for this project
 auth_token_twitter
+saved_twitter_result_wordle*.yaml
 
 *.gem
 *.rbc
