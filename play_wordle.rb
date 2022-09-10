@@ -126,6 +126,18 @@ module UI
     print "#{' ' * LEFT_PADDING_DEFAULT}#{s}"
   end
 
+  class UI::Stopwatch
+    def initialize
+      @time_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    end
+    def lap
+      Process.clock_gettime(Process::CLOCK_MONOTONIC) - @time_start
+    end
+    def elapsed_time
+      "elapsed_time: #{'%.1f' % lap} seconds"
+    end
+  end
+
   def self.prompt_for_input(input_string, prompt_on_new_line = true)
     if prompt_on_new_line
       padded_puts input_string
@@ -182,17 +194,17 @@ module UI
           stats_hash = Twitter::twitter[:stats]
           Fingerprint::fingerprint_analysis(d, stats_hash)
         when 'performance'
-          time_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          sw = UI::Stopwatch.new
+          # time_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
           # (0...100).each {|_| Filter::filter_4g(populate_all_words, 2, 1)}
           # (0...100).each {|_| Filter::filter_3g1y(populate_all_words, 1, 2)}
-          (0...100).each {|i| Filter::filter_3g2y(populate_all_words, 1, 2)}
-          # (0...1).each {|_| Filter::filter_2g3y_version_3(populate_all_words, 1, 2); puts '.'}
-          # (0...5).each {|_| Filter::filter_2g3y_version_2(populate_all_words, 1, 2); puts '.'}
-          # (0...5).each {|_| Filter::filter_2g3y_version_1(populate_all_words, 1, 2); puts '.'}
-          # (0...5).each {|_| Filter::filter_1g4y(populate_all_words, 1); puts '.'}
-          # (0...3).each {|_| Filter::filter_0g5y(populate_all_words); puts '.'}
-          elapsed_time = Process.clock_gettime(Process::CLOCK_MONOTONIC) - time_start
-          puts "elapsed_time: #{'%.1f' % elapsed_time} seconds"
+          # (0...100).each {|i| Filter::filter_3g2y(populate_all_words, 1, 2)}
+          # (0...1).each {|_| Filter::filter_2g3y_v3(populate_all_words, 1, 2)}
+          (0...5).each {|_| Filter::filter_2g3y_v2(populate_all_words, 1, 2); puts "#{i}: #{sw.elapsed_time}"}
+          # (0...5).each {|i| Filter::filter_2g3y_v1(populate_all_words, 1, 2); puts "#{i}: #{sw.elapsed_time}"}
+          # (0...5).each {|_| Filter::filter_1g4y(populate_all_words, 1); puts "#{i}: #{sw.elapsed_time}"}
+          # (0...3).each {|_| Filter::filter_0g5y(populate_all_words); puts "#{i}: #{sw.elapsed_time}"}
+          puts sw.elapsed_time
         when 'regression'
           regression_analysis(d)
         when 'goofball'

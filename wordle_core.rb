@@ -388,10 +388,10 @@ module Filter
   end
 
   def Filter::filter_2g3y(d, green1, green2)
-    filter_2g3y_version_2(d, green1, green2)
+    filter_2g3y_v2(d, green1, green2)
   end
-  def Filter::filter_2g3y_version_3(d, green1, green2)
-    # filter_2g3y_version_3(populate_all_words, 1, 2) ONE time: 691s (0:11:31)
+  def Filter::filter_2g3y_v3(d, green1, green2)
+    # filter_2g3y_v3(populate_all_words, 1, 2) ONE time: 691s (0:11:31)
     d.delete_if do |word, _|
       matches = populate_valid_wordle_words.dup
         .map{|guess, _| [guess, wordle_response(guess, word)]}
@@ -403,8 +403,8 @@ module Filter
       matches.size == 0
     end
   end
-  def Filter::filter_2g3y_version_2(d, green1, green2)
-    # filter_2g3y_version_2(populate_all_words, 1, 2) 5 times: 132.9s (26.6s)
+  def Filter::filter_2g3y_v2(d, green1, green2)
+    # filter_2g3y_v2(populate_all_words, 1, 2) 5 times: 132.9s (26.6s)
     yellows = (0...5).to_a.delete_if{|i| i==green1 || i==green2}
     d.delete_if do |key, _|
       # [1, 3, 4]
@@ -417,8 +417,8 @@ module Filter
       matches.size == 0
     end
   end
-  def Filter::filter_2g3y_version_1(d, green1, green2)
-    # filter_2g3y_version_1(populate_all_words, 1, 2) 5 times: 242.2s (48.4s)
+  def Filter::filter_2g3y_v1(d, green1, green2)
+    # filter_2g3y_v1(populate_all_words, 1, 2) 5 times: 242.2s (48.4s)
     d.each_key do |key|
       all_words = populate_valid_wordle_words.dup
       for i in 0...5
