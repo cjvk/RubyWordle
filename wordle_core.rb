@@ -318,6 +318,7 @@ module Filter
   end
 
   def Filter::filter_4g(d, gray, count)
+    # filter_4g(populate_all_words, 2, 1) 100 times: 6.7s
     all_words = populate_valid_wordle_words
 
     d.each_key do |key|
@@ -339,6 +340,7 @@ module Filter
   end
 
   def Filter::filter_3g1y(d, yellow, gray)
+    # filter_3g1y(populate_all_words, 1, 2) 100 times: 7.1s
     # yellow and grey are 0-indexed
     all_words = populate_valid_wordle_words
     d.each_key do |key|
@@ -370,6 +372,7 @@ module Filter
   end
 
   def Filter::filter_3g2y(d, yellow1, yellow2)
+    # filter_3g2y(populate_all_words, 1, 2) 100 times: 0.6s
     all_words = populate_valid_wordle_words
     d.each_key do |key|
       switched_word = key.dup
@@ -385,6 +388,10 @@ module Filter
   end
 
   def Filter::filter_2g3y(d, green1, green2)
+    filter_2g3y_version_2(d, green1, green2)
+  end
+  def Filter::filter_2g3y_version_3(d, green1, green2)
+    # filter_2g3y_version_3(populate_all_words, 1, 2) ONE time: 691s (0:11:31)
     d.delete_if do |word, _|
       matches = populate_valid_wordle_words.dup
         .map{|guess, _| [guess, wordle_response(guess, word)]}
@@ -397,6 +404,7 @@ module Filter
     end
   end
   def Filter::filter_2g3y_version_2(d, green1, green2)
+    # filter_2g3y_version_2(populate_all_words, 1, 2) 5 times: 132.9s (26.6s)
     yellows = (0...5).to_a.delete_if{|i| i==green1 || i==green2}
     d.delete_if do |key, _|
       # [1, 3, 4]
@@ -410,6 +418,7 @@ module Filter
     end
   end
   def Filter::filter_2g3y_version_1(d, green1, green2)
+    # filter_2g3y_version_1(populate_all_words, 1, 2) 5 times: 242.2s (48.4s)
     d.each_key do |key|
       all_words = populate_valid_wordle_words.dup
       for i in 0...5
@@ -429,6 +438,7 @@ module Filter
   end
 
   def Filter::filter_1g4y(d, green)
+    # filter_1g4y(populate_all_words, 1) 5 times: 244.1s (48.8s)
     d.each_key do |key|
       all_words = populate_valid_wordle_words.dup
       for i in 0...5
@@ -448,6 +458,7 @@ module Filter
   end
 
   def Filter::filter_0g5y(d)
+    # filter_0g5y(populate_all_words) 3 times: 155.8s (51.9s)
     d.each_key do |key|
       all_words = populate_valid_wordle_words.dup
       for i in 0...5

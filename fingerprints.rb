@@ -91,6 +91,13 @@ module Fingerprint
     d.to_h
   end
 
+  # Wordle 447 (theme): 1/1
+  # Wordle 446 (class): 1/20
+  # Wordle 445 (leery): 1/24
+  # Wordle 444 (taunt): 1/123 (but pretty close)
+  # Wordle 443 (whoop): 1/50
+  # Wordle 442 (inter): 1/1
+
   def Fingerprint::score(candidate_word, stats_hash, fingerprint)
     previous_maybe = Debug.maybe?
     # Debug.set_maybe(candidate_word == 'corns')

@@ -26,6 +26,9 @@ module Twitter
     # 9/9/2022 11:26am: 343,306
     # 9/9/2022 12:26pm: 345,298
     # 9/9/2022  1:47pm: 346,295
+    # 9/9/2022  2:02pm: 348,287
+    # 9/9/2022  2:17pm: 353,261
+    # 9/9/2022  5:18pm: Id.
 
     # Twitter API calls
     @@results = 100
@@ -38,7 +41,7 @@ module Twitter
     @@absence_of_evidence_filename = DRACOS_VALID_WORDLE_WORDS_FILE
 
     #         Uncomment this to query a specific wordle number
-    # @@wordle_number_override = 444 # taunt
+    # @@wordle_number_override = 442
 
     #         Uncomment this to enable debug printing for a specific tweet_id
     # @@debug_print_tweet_id = '1559163924548915201'

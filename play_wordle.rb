@@ -4,12 +4,13 @@
 #   2. raise (-!--- response), twitter, filtering, absence-of-evidence
 #   3. goofball 444
 
-#      - run goofball testing back to... Wordle 400?
-#      - ... and then do comparison testing of filtering vs fingerprint-analysis
 #      - ... and then do scoring
 # TODO enable scoring on a per-dictionary basis?
 # TODO performance test for the 3g1y filter function (create Timer class too?)
 # TODO rank stats_hash based on speed of filtering function
+# TODO consider allowing potential goofballs, but discarding and
+#      re-running if there are no solutions... or perhaps if there are
+#      no solutions above a certain threshold?
 
 require 'yaml'
 require_relative 'constants'
@@ -180,6 +181,18 @@ module UI
         when 'test'
           stats_hash = Twitter::twitter[:stats]
           Fingerprint::fingerprint_analysis(d, stats_hash)
+        when 'performance'
+          time_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          # (0...100).each {|_| Filter::filter_4g(populate_all_words, 2, 1)}
+          # (0...100).each {|_| Filter::filter_3g1y(populate_all_words, 1, 2)}
+          (0...100).each {|i| Filter::filter_3g2y(populate_all_words, 1, 2)}
+          # (0...1).each {|_| Filter::filter_2g3y_version_3(populate_all_words, 1, 2); puts '.'}
+          # (0...5).each {|_| Filter::filter_2g3y_version_2(populate_all_words, 1, 2); puts '.'}
+          # (0...5).each {|_| Filter::filter_2g3y_version_1(populate_all_words, 1, 2); puts '.'}
+          # (0...5).each {|_| Filter::filter_1g4y(populate_all_words, 1); puts '.'}
+          # (0...3).each {|_| Filter::filter_0g5y(populate_all_words); puts '.'}
+          elapsed_time = Process.clock_gettime(Process::CLOCK_MONOTONIC) - time_start
+          puts "elapsed_time: #{'%.1f' % elapsed_time} seconds"
         when 'regression'
           regression_analysis(d)
         when 'goofball'

@@ -6,6 +6,12 @@
   analysis: Wordle 437 (onset), 3g1y.yellow5.white2, (owsen)
   verdict: allow # Not a Goofball
 
+- name: astigma0421
+  author_id: 837360158430773248
+  tweet: https://twitter.com/astigma0421/status/1566665066363031552
+  analysis: Wordle 442 (inter), 3g1y.yellow1.white2, (noter)
+  verdict: allow # Not a Goofball
+
 - name: awlgae_mm
   author_id: 1533447006
   tweet: https://twitter.com/awlgae_mm/status/1563899715347169281
@@ -16,6 +22,12 @@
   author_id: 38323083
   tweet: https://twitter.com/Backstreetsmac/status/1564730691841101824
   analysis: Wordle 437 (onset), 3g1y.yellow5.white3, (onces)
+  verdict: allow # Not a Goofball
+
+- name: Chandra_Mukhi
+  author_id: 636284373
+  tweet: https://twitter.com/Chandra_Mukhi/status/1566762675320807424
+  analysis: Wordle 443 (whoop), 4g.5.2, (whoof/whoot)
   verdict: allow # Not a Goofball
 
 - name: C_Muteba
@@ -156,6 +168,12 @@
   analysis: Wordle 431 (NEEDY), 4g.1.3, many -EEDY options
   verdict: allow # Not a Goofball
 
+- name: missliss67
+  author_id: 18202958
+  tweet: https://twitter.com/missliss67/status/1566636584929488896
+  analysis: Wordle 442 (inter), 3g1y.yellow1.white2, (noter)
+  verdict: allow # Not a Goofball
+
 - name: moore_hype
   author_id: 989297528419078144
   tweet: https://twitter.com/moore_hype/status/1563595600880619520
@@ -180,6 +198,12 @@
   analysis: Wordle 430 (WOVEN), 4g.1.3, coven/doven/hoven/roven
   verdict: allow # Not a Goofball
 
+- name: _Otenkiya_
+  author_id: 2818399074
+  tweet: https://twitter.com/_Otenkiya_/status/1566787160250155008
+  analysis: Wordle 443 (whoop), 3g1y.yellow5.white4, (whoso)
+  verdict: allow # Not a Goofball
+
 - name: pawadokai
   author_id: 53636369
   tweet: https://twitter.com/pawadokai/status/1562675094094487553
@@ -196,6 +220,12 @@
   author_id: 1545873469564502019
   tweet: https://twitter.com/rannibow/status/1568299019092520967
   analysis: Wordle 447 (theme), 4g.4.3, (thebe/there/these/thete)
+  verdict: allow # Not a Goofball
+
+- name: RitaDiCarne
+  author_id: 91362256
+  tweet: https://twitter.com/RitaDiCarne/status/1566406483541204993
+  analysis: Wordle 442 (inter), 4g.3.3, (infer/inker/inner/inver)
   verdict: allow # Not a Goofball
 
 - name: rnkellystclair
