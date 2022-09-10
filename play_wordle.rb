@@ -6,7 +6,6 @@
 
 #      - ... and then do scoring
 # TODO enable scoring on a per-dictionary basis?
-# TODO performance test for the 3g1y filter function (create Timer class too?)
 # TODO rank stats_hash based on speed of filtering function
 # TODO consider allowing potential goofballs, but discarding and
 #      re-running if there are no solutions... or perhaps if there are
