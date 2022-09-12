@@ -449,3 +449,6 @@ taunt
 leery
 class
 theme
+lofty
+tibia
+booze # Wordle 450, 9/12/2022

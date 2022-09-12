@@ -51,7 +51,7 @@ module Fingerprint
     (0...5).map{|i| fingerprint["4g.#{i+1}"] || 0}
   end
 
-  def Fingerprint::fingerprint_analysis(d, stats_hash)
+  def Fingerprint::fingerprint_analysis(d, stats_hash, verbose: 0)
     fingerprints = reconstitute_fingerprints
 
     d = d
@@ -80,7 +80,7 @@ module Fingerprint
         " -------- Alert! Wordle #{maybe_solution_number} solution was #{word} --------" :
         ''
       UI::padded_puts "#{index+1}: #{word} has a score of #{'%.1f' % data_hash[:score]}#{maybe_alert}"
-      if Debug::THRESHOLD >= Debug::LOG_LEVEL_VERBOSE && index < 5
+      if index < verbose
         UI::padded_puts "         #{word} fingerprint: #{data_hash[:fingerprint]}"
       end
     end

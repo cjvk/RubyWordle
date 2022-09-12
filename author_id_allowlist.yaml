@@ -132,6 +132,12 @@
   analysis: Wordle 431 was NEEDY, 3g1y.yellow5.white4, (neeld)
   verdict: allow # Not a Goofball
 
+- name: JuliaNightmare
+  author_id: 2757953132
+  tweet: https://twitter.com/JuliaNightmares/status/1569369093215780864
+  analysis: Wordle 450 (booze), 3g1y.yellow4.white5, (booed)
+  verdict: allow # Not a Goofball
+
 - name: kitchen38jp
   author_id: 265368603
   tweet: https://twitter.com/kitchen38jp/status/1562701812947623936

@@ -10,6 +10,7 @@
 # TODO consider allowing potential goofballs, but discarding and
 #      re-running if there are no solutions... or perhaps if there are
 #      no solutions above a certain threshold?
+# TODO Not sure how much this would add... but why only consider penultimate?
 
 require 'yaml'
 require_relative 'constants'
@@ -46,6 +47,22 @@ def populate_all_words
   ['pinot', 'ramen', 'apage', 'stear', 'stean', 'tased', 'tsade'].each { |word| d[word] = '-1' }
   d
 end
+
+# A note on "wordle words" that are not "words"
+# I went here: https://github.com/dwyl/english-words, got words_alpha.txt,
+# which _should_ be what I want. Transform and sort the data:
+# cat words_alpha.txt | grep '^\([a-z]\{5\}\)[^a-z]$' | sed 's/^\(.....\).$/\1/' > words_alpha.txt.grep.sed
+# copy valid-wordle-words.txt, remove comments, and sort: valid-wordle-words-words-only.txt.sort
+# comm -13 words_alpha.txt.grep.sed.sort valid-wordle-words-words-only.txt.sort > non-word-valid-wordle-words.txt
+# % head -n 5 non-word-valid-wordle-words.txt
+# aapas
+# aarti
+# abacs
+# abaht
+# abaya
+# Verified many of these are in valid-wordle-words but not in words_alpha
+# % wc -l non-word-valid-wordle-words.txt
+#     4228 non-word-valid-wordle-words.txt
 
 module Alert
   def self.alert(s)
@@ -172,7 +189,9 @@ module UI
         when 'penultimate'
           Commands::penultimate(d)
         when 'twitter'
-          stats_hash = Twitter::twitter[:stats]
+          query_result = Twitter::Query::regular
+          query_result.print_report
+          stats_hash = query_result.stats_hash
           UI.print_remaining_count(d)
           if UI.maybe_filter_twitter(d, stats_hash)
             UI.maybe_absence_of_evidence(d, stats_hash)
@@ -187,11 +206,28 @@ module UI
           # compressed_fingerprints = compress(fingerprints)
           # save_fingerprints_to_file compressed_fingerprints
         when 'fingerprint-analysis'
-          stats_hash = Twitter::twitter[:stats]
+          query_result = Twitter::Query::regular
+          query_result.print_report
+          stats_hash = query_result.stats_hash
           Fingerprint::fingerprint_analysis(d, stats_hash)
-        when 'test'
-          stats_hash = Twitter::twitter[:stats]
-          Fingerprint::fingerprint_analysis(d, stats_hash)
+        when 'fingerprint-analysis --verbose'
+          verbose_number = UI.prompt_for_input("Enter number to show in verbose mode: ==> ", false).to_i
+          query_result = Twitter::Query::regular
+          query_result.print_report
+          stats_hash = query_result.stats_hash
+          Fingerprint::fingerprint_analysis(d, stats_hash, verbose: verbose_number)
+        when 'test2'
+          make_call_result = Twitter::Internal::make_call
+          puts make_call_result[:call_stats]
+          puts "make-call-result answers.length=#{make_call_result[:answers].length}"
+          post_process_result = Twitter::Internal::post_process(make_call_result, delete_stats_hash_singletons: true)
+          puts "make-call-result answers.length=#{make_call_result[:answers].length}"
+          puts "post-process-result answers.length=#{post_process_result[:answers].length}"
+          puts post_process_result[:stats_hash]
+        when 'test3'
+          # foo = Twitter::Query::regular_with_singletons
+          foo = Twitter::Query::regular
+          foo.print_report
         when 'performance'
           sw = UI::Stopwatch.new
           # time_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
@@ -330,12 +366,9 @@ module UI
   def UI::goofball_analysis
     wordle_number = UI.prompt_for_input("Enter daily wordle number (to check for goofballs): ==> ", false)
     Twitter::Configuration.set_wordle_number_override wordle_number
-
-    Twitter::Configuration.set_goofball_mode true
-    twitter_result = Twitter::twitter
-    stats_hash = twitter_result[:stats]
-    answers = twitter_result[:answers]
-    Twitter::Configuration.set_goofball_mode false
+    query_result = Twitter::Query::goofball
+    stats_hash = query_result.stats_hash
+    answers = query_result.answers
     wordle_number_solution = PreviousWordleSolutions.lookup_by_number(wordle_number.to_i)
 
     singleton_keys = []
@@ -474,7 +507,9 @@ module UI
     exit if wordle_number.to_i.to_s != wordle_number
     Twitter::Configuration.set_wordle_number_override wordle_number
 
-    stats_hash = Twitter::twitter[:stats]
+    query_result = Twitter::Query::regular
+    query_result.print_report
+    stats_hash = query_result.stats_hash
     a = filter_twitter(d.dup, stats_hash).keys
     b = Fingerprint::fingerprint_analysis(d.dup, stats_hash).keys
 

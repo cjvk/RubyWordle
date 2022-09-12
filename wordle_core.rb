@@ -173,6 +173,12 @@ def today_wordle_number
   wordle_number
 end
 
+def user_specified_wordle_number_or_default(suppress_output: false)
+  [Twitter::Configuration.wordle_number_override]
+    .map{|override| Debug.log_terse("user-specified wordle number: #{override}") if override && !suppress_output; override}
+    .map{|override| override or today_wordle_number}[0].to_s
+end
+
 def close(w1, w2)
   diff = 0
   (0...5).each {|i| diff += (w1[i]==w2[i] ? 0 : 1)}
