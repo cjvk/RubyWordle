@@ -490,8 +490,8 @@ module UI
   def UI::full_solver(d)
     max_to_print = [UI.prompt_for_input('Enter max to print (default 10): ==> ', false)]
       .map{|user_input| user_input!='' && user_input==user_input.to_i.to_s ? user_input.to_i : 10}[0]
-    verbose = [UI.prompt_for_input('Enter number to print verbose (default 3): ==> ', false)]
-      .map{|user_input| user_input!='' && user_input==user_input.to_i.to_s ? user_input.to_i : 3}[0]
+    verbose = [UI.prompt_for_input('Enter number to print verbose (default 0): ==> ', false)]
+      .map{|user_input| user_input!='' && user_input==user_input.to_i.to_s ? user_input.to_i : 0}[0]
     query1 = Twitter::Query::regular_with_singletons
     stats_hash1 = query1.stats_hash
     _analysis_1 = Fingerprint::fingerprint_analysis(d, stats_hash1, max_to_print: max_to_print, verbose: verbose)
