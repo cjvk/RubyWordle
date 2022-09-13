@@ -48,6 +48,12 @@
   analysis: Wordle 439 (fungi), 4g.1.2, (lungi/mungi/pungi)
   verdict: allow # Not a Goofball
 
+- name: _DerekMcHugh_
+  author_id: 849721559476338688
+  tweet: https://twitter.com/_DerekMcHugh_/status/1569459066765967361
+  analysis: Wordle 450 (booze), 4g.5.1, (boozy)
+  verdict: allow # Not a Goofball
+
 - name: Dope_Dan
   author_id: 166221335
   tweet: https://twitter.com/Dope_Dan/status/1565393035139194882
@@ -178,6 +184,12 @@
   author_id: 18202958
   tweet: https://twitter.com/missliss67/status/1566636584929488896
   analysis: Wordle 442 (inter), 3g1y.yellow1.white2, (noter)
+  verdict: allow # Not a Goofball
+
+- name: MollyWatanabe
+  author_id: 41509118
+  tweet: https://twitter.com/MollyWatanabe/status/1569456023030857728
+  analysis: Wordle 450 (booze), 3g1y.yellow4.white5, (booed)
   verdict: allow # Not a Goofball
 
 - name: moore_hype

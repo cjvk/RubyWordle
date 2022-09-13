@@ -31,7 +31,8 @@ module Twitter
     # 9/9/2022  5:18pm: Id.
     # 9/12/2022 9:03am: 357,653
     # 9/12/2022 4:43pm: 357,952
-    # 9/12/2022 4:47pm: 349,946
+    # 9/12/2022 4:47pm: 359,946
+    # 9/12/2022 5:10pm: Id.
 
     # Twitter API calls
     @@results = 100
@@ -176,6 +177,25 @@ module Twitter
   end
 
   module Query
+    def Query::goofball
+      ProcessedResult.new(
+        Internal::post_process(
+          Internal::make_call,
+          delete_stats_hash_singletons: false,
+          check_denylist: false))
+    end
+
+    def Query::regular
+      ProcessedResult.new(Internal::post_process(Internal::make_call))
+    end
+
+    def Query::regular_with_singletons
+      ProcessedResult.new(
+        Internal::post_process(
+          Internal::make_call,
+          delete_stats_hash_singletons: false))
+    end
+
     class ProcessedResult
       def initialize(post_process_result)
         @answers = post_process_result[:answers]
@@ -233,25 +253,6 @@ module Twitter
           UI::padded_puts ''
         end
       end
-    end
-
-    def Query::goofball
-      ProcessedResult.new(
-        Internal::post_process(
-          Internal::make_call,
-          delete_stats_hash_singletons: false,
-          check_denylist: false))
-    end
-
-    def Query::regular
-      ProcessedResult.new(Internal::post_process(Internal::make_call))
-    end
-
-    def Query::regular_with_singletons
-      ProcessedResult.new(
-        Internal::post_process(
-          Internal::make_call,
-          delete_stats_hash_singletons: false))
     end
   end
 

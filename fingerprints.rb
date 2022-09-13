@@ -51,7 +51,7 @@ module Fingerprint
     (0...5).map{|i| fingerprint["4g.#{i+1}"] || 0}
   end
 
-  def Fingerprint::fingerprint_analysis(d, stats_hash, verbose: 0)
+  def Fingerprint::fingerprint_analysis(d, stats_hash, verbose: 0, max_to_print: 30, suppress_output: false)
     fingerprints = reconstitute_fingerprints
 
     d = d
@@ -61,32 +61,33 @@ module Fingerprint
       .delete_if{|word, data_hash| data_hash[:score] == -1}
       .sort_by {|word, data_hash| -1 * data_hash[:score]}
 
-    max_to_print = 30
+    if !suppress_output
+      puts ''
+      UI::padded_puts '/------------------------------------------------------\\'
+      UI::padded_puts "|              Fingerprint analysis report             |"
+      UI::padded_puts '\------------------------------------------------------/'
+      UI::padded_puts ''
+      UI::padded_puts "stats_hash: #{stats_hash}"
+      puts ''
+      UI::padded_puts "There are #{d.length} words remaining. Showing score to a maximum of #{max_to_print}."
+      puts ''
 
-    puts ''
-    UI::padded_puts '/------------------------------------------------------\\'
-    UI::padded_puts "|              Fingerprint analysis report             |"
-    UI::padded_puts '\------------------------------------------------------/'
-    UI::padded_puts ''
-    UI::padded_puts "stats_hash: #{stats_hash}"
-    puts ''
-    UI::padded_puts "There are #{d.length} words remaining. Showing score to a maximum of #{max_to_print}."
-    puts ''
-
-    d.each.with_index do |(word, data_hash), index|
-      break if index >= max_to_print
-      maybe_solution_number = PreviousWordleSolutions.check_word(word)
-      maybe_alert = maybe_solution_number ?
-        " -------- Alert! Wordle #{maybe_solution_number} solution was #{word} --------" :
-        ''
-      UI::padded_puts "#{index+1}: #{word} has a score of #{'%.1f' % data_hash[:score]}#{maybe_alert}"
-      if index < verbose
-        UI::padded_puts "         #{word} fingerprint: #{data_hash[:fingerprint]}"
+      d.each.with_index do |(word, data_hash), index|
+        break if index >= max_to_print
+        maybe_solution_number = PreviousWordleSolutions.check_word(word)
+        maybe_alert = maybe_solution_number ?
+          " -------- Alert! Wordle #{maybe_solution_number} solution was #{word} --------" :
+          ''
+        UI::padded_puts "#{index+1}: #{word} has a score of #{'%.1f' % data_hash[:score]}#{maybe_alert}"
+        if index < verbose
+          UI::padded_puts "         #{word} fingerprint: #{data_hash[:fingerprint]}"
+        end
       end
-    end
 
-    puts ''
-    puts ''
+      puts ''
+      puts ''
+
+    end
 
     d.to_h
   end

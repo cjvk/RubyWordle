@@ -7,9 +7,6 @@
 #      - ... and then do scoring
 # TODO enable scoring on a per-dictionary basis?
 # TODO rank stats_hash based on speed of filtering function
-# TODO consider allowing potential goofballs, but discarding and
-#      re-running if there are no solutions... or perhaps if there are
-#      no solutions above a certain threshold?
 # TODO Not sure how much this would add... but why only consider penultimate?
 
 require 'yaml'
@@ -216,18 +213,8 @@ module UI
           query_result.print_report
           stats_hash = query_result.stats_hash
           Fingerprint::fingerprint_analysis(d, stats_hash, verbose: verbose_number)
-        when 'test2'
-          make_call_result = Twitter::Internal::make_call
-          puts make_call_result[:call_stats]
-          puts "make-call-result answers.length=#{make_call_result[:answers].length}"
-          post_process_result = Twitter::Internal::post_process(make_call_result, delete_stats_hash_singletons: true)
-          puts "make-call-result answers.length=#{make_call_result[:answers].length}"
-          puts "post-process-result answers.length=#{post_process_result[:answers].length}"
-          puts post_process_result[:stats_hash]
-        when 'test3'
-          # foo = Twitter::Query::regular_with_singletons
-          foo = Twitter::Query::regular
-          foo.print_report
+        when 'solver'
+          full_solver(d)
         when 'performance'
           sw = UI::Stopwatch.new
           # time_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
@@ -498,6 +485,20 @@ module UI
     puts ''
     puts '##################################################'
     exit
+  end
+
+  def UI::full_solver(d)
+    max_to_print = [UI.prompt_for_input('Enter max to print (default 10): ==> ', false)]
+      .map{|user_input| user_input!='' && user_input==user_input.to_i.to_s ? user_input.to_i : 10}[0]
+    verbose = [UI.prompt_for_input('Enter number to print verbose (default 3): ==> ', false)]
+      .map{|user_input| user_input!='' && user_input==user_input.to_i.to_s ? user_input.to_i : 3}[0]
+    query1 = Twitter::Query::regular_with_singletons
+    stats_hash1 = query1.stats_hash
+    _analysis_1 = Fingerprint::fingerprint_analysis(d, stats_hash1, max_to_print: max_to_print, verbose: verbose)
+
+    query2 = Twitter::Query::regular
+    stats_hash2 = query2.stats_hash
+    _analysis_2 = Fingerprint::fingerprint_analysis(d, stats_hash2, max_to_print: max_to_print, verbose: verbose)
   end
 
   def UI::regression_analysis(d)
