@@ -492,9 +492,17 @@ module UI
       .map{|user_input| user_input!='' && user_input==user_input.to_i.to_s ? user_input.to_i : 10}[0]
     verbose = [UI.prompt_for_input('Enter number to print verbose (default 0): ==> ', false)]
       .map{|user_input| user_input!='' && user_input==user_input.to_i.to_s ? user_input.to_i : 0}[0]
+
     query1 = Twitter::Query::regular_with_singletons
     stats_hash1 = query1.stats_hash
-    _analysis_1 = Fingerprint::fingerprint_analysis(d, stats_hash1, max_to_print: max_to_print, verbose: verbose)
+    analysis_1 = Fingerprint::fingerprint_analysis(d, stats_hash1, max_to_print: max_to_print, verbose: verbose)
+    max_score_analysis_1 = analysis_1.max_by{|word, data_hash| data_hash[:score]}[1][:score]
+
+    if max_score_analysis_1 < 60
+      UI::padded_puts("Query with singletons produced a max score of only #{max_score_analysis_1}!")
+      puts ''
+      puts ''
+    end
 
     query2 = Twitter::Query::regular
     stats_hash2 = query2.stats_hash
