@@ -498,15 +498,22 @@ module UI
     analysis_1 = Fingerprint::fingerprint_analysis(d, stats_hash1, max_to_print: max_to_print, verbose: verbose)
     max_score_analysis_1 = analysis_1.max_by{|word, data_hash| data_hash[:score]}[1][:score]
 
-    if max_score_analysis_1 < 60
+    good_enuf = max_score_analysis_1 >= 60
+    if !good_enuf
       UI::padded_puts("Query with singletons produced a max score of only #{max_score_analysis_1}!")
       puts ''
       puts ''
     end
 
-    query2 = Twitter::Query::regular
-    stats_hash2 = query2.stats_hash
-    _analysis_2 = Fingerprint::fingerprint_analysis(d, stats_hash2, max_to_print: max_to_print, verbose: verbose)
+    default = good_enuf ? 'n' : 'y'
+    proceed = [UI.prompt_for_input("Run again without singletons? (y/n) (default #{default}) ==> ", false)]
+      .map{|user_input| user_input == '' ? default : user_input} # default
+      .map{|user_input| !['y', 'n'].include?(user_input) ? 'n' : user_input}[0] == 'y' # bad input => do not proceed
+    if proceed
+      query2 = Twitter::Query::regular
+      stats_hash2 = query2.stats_hash
+      _analysis_2 = Fingerprint::fingerprint_analysis(d, stats_hash2, max_to_print: max_to_print, verbose: verbose)
+    end
   end
 
   def UI::regression_analysis(d)
