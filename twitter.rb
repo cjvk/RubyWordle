@@ -36,6 +36,7 @@ module Twitter
     # 9/14/2022 7:19am: 360,944
     # 9/14/2022 7:20am: 361,944
     # 9/14/2022 12:44pm: Id.
+    # 9/14/2022 4:43pm: Id. // 139k/14d = 9.92k/day
 
     # Twitter API calls
     @@results = 100
