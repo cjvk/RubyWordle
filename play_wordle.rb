@@ -5,7 +5,6 @@
 #   3. goofball 444
 
 #      - ... and then do scoring
-# TODO enable scoring on a per-dictionary basis?
 # TODO rank stats_hash based on speed of filtering function
 # TODO Not sure how much this would add... but why only consider penultimate?
 
@@ -193,15 +192,14 @@ module UI
           if UI.maybe_filter_twitter(d, stats_hash)
             UI.maybe_absence_of_evidence(d, stats_hash)
           end
+        when 'test'
         when 'dad'
           print_a_dad_joke
         when 'generate-fingerprints'
           puts 'running this takes a long time, ~20 minutes'
           puts 'typically it is only necessary after re-scraping of NYT'
           puts 'if you still want to run this, uncomment the code'
-          # fingerprints = calculate_fingerprints
-          # compressed_fingerprints = compress(fingerprints)
-          # save_fingerprints_to_file compressed_fingerprints
+          Fingerprint::regenerate_compress_and_save('Dracos')
         when 'fingerprint-analysis'
           query_result = Twitter::Query::regular
           query_result.print_report
@@ -496,7 +494,7 @@ module UI
     query1 = Twitter::Query::regular_with_singletons
     stats_hash1 = query1.stats_hash
     analysis_1 = Fingerprint::fingerprint_analysis(d, stats_hash1, max_to_print: max_to_print, verbose: verbose)
-    max_score_analysis_1 = analysis_1.max_by{|word, data_hash| data_hash[:score]}[1][:score]
+    max_score_analysis_1 = analysis_1.max_by{|word, data_hash| data_hash[:nyt_score]}[1][:nyt_score]
 
     good_enuf = max_score_analysis_1 >= 60
     if !good_enuf
@@ -505,10 +503,10 @@ module UI
       puts ''
     end
 
-    default = good_enuf ? 'n' : 'y'
-    proceed = [UI.prompt_for_input("Run again without singletons? (y/n) (default #{default}) ==> ", false)]
-      .map{|user_input| user_input == '' ? default : user_input} # default
-      .map{|user_input| !['y', 'n'].include?(user_input) ? 'n' : user_input}[0] == 'y' # bad input => do not proceed
+    num_singletons = StatsHash.num_singletons(stats_hash1)
+    proceed = UI.prompt_for_input(
+      "Re-run with singleton filtering on? (#{num_singletons} singletons) ('y' to proceed) ==> ", false
+    ) == 'y'
     if proceed
       query2 = Twitter::Query::regular
       stats_hash2 = query2.stats_hash
@@ -562,14 +560,15 @@ module Commands
     # calculate how many actual 4g matches there are per key
     # key=laved, all_4g_matches=[6, 2, 10, 0, 2]
     # defined distances between ith all-4g-matches and possible observed Twitter values
-    # FIXME it is possible to see more matches on Twitter than mag-4gs if using
-    #       a smaller dictionary (like dracos)
+    # Question: it is possible to see more matches on Twitter than mag-4gs if using
+    #           a smaller dictionary (like dracos)
+    # Answer: The scoring should _always_ use NYT when eliminating words,
+    #         but could change it up when doing the subsequent scoring
     new_d = {}
     d.each do |key, _value|
       matches = all_4g_matches(key, Twitter::Configuration.absence_of_evidence_filename)
       difference = [0, 0, 0, 0, 0]
-      # (0...5).each {|i| difference[i] = matches[i] - max_4gs_seen[i]}
-      (0...5).each {|i| difference[i] = Distances::DISTANCES_4G[[matches[i], 9].min][max_4gs_seen[i]].to_f}
+      (0...5).each {|i| difference[i] = Fingerprint::Distance::individual_distance(matches[i], max_4gs_seen[i])}
       new_d[key] = [difference.sum, difference, matches, max_4gs_seen]
     end
     new_d = new_d.sort_by {|_key, value| value[0]}.to_h

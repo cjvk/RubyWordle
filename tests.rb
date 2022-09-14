@@ -62,13 +62,13 @@ module Tests
     fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::BLUE, 'DeborahDark') == 'y'
     fail unless WordleModes.unicode_to_normalized_string(WordleShareColors::ORANGE, 'DeborahDark') == 'g'
 
-    kdh = CompactKeys::KEY_COMPRESSION_HASH
-    max_compact_keys_value = kdh.values.max
-    min_compact_keys_value = kdh.values.min
-    fail unless kdh['4g.1'] == 0
+    kch = Fingerprint::Internal::CompactKeys::KEY_COMPRESSION_HASH
+    max_compact_keys_value = kch.values.max
+    min_compact_keys_value = kch.values.min
+    fail unless kch['4g.1'] == 0
     fail unless min_compact_keys_value == 0
     # this also guarantees that all keys are unique
-    (min_compact_keys_value..max_compact_keys_value).each {|v| fail unless kdh.has_value?(v)}
+    (min_compact_keys_value..max_compact_keys_value).each {|v| fail unless kch.has_value?(v)}
 
     clout_fingerprint = {
       "4g.1"=>3,

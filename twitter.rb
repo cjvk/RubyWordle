@@ -33,6 +33,9 @@ module Twitter
     # 9/12/2022 4:43pm: 357,952
     # 9/12/2022 4:47pm: 359,946
     # 9/12/2022 5:10pm: Id.
+    # 9/14/2022 7:19am: 360,944
+    # 9/14/2022 7:20am: 361,944
+    # 9/14/2022 12:44pm: Id.
 
     # Twitter API calls
     @@results = 100
@@ -45,7 +48,7 @@ module Twitter
     @@absence_of_evidence_filename = DRACOS_VALID_WORDLE_WORDS_FILE
 
     #         Uncomment this to query a specific wordle number
-    # @@wordle_number_override = 449
+    # @@wordle_number_override = 451
 
     #         Uncomment this to enable debug printing for a specific tweet_id
     # @@debug_print_tweet_id = '1559163924548915201'
@@ -211,6 +214,10 @@ module Twitter
         @stats_hash
       end
 
+      def call_stats
+        @call_stats
+      end
+
       def print_report
         wordle_number = user_specified_wordle_number_or_default
         total_guesses_histogram = [0, 0, 0, 0, 0, 0]
@@ -227,6 +234,7 @@ module Twitter
         UI.padded_puts '/--------------------------------------\\'
         UI.padded_puts "|              Wordle #{wordle_number}              |"
         UI.padded_puts '|            Twitter report            |'
+        UI.padded_puts "|              #{wordle_number_to_date(wordle_number)}              |"
         UI.padded_puts '\--------------------------------------/'
         UI.padded_puts "#{@call_stats[:tweets_seen]} Twitter posts seen"
         UI.padded_puts "#{@call_stats[:tweets_seen]-@call_stats[:duplicates]} Unique Twitter posts seen"

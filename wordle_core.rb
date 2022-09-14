@@ -1,5 +1,7 @@
 #!/usr/bin/ruby -w
 
+require 'date'
+
 module WordleShareColors
   # Normal mode
   # e.g. https://twitter.com/mobanwar/status/1552908148696129536
@@ -165,10 +167,11 @@ module InterestingWordleResponses
   end
 end
 
+WORDLE_DAY_0 = Date.civil(2021, 6, 19).freeze
+
 def today_wordle_number
   now = Date.today
-  wordle_day_0 = Date.civil(2021, 6, 19)
-  difference_in_days = (now - wordle_day_0).to_i
+  difference_in_days = (now - WORDLE_DAY_0).to_i
   wordle_number = difference_in_days.to_s
   wordle_number
 end
@@ -177,6 +180,10 @@ def user_specified_wordle_number_or_default(suppress_output: false)
   [Twitter::Configuration.wordle_number_override]
     .map{|override| Debug.log_terse("user-specified wordle number: #{override}") if override && !suppress_output; override}
     .map{|override| override or today_wordle_number}[0].to_s
+end
+
+def wordle_number_to_date(wordle_number)
+  (WORDLE_DAY_0 + wordle_number.to_i).strftime('%m/%d/%Y')
 end
 
 def close(w1, w2)
