@@ -161,6 +161,9 @@ module Tests
     previous_solutions = PreviousWordleSolutions.all_solutions
     fail unless previous_solutions.length > 0
     fail unless previous_solutions.values.max == previous_solutions.keys.length - 1
+
+    fail unless 'some string'.pad_right_to_length(100).length == 100
+    fail unless 'Hello World'.pad_right_to_length(13, termination_character: '!') == 'Hello World !'
   end
 end
 

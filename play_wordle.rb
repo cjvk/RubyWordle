@@ -127,6 +127,13 @@ module Debug
   end
 end
 
+class String
+  def pad_right_to_length(desired_length, termination_character: ' ')
+    termination_character = ' ' if termination_character.length != 1
+    self + ' ' * [(desired_length-self.length-1), 0].max + termination_character
+  end
+end
+
 module UI
   LEFT_PADDING_DEFAULT = 20
 
@@ -136,6 +143,13 @@ module UI
 
   def UI::padded_print(s)
     print "#{' ' * LEFT_PADDING_DEFAULT}#{s}"
+  end
+
+  def UI::pad_right_deprecated(s, desired_length, termination_character: ' ')
+    # use String.pad_right_to_length instead
+    termination_character = ' ' if termination_character.length != 1
+    s + ' ' * (desired_length-s.length-1) + termination_character
+    # ' ' * 100
   end
 
   class UI::Stopwatch
@@ -160,6 +174,24 @@ module UI
     return gets.chomp
   end
 
+  def self.main_menu(guess, d, show_menu: true)
+    main_menu_array = [
+      ' ----------------------------------------------------------.',
+      '|                        Main Menu                         |',
+      '|                                                          |',
+      "|   You are on guess #{guess}/6. #{remaining_count_string(d)}".pad_right_to_length(
+        60, termination_character: '|'),
+      '|                                                          |',
+      "|   Enter a guess, or 'help' for more commands             |",
+      ' ----------------------------------------------------------/',
+    ]
+    if show_menu
+      puts ''
+      main_menu_array.each{|s| padded_puts s}
+    end
+    UI.prompt_for_input(' ==> ', false)
+  end
+
   def self.play(d)
     puts ''
     padded_puts '----------------------------------------------------------'
@@ -168,10 +200,11 @@ module UI
     padded_puts '|                                                        |'
     padded_puts '----------------------------------------------------------'
     for guess in 1..6
-      padded_puts "You are on guess #{guess}/6. #{remaining_count_string(d)}"
       check_for_problematic_patterns(d) if guess >= 3
+      show_main_menu = true
       while true do
-        choice = UI.prompt_for_input("Enter a guess, or 'help':")
+        choice = UI.main_menu(guess, d, show_menu: show_main_menu)
+        show_main_menu = false
         case choice
         when 'c'
           UI.print_remaining_count(d)
@@ -179,11 +212,13 @@ module UI
           UI.print_remaining_words(d, choice == 'p' ? 30 : nil)
         when 'hint'
           Commands::hint(d)
+          show_main_menu = true
         when 'q'
           puts ''
           return
         when 'penultimate'
           Commands::penultimate(d)
+          show_main_menu = true
         when 'twitter'
           query_result = Twitter::Query::regular
           query_result.print_report
@@ -192,6 +227,7 @@ module UI
           if UI.maybe_filter_twitter(d, stats_hash)
             UI.maybe_absence_of_evidence(d, stats_hash)
           end
+          show_main_menu = true
         when 'test'
         when 'dad'
           print_a_dad_joke
@@ -200,19 +236,23 @@ module UI
           puts 'typically it is only necessary after re-scraping of NYT'
           puts 'if you still want to run this, uncomment the code'
           Fingerprint::regenerate_compress_and_save('Dracos')
+          show_main_menu = true
         when 'fingerprint-analysis'
           query_result = Twitter::Query::regular
           query_result.print_report
           stats_hash = query_result.stats_hash
           Fingerprint::fingerprint_analysis(d, stats_hash)
+          show_main_menu = true
         when 'fingerprint-analysis --verbose'
           verbose_number = UI.prompt_for_input("Enter number to show in verbose mode: ==> ", false).to_i
           query_result = Twitter::Query::regular
           query_result.print_report
           stats_hash = query_result.stats_hash
           Fingerprint::fingerprint_analysis(d, stats_hash, verbose: verbose_number)
+          show_main_menu = true
         when 'solver'
           full_solver(d)
+          show_main_menu = true
         when 'performance'
           sw = UI::Stopwatch.new
           # time_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
@@ -225,8 +265,10 @@ module UI
           # (0...5).each {|_| Filter::filter_1g4y(populate_all_words, 1); puts "#{i}: #{sw.elapsed_time}"}
           # (0...3).each {|_| Filter::filter_0g5y(populate_all_words); puts "#{i}: #{sw.elapsed_time}"}
           puts sw.elapsed_time
+          show_main_menu = true
         when 'regression'
           regression_analysis(d)
+          show_main_menu = true
         when 'goofball'
           goofball_analysis
         when 'help', 'h'
@@ -319,7 +361,6 @@ module UI
   end
 
   def self.print_usage
-    # TODO convert this more to a "main menu" type thing?
     puts ''
     UI::padded_puts '.----------------------------------------------.'
     UI::padded_puts '|                                              |'
@@ -345,7 +386,7 @@ module UI
   end
 
   def self.remaining_count_string(d)
-    "There #{d.length==1?'is':'are'} #{d.size} matching word#{d.length==1?'':'s'} remaining."
+    "There #{d.length==1?'is':'are'} #{d.size} word#{d.length==1?'':'s'} remaining."
   end
 
   def UI::goofball_analysis
