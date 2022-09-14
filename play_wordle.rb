@@ -179,12 +179,11 @@ module UI
       ' ----------------------------------------------------------.',
       '|                        Main Menu                         |',
       '|                                                          |',
-      "|   You are on guess #{guess}/6. #{remaining_count_string(d)}".pad_right_to_length(
-        60, termination_character: '|'),
+      "|   You are on guess #{guess}/6. #{remaining_count_string(d)}",
       '|                                                          |',
       "|   Enter a guess, or 'help' for more commands             |",
       ' ----------------------------------------------------------/',
-    ]
+    ].map{|s| s.length<60 ? s.pad_right_to_length(60, termination_character: '|') : s}
     if show_menu
       puts ''
       main_menu_array.each{|s| padded_puts s}
