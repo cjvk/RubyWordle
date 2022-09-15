@@ -304,6 +304,13 @@ module PreviousWordleSolutions
   def self.lookup_by_number(n)
     PreviousWordleSolutions.all_solutions.key n
   end
+
+  def self.maybe_alert_string(word)
+    [word]
+      .map{|word| PreviousWordleSolutions.check_word(word)}
+      .map{|maybe_number| maybe_number ?
+           " -------- Alert! Wordle #{maybe_number} solution was #{word} --------" : ''}[0]
+  end
 end
 
 module Filter

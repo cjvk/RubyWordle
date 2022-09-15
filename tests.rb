@@ -164,6 +164,10 @@ module Tests
 
     fail unless 'some string'.pad_right_to_length(100).length == 100
     fail unless 'Hello World'.pad_right_to_length(13, termination_character: '!') == 'Hello World !'
+
+    fail unless PreviousWordleSolutions.maybe_alert_string('Hello World!') == ''
+    fail unless PreviousWordleSolutions.maybe_alert_string('cigar') ==
+      ' -------- Alert! Wordle 0 solution was cigar --------'
   end
 end
 

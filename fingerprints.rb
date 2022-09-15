@@ -196,6 +196,7 @@ module Fingerprint
       .map{|word, data| data[:nyt_score] = score(word, stats_hash, data[:nyt_fingerprint]); [word, data]}
       .delete_if{|word, data| data[:nyt_score] == -1}
       .sort_by {|word, data| -1 * data[:nyt_score]}
+      .to_h
 
     if !suppress_output
       puts ''
@@ -208,16 +209,19 @@ module Fingerprint
       UI::padded_puts "There are #{d.length} words remaining. Showing score to a maximum of #{max_to_print}."
       puts ''
 
-      d.each.with_index do |(word, data_hash), index|
-        break if index >= max_to_print
-        maybe_solution_number = PreviousWordleSolutions.check_word(word)
-        maybe_alert = maybe_solution_number ?
-          " -------- Alert! Wordle #{maybe_solution_number} solution was #{word} --------" :
-          ''
-        UI::padded_puts "#{index+1}: #{word} has a score of #{'%.1f' % data_hash[:nyt_score]}#{maybe_alert}"
-        if index < verbose
+      d.each.with_index do |(word, data_hash), i|
+        break if i >= max_to_print
+        maybe_alert = PreviousWordleSolutions.maybe_alert_string(word)
+        UI::padded_puts "#{i+1}: #{word} has a score of #{'%.1f' % data_hash[:nyt_score]}#{maybe_alert}"
+        if i < verbose
           UI::padded_puts "         #{word} fingerprint: #{data_hash[:nyt_fingerprint]}"
         end
+      end
+
+      puts ''
+      while '' != word = UI.prompt_for_input("Enter a word to see its score, or ENTER to continue: ==> ", false) do
+        maybe_alert = PreviousWordleSolutions.maybe_alert_string(word)
+        UI::padded_puts("#{word} has a score of #{'%.1f' % d[word][:nyt_score]}#{maybe_alert}") if d.key?(word)
       end
 
       puts ''
@@ -233,10 +237,7 @@ module Fingerprint
 
         draco_d.each.with_index do |(word, data_hash), index|
           break if index >= max_to_print
-          maybe_solution_number = PreviousWordleSolutions.check_word(word)
-          maybe_alert = maybe_solution_number ?
-            " -------- Alert! Wordle #{maybe_solution_number} solution was #{word} --------" :
-            ''
+          maybe_alert = PreviousWordleSolutions.maybe_alert_string(word)
           UI::padded_puts "#{index+1}: #{word} has a score of #{'%.1f' % data_hash[:dracos_score]}#{maybe_alert}"
           if index < verbose
             UI::padded_puts "         #{word} fingerprint: #{data_hash[:dracos_fingerprint]}"

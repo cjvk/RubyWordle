@@ -7,6 +7,8 @@ require_relative 'twitter'
 require_relative 'fingerprints'
 require_relative 'tests'
 
+# TODO add ability to query for score
+
 DICTIONARY_FILE = DICTIONARY_FILE_LARGE
 
 VALID_WORDLE_WORDS = {}
@@ -623,8 +625,7 @@ module Commands
       new_d.each_with_index do |(key, value), index|
         next if index < page_number * page_size
         break if index >= (page_number+1) * page_size
-        solution_number = PreviousWordleSolutions.check_word(key)
-        maybe_alert = solution_number ? " -------- Alert! Wordle #{solution_number} solution was #{key} --------" : ''
+        maybe_alert = PreviousWordleSolutions.maybe_alert_string(word)
         UI::padded_puts absence_of_evidence_string.call(key, value, maybe_alert)
       end
       while true do
@@ -634,8 +635,7 @@ module Commands
         if new_d.key?(user_input)
           key = user_input
           value = new_d[key]
-          solution_number = PreviousWordleSolutions.check_word(key)
-          maybe_alert = solution_number ? " -------- Alert! Wordle #{solution_number} solution was #{key} --------" : ''
+          maybe_alert = PreviousWordleSolutions.maybe_alert_string(word)
           UI::padded_puts absence_of_evidence_string.call(key, value, maybe_alert)
         end
       end
