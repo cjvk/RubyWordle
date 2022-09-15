@@ -1,13 +1,5 @@
 #!/usr/bin/ruby -w
 
-#   1. test
-#   2. raise (-!--- response), twitter, filtering, absence-of-evidence
-#   3. goofball 444
-
-#      - ... and then do scoring
-# TODO rank stats_hash based on speed of filtering function
-# TODO Not sure how much this would add... but why only consider penultimate?
-
 require 'yaml'
 require_relative 'constants'
 require_relative 'wordle_core'
