@@ -228,25 +228,27 @@ module Twitter
         mode = total_guesses_histogram.find_index(mode_value) + 1
         num_interesting = @stats_hash.map{|_, value| value}.sum
         num_skipped = @call_stats[:denylisted] + @call_stats[:retweets]
+        incorrect_percentage = @call_stats[:failures]*100/(@answers.length.to_f+@call_stats[:failures])
 
         # print the report
-        incorrect_percentage = @call_stats[:failures]*100/(@answers.length.to_f+@call_stats[:failures])
-        puts ''
-        UI.padded_puts '/--------------------------------------\\'
-        UI.padded_puts "|              Wordle #{wordle_number}              |"
-        UI.padded_puts '|            Twitter report            |'
-        UI.padded_puts "|              #{wordle_number_to_date(wordle_number)}              |"
-        UI.padded_puts '\--------------------------------------/'
-        UI.padded_puts "#{@call_stats[:tweets_seen]} Twitter posts seen"
-        UI.padded_puts "#{@call_stats[:tweets_seen]-@call_stats[:duplicates]} Unique Twitter posts seen"
-        UI.padded_puts "#{num_skipped} skipped"
-        UI.padded_puts "#{@answers.length()+@call_stats[:failures]} total answers"
-        UI.padded_puts "#{@answers.length} correct answers"
-        UI.padded_puts "#{@call_stats[:failures]} incorrect (#{'%.2f' % incorrect_percentage}% failure)"
-        UI.padded_puts "#{'%.2f' % mean}: Average number of guesses"
-        UI.padded_puts "#{mode}: Most common number of guesses (#{mode_value} times)"
-        UI.padded_puts "#{num_interesting}/#{@answers.length()} are interesting"
-        puts ''
+        [
+          '',
+          '/--------------------------------------\\',
+          "|              Wordle #{wordle_number}              |",
+          '|            Twitter report            |',
+          "|              #{wordle_number_to_date(wordle_number)}              |",
+          '\--------------------------------------/',
+          "#{@call_stats[:tweets_seen]} Twitter posts seen",
+          "#{@call_stats[:tweets_seen]-@call_stats[:duplicates]} Unique Twitter posts seen",
+          "#{num_skipped} skipped",
+          "#{@answers.length()+@call_stats[:failures]} total answers",
+          "#{@answers.length} correct answers",
+          "#{@call_stats[:failures]} incorrect (#{'%.2f' % incorrect_percentage}% failure)",
+          "#{'%.2f' % mean}: Average number of guesses",
+          "#{mode}: Most common number of guesses (#{mode_value} times)",
+          "#{num_interesting}/#{@answers.length()} are interesting",
+          '',
+        ].each{|s| UI.padded_puts(s)}
 
         @stats_hash.each {|key, value| UI.padded_puts "#{key} = #{value}"}
         puts ''
@@ -750,21 +752,24 @@ module Twitter
     # print the report
     incorrect_percentage = num_failures*100/(answers.length().to_f+num_failures)
     avg_number_of_guesses = total_guesses/(answers.length.to_f+num_failures)
-    puts ''
-    UI.padded_puts '/--------------------------------------\\'
-    UI.padded_puts "|              Wordle #{wordle_number}              |"
-    UI.padded_puts '|            Twitter report            |'
-    UI.padded_puts '\--------------------------------------/'
-    UI.padded_puts "#{total_twitter_posts} Twitter posts seen"
-    UI.padded_puts "#{unique_twitter_posts.size} Unique Twitter posts seen"
-    UI.padded_puts "#{skipped_twitter_posts} skipped"
-    UI.padded_puts "#{answers.length()+num_failures} total answers"
-    UI.padded_puts "#{answers.length} correct answers"
-    UI.padded_puts "#{num_failures} incorrect (#{'%.2f' % incorrect_percentage}% failure)"
-    UI.padded_puts "#{'%.2f' % avg_number_of_guesses}: Average number of guesses"
-    UI.padded_puts "#{mode_index+1}: Most common number of guesses (#{mode_value} times)"
-    UI.padded_puts "#{num_interesting}/#{answers.length()} are interesting"
-    puts ''
+
+    [
+      '',
+      '/--------------------------------------\\',
+      "|              Wordle #{wordle_number}              |",
+      '|            Twitter report            |',
+      '\--------------------------------------/',
+      "#{total_twitter_posts} Twitter posts seen",
+      "#{unique_twitter_posts.size} Unique Twitter posts seen",
+      "#{skipped_twitter_posts} skipped",
+      "#{answers.length()+num_failures} total answers",
+      "#{answers.length} correct answers",
+      "#{num_failures} incorrect (#{'%.2f' % incorrect_percentage}% failure)",
+      "#{'%.2f' % avg_number_of_guesses}: Average number of guesses",
+      "#{mode_index+1}: Most common number of guesses (#{mode_value} times)",
+      "#{num_interesting}/#{answers.length()} are interesting",
+      '',
+    ].each{|s| UI.padded_puts(s)}
 
     stats.each {|key, value| UI.padded_puts "#{key} = #{value}"}
     puts ''

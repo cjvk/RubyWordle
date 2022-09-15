@@ -37,7 +37,6 @@ module Fingerprint
 
     fingerprints = Internal::calculate_fingerprints(filename_key)
     fingerprint_filename = SUPPORTED_FINGERPRINT_SOURCE_FILES[filename_key][:fingerprint_filename]
-    puts "skipping saving to file: #{fingerprint_filename}"
     Internal::save_fingerprints_to_file(Internal::compress(fingerprints), fingerprint_filename)
   end
 

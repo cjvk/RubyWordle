@@ -132,7 +132,8 @@ module UI
   LEFT_PADDING_DEFAULT = 20
 
   def UI::padded_puts(s)
-    puts "#{' ' * LEFT_PADDING_DEFAULT}#{s}"
+    print ' ' * LEFT_PADDING_DEFAULT if s.length > 0
+    puts s
   end
 
   def UI::padded_print(s)
@@ -186,12 +187,14 @@ module UI
   end
 
   def self.play(d)
-    puts ''
-    padded_puts '----------------------------------------------------------'
-    padded_puts '|                                                        |'
-    padded_puts '|                   Welcome to Wordle!                   |'
-    padded_puts '|                                                        |'
-    padded_puts '----------------------------------------------------------'
+    [
+      '',
+      '----------------------------------------------------------',
+      '|                                                        |',
+      '|                   Welcome to Wordle!                   |',
+      '|                                                        |',
+      '----------------------------------------------------------',
+    ].each{|s| UI.padded_puts(s)}
     for guess in 1..6
       check_for_problematic_patterns(d) if guess >= 3
       show_main_menu = true
@@ -225,10 +228,14 @@ module UI
         when 'dad'
           print_a_dad_joke
         when 'generate-fingerprints'
-          puts 'running this takes a long time, ~20 minutes'
-          puts 'typically it is only necessary after re-scraping of NYT'
-          puts 'if you still want to run this, uncomment the code'
-          Fingerprint::regenerate_compress_and_save('Dracos')
+          puts 'Generating fingerprints takes a long time (~20 min).'
+          puts 'Typically it is only necessary after re-scraping of NYT,'
+          puts 'or if building support for a new fingerprint file.'
+          if UI.prompt_for_input("Type 'I understand' to proceed ==> ", false) == 'I understand'
+            Fingerprint::regenerate_compress_and_save('REPLACE_ME')
+          else
+            puts 'Fingerprint generation skipped'
+          end
           show_main_menu = true
         when 'fingerprint-analysis'
           query_result = Twitter::Query::regular
@@ -354,24 +361,26 @@ module UI
   end
 
   def self.print_usage
-    puts ''
-    UI::padded_puts '.----------------------------------------------.'
-    UI::padded_puts '|                                              |'
-    UI::padded_puts '|                     Usage                    |'
-    UI::padded_puts '|                                              |'
-    UI::padded_puts '\----------------------------------------------/'
-    UI::padded_puts 'c               : count'
-    UI::padded_puts 'p               : print'
-    UI::padded_puts 'pa              : print all'
-    UI::padded_puts 'hint            : hint'
-    UI::padded_puts 'q               : quit'
-    puts ''
-    UI::padded_puts 'penultimate     : run penultimate-style analysis'
-    UI::padded_puts 'twitter         : run Twitter analysis'
-    puts ''
-    UI::padded_puts 'dad             : print a dad joke'
-    UI::padded_puts 'help, h         : print this message'
-    puts ''
+    [
+      '',
+      '.----------------------------------------------.',
+      '|                                              |',
+      '|                     Usage                    |',
+      '|                                              |',
+      '\----------------------------------------------/',
+      'c               : count',
+      'p               : print',
+      'pa              : print all',
+      'hint            : hint',
+      'q               : quit',
+      '',
+      'penultimate     : run penultimate-style analysis',
+      'twitter         : run Twitter analysis',
+      '',
+      'dad             : print a dad joke',
+      'help, h         : print this message',
+      '',
+    ].each{|s| UI::padded_puts(s)}
   end
 
   def self.print_remaining_count(d)
@@ -416,14 +425,16 @@ module UI
       end
     end
 
-    puts ''
-    puts ''
-    puts ''
-    UI.padded_puts '/--------------------------------------\\'
-    UI.padded_puts "|              Wordle #{wordle_number}              |"
-    UI.padded_puts '|            Goofball report           |'
-    UI.padded_puts '\--------------------------------------/'
-    puts ''
+    [
+      '',
+      '',
+      '',
+      '/--------------------------------------\\',
+      "|              Wordle #{wordle_number}              |",
+      '|            Goofball report           |',
+      '\--------------------------------------/',
+      '',
+    ].each{|s| UI::padded_puts(s)}
 
     answers_and_verdicts = [] # [answer, key, reasoning, verdict, title]
 
@@ -477,14 +488,13 @@ module UI
     print_goofball_report_entry = ->(answer, key, reasoning, verdict, title) {
       nm = wordle_number
       sn = wordle_number_solution
-      author_id = answer.author_id
-      username = answer.username
+      aid = answer.author_id
 
       # Goofball report
-      puts "Author ID #{author_id} already in denylist" if Twitter::Configuration.author_id_denylist.include?(author_id)
-      puts "Author ID #{author_id} already in allowlist" if Twitter::Configuration.author_id_allowlist.include?(author_id)
-      puts "- name: #{username}"
-      puts "  author_id: #{author_id}"
+      puts "Author ID #{aid} already in denylist" if Twitter::Configuration.author_id_denylist.include?(aid)
+      puts "Author ID #{aid} already in allowlist" if Twitter::Configuration.author_id_allowlist.include?(aid)
+      puts "- name: #{answer.username}"
+      puts "  author_id: #{aid}"
       puts "  tweet: #{answer.tweet_url}"
       puts "  analysis: Wordle #{nm} (#{sn}), #{key}, #{reasoning}"
       puts "  verdict: #{verdict} # #{title}"
@@ -557,21 +567,22 @@ module UI
     Twitter::Configuration.set_wordle_number_override wordle_number
 
     query_result = Twitter::Query::regular
-    query_result.print_report
     stats_hash = query_result.stats_hash
     a = filter_twitter(d.dup, stats_hash).keys
-    b = Fingerprint::fingerprint_analysis(d.dup, stats_hash).keys
+    b = Fingerprint::fingerprint_analysis(d.dup, stats_hash, suppress_output: true).keys
 
-    puts ''
-    UI::padded_puts '/------------------------------------------------------\\'
-    UI::padded_puts "|        Regression analysis report (Wordle #{wordle_number})       |"
-    UI::padded_puts '\------------------------------------------------------/'
-    puts ''
-    UI::padded_puts "length comparison: #{a.length == b.length ? 'OK' : 'FAIL'}"
-    UI::padded_puts "remaining word comparison: #{(a.size == b.size && a&b==a) ? 'OK' : 'FAIL'}"
-    puts ''
-    UI::padded_puts 'Exiting because wordle_number_override was set manually...'
-    puts ''
+    [
+      '',
+      '/------------------------------------------------------\\',
+      "|        Regression analysis report (Wordle #{wordle_number})       |",
+      '\------------------------------------------------------/',
+      '',
+      "length comparison: #{a.length == b.length ? 'OK' : 'FAIL'}",
+      "remaining word comparison: #{(a.size == b.size && a&b==a) ? 'OK' : 'FAIL'}",
+      '',
+      'Exiting because wordle_number_override was set manually...',
+      '',
+    ].each{|s| UI::padded_puts s}
 
     exit
   end
