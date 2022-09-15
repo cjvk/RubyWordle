@@ -165,7 +165,7 @@ module UI
     else
       padded_print input_string
     end
-    return gets.chomp
+    [gets.chomp].map{|user_input| exit if user_input == 'exit'; user_input}[0]
   end
 
   def self.main_menu(guess, d, show_menu: true)
@@ -530,9 +530,10 @@ module UI
     analysis_1 = Fingerprint::fingerprint_analysis(d, stats_hash1, max_to_print: max_to_print, verbose: verbose)
     max_score_analysis_1 = analysis_1.max_by{|word, data_hash| data_hash[:nyt_score]}[1][:nyt_score]
 
-    good_enuf = max_score_analysis_1 >= 60
-    if !good_enuf
-      UI::padded_puts("Query with singletons produced a max score of only #{max_score_analysis_1}!")
+    if max_score_analysis_1 < 60
+      puts ''
+      UI::padded_puts(
+        "****** Query with singletons produced a max score of only #{'%.1f' % max_score_analysis_1}!")
       puts ''
       puts ''
     end
