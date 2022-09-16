@@ -454,3 +454,5 @@ tibia
 booze # Wordle 450, 9/12/2022
 alpha
 thyme
+doubt
+parer

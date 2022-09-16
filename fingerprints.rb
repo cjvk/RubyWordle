@@ -49,7 +49,10 @@ module Fingerprint
     end
 
     def Internal::fingerprint_string(word, fingerprint)
-      "         #{word} fingerprint: #{fingerprint}"
+      sorted_fingerprint = fingerprint
+        .sort_by{|k, v| [k.start_with?('4g') ? 0 : 1, k]}
+        .to_h
+      "         #{word} fingerprint: #{sorted_fingerprint}"
     end
 
     def Internal::save_fingerprints_to_file(compressed_fingerprints, filename)
@@ -268,6 +271,75 @@ module Fingerprint
   # Wordle 444 (taunt): 1/123 (but pretty close)
   # Wordle 443 (whoop): 1/50
   # Wordle 442 (inter): 1/1
+
+  # Wordle 454 (parer)
+  #   - parer has a score of 68.1
+  #     - parer fingerprint: {
+  #         "4g.1"=>7,
+  #         "4g.2"=>2,
+  #         "4g.3"=>8,
+  #         "4g.5"=>6,
+  #         "3g1y.yellow1.white2"=>1,
+  #         "3g1y.yellow1.white3"=>8,
+  #         "3g1y.yellow1.white5"=>3,
+  #         "3g1y.yellow2.white3"=>2,
+  #         "3g1y.yellow3.white1"=>5,
+  #         "3g1y.yellow4.white5"=>3,
+  #         "3g1y.yellow5.white2"=>1,
+  #         "3g1y.yellow5.white4"=>6,
+  #         "3g2y.yellow13"=>1
+  #       }
+  #   - carer has a score of 64.6
+  #     - carer fingerprint: {
+  #         "4g.1"=>7,
+  #         "4g.2"=>2,
+  #         "4g.3"=>7,
+  #         "4g.5"=>4,
+  #         "1g4y.green1"=>1,
+  #         "3g1y.yellow1.white2"=>1,
+  #         "3g1y.yellow1.white3"=>8,
+  #         "3g1y.yellow1.white5"=>3,
+  #         "3g1y.yellow2.white3"=>2,
+  #         "3g1y.yellow3.white1"=>4,
+  #         "3g1y.yellow4.white5"=>2,
+  #         "3g1y.yellow5.white1"=>1,
+  #         "3g1y.yellow5.white4"=>6,
+  #         "3g2y.yellow13"=>1
+  #       }
+  #   - stats_hash (shortened): {
+  #       "4g.1.3"=>4,
+  #       "4g.2.2"=>2,
+  #       "4g.3.5"=>2,
+  #       "4g.5.4"=>4,
+  #       "3g1y.yellow1.white3"=>6,
+  #       "3g1y.yellow2.white3"=>1,
+  #       "3g1y.yellow3.white1"=>4,
+  #       "3g1y.yellow4.white5"=>2,
+  #       "3g1y.yellow5.white4"=>12,
+  #       "3g2y.yellow13"=>3
+  #     }
+  #   - stats_hash: {
+  #     "4g.1.1"=>29,
+  #     "4g.1.2"=>14,
+  #     "4g.1.3"=>4,
+  #     "4g.2.1"=>6,
+  #     "4g.2.2"=>2,
+  #     "4g.3.1"=>31,
+  #     "4g.3.2"=>17,
+  #     "4g.3.3"=>34,
+  #     "4g.3.4"=>7,
+  #     "4g.3.5"=>2,
+  #     "4g.5.1"=>77,
+  #     "4g.5.2"=>38,
+  #     "4g.5.3"=>13,
+  #     "4g.5.4"=>4,
+  #     "3g1y.yellow1.white3"=>6,
+  #     "3g1y.yellow2.white3"=>1,
+  #     "3g1y.yellow3.white1"=>4,
+  #     "3g1y.yellow4.white5"=>2,
+  #     "3g1y.yellow5.white4"=>12,
+  #     "3g2y.yellow13"=>3
+  #   }
 
   def Fingerprint::score(candidate_word, stats_hash, fingerprint)
     previous_maybe = Debug.maybe?
