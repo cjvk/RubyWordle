@@ -15,29 +15,11 @@ end
 module Twitter
   module Configuration
     # Twitter API capacity
-    # My project is at "Essential access" level, which gives 500k tweets/month
+    # My project is at "Essential access" level, which gives 500k tweets/month (~16.7k/day)
     #   - https://developer.twitter.com/en/docs/twitter-api/tweet-caps
     #   - https://developer.twitter.com/en/portal/dashboard
     #   - My usage resets on 28th of the month
-    #   - Generally speaking, I get 500/30 = 16.67k/day
-    # 9/9/2022: My usage today is 342,310/500k (68%), with 19 days remaining
-    #   - 158k remaining over 19 days = 8.31k/day
-    # 9/9/2022 11:24am: 342,310
-    # 9/9/2022 11:26am: 343,306
-    # 9/9/2022 12:26pm: 345,298
-    # 9/9/2022  1:47pm: 346,295
-    # 9/9/2022  2:02pm: 348,287
-    # 9/9/2022  2:17pm: 353,261
-    # 9/9/2022  5:18pm: Id.
-    # 9/12/2022 9:03am: 357,653
-    # 9/12/2022 4:43pm: 357,952
-    # 9/12/2022 4:47pm: 359,946
-    # 9/12/2022 5:10pm: Id.
-    # 9/14/2022 7:19am: 360,944
-    # 9/14/2022 7:20am: 361,944
-    # 9/14/2022 12:44pm: Id.
-    # 9/14/2022 4:43pm: Id. // 139k/14d = 9.92k/day
-    # 9/16/2022 9:54am: 363,943 // 136k/12d = 11,333/day
+    #   - After adding caching, I have less need to track quota
 
     # Twitter API calls
     @@results = 100
