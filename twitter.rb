@@ -37,6 +37,7 @@ module Twitter
     # 9/14/2022 7:20am: 361,944
     # 9/14/2022 12:44pm: Id.
     # 9/14/2022 4:43pm: Id. // 139k/14d = 9.92k/day
+    # 9/16/2022 9:54am: 363,943 // 136k/12d = 11,333/day
 
     # Twitter API calls
     @@results = 100
@@ -274,7 +275,7 @@ module Twitter
     # these available at the Twitter-module level, named appropriately, is good.
 
     def Internal::cache_filename(wordle_number)
-      "saved_twitter_result_wordle#{wordle_number}.yaml"
+      "saved_twitter_results/saved_twitter_result_wordle#{wordle_number}.yaml"
     end
 
     def Internal::post_process(
