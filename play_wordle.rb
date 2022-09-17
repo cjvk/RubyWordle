@@ -166,7 +166,7 @@ module UI
     else
       padded_print input_string
     end
-    [gets.chomp].map{|user_input| exit if user_input == 'exit'; user_input}[0]
+    [gets.chomp].map{|user_input| exit if user_input == 'exit' || user_input == 'quit'; user_input}[0]
   end
 
   def self.main_menu(guess, d, show_menu: true)
@@ -611,13 +611,13 @@ module Commands
     # Answer: The scoring should _always_ use NYT when eliminating words,
     #         but could change it up when doing the subsequent scoring
     new_d = {}
-    d.each do |key, _value|
-      matches = all_4g_matches(key, Twitter::Configuration.absence_of_evidence_filename)
+    d.each do |word, _value|
+      matches = all_4g_matches(word, Twitter::Configuration.absence_of_evidence_filename)
       difference = [0, 0, 0, 0, 0]
       (0...5).each {|i| difference[i] = Fingerprint::Distance::individual_distance(matches[i], max_4gs_seen[i])}
-      new_d[key] = [difference.sum, difference, matches, max_4gs_seen]
+      new_d[word] = [difference.sum, difference, matches, max_4gs_seen]
     end
-    new_d = new_d.sort_by {|_key, value| value[0]}.to_h
+    new_d = new_d.sort_by {|_, value| value[0]}.to_h
 
     puts ''
     UI::padded_puts '/------------------------------------------------------\\'
@@ -634,21 +634,21 @@ module Commands
     }
     (0...10).each do |page_number|
       break if (page_number * page_size) > new_d.length
-      new_d.each_with_index do |(key, value), index|
+      new_d.each_with_index do |(word, value), index|
         next if index < page_number * page_size
         break if index >= (page_number+1) * page_size
         maybe_alert = PreviousWordleSolutions.maybe_alert_string(word)
-        UI::padded_puts absence_of_evidence_string.call(key, value, maybe_alert)
+        UI::padded_puts absence_of_evidence_string.call(word, value, maybe_alert)
       end
       while true do
         more = [0, new_d.length - ((page_number+1) * page_size)].max
         user_input = UI.prompt_for_input("Enter a word to see its score, 'next', or (q)uit (#{more} more): ==> ", false)
         break if (user_input == 'q' || user_input == 'next')
         if new_d.key?(user_input)
-          key = user_input
-          value = new_d[key]
-          maybe_alert = PreviousWordleSolutions.maybe_alert_string(word)
-          UI::padded_puts absence_of_evidence_string.call(key, value, maybe_alert)
+          UI::padded_puts(absence_of_evidence_string.call(
+            user_input,
+            new_d[user_input],
+            PreviousWordleSolutions.maybe_alert_string(user_input)))
         end
       end
       break if user_input == 'q'
