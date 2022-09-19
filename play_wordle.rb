@@ -530,6 +530,8 @@ module UI
   end
 
   def UI::full_solver(d)
+    # TODO add some intelligence to this, so it only returns a single word
+    # Only then can it start to be measured
     max_to_print = [UI.prompt_for_input('Enter max to print (default 10): ==> ', false)]
       .map{|user_input| user_input!='' && user_input==user_input.to_i.to_s ? user_input.to_i : 10}[0]
     verbose = [UI.prompt_for_input('Enter number to print verbose (default 0): ==> ', false)]
