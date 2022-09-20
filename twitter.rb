@@ -12,6 +12,33 @@ def print_a_dad_joke
   puts joke_object[:joke]
 end
 
+def dictionary_dot_com_level
+  words = [
+    'happy', # elementary
+    'jolly', # middle school
+    'mommy', # middle school (!)
+    'trice', # high school
+    'begat', # high school
+    'orate', # college
+    'parer', # n/a
+    'barer', # n/a, but note 'bare' is Elementary level
+  ]
+  words = %w(carer barer)
+  words.each do |word|
+    url = "https://www.dictionary.com/browse/#{word}"
+    response = Faraday.get(url)
+    # look for 'Level.'
+    # find "<something_here> Level."
+    pos_start = response.body.index(/"[A-Za-z ]+ Level."/)
+    if pos_start != nil
+      pos_end = response.body.index('"', pos_start+1)
+      puts "#{word}: #{response.body[pos_start..pos_end]}"
+    else
+      puts "#{word}: n/a"
+    end
+  end
+end
+
 module Twitter
   module Configuration
     # Twitter API capacity

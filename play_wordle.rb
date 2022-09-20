@@ -7,8 +7,6 @@ require_relative 'twitter'
 require_relative 'fingerprints'
 require_relative 'tests'
 
-# TODO add ability to query for score
-
 DICTIONARY_FILE = DICTIONARY_FILE_LARGE
 
 VALID_WORDLE_WORDS = {}
@@ -56,10 +54,10 @@ end
 
 module Alert
   def self.alert(s)
-    puts "ALERT: #{s}"
+    puts "ALERT: #{s}" if !UI::suppress_all_output?
   end
   def self.warn(s)
-    puts "WARN: #{s}"
+    puts "WARN: #{s}" if !UI::suppress_all_output?
   end
 end
 
@@ -79,7 +77,7 @@ module Debug
       LOG_LEVEL_VERBOSE => 'VERBOSE',
     }
     def Internal::println(s, log_level)
-      puts s if log_level <= THRESHOLD
+      puts s if log_level <= THRESHOLD && !UI::suppress_all_output?
     end
     def Internal::decorate(s, log_level)
       "debug(#{@@log_level_to_string[log_level]}): #{s}"
@@ -129,6 +127,14 @@ class String
 end
 
 module UI
+  @@suppress_all_output = false
+  def UI::set_suppress_all_output(b)
+    @@suppress_all_output = b
+  end
+  def UI::suppress_all_output?
+    @@suppress_all_output
+  end
+  SUPPRESS_ALL_OUTPUT = false
   LEFT_PADDING_DEFAULT = 20
 
   def UI::padded_puts(s)
@@ -225,6 +231,7 @@ module UI
           end
           show_main_menu = true
         when 'test'
+          dictionary_dot_com_level
         when 'dad'
           print_a_dad_joke
         when 'generate-fingerprints'
@@ -253,6 +260,8 @@ module UI
         when 'solver'
           full_solver(d)
           show_main_menu = true
+        when 'give me the answer'
+          give_me_the_answer(d)
         when 'performance'
           sw = UI::Stopwatch.new
           # time_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
@@ -529,8 +538,126 @@ module UI
     exit
   end
 
+  # NYT w/ singles     : always has a result
+  # Dracos w/ singles  : might not
+  # NYT w/o singles    : always has a result (but might be worse)
+  # Dracos w/o singles : might not have a result
+  # - If NYT top choice isn't very high, could be because the fingerprint is "too big"
+  #   - This is the point of the Dracos result with singletons
+  # - If NYT top choice isn't very high, could be because of a bad result
+  #   - This is the point of querying with singletons removed
+  #
+  # 1. Run query with singletons
+  #    1.1 If NYT top choice is high enough, that's the answer.
+  #    1.2 If NYT top choice is not high enough but dracos is, that's the answer.
+  # 2. If neither was high enough, and if there are singletons to remove, re-run w/o singletons
+  #    2.1 If NYT top choice is high enough, that's the answer.
+  #    2.2 If NYT top choice is not high enough but dracos is, that's the answer.
+  # 3. If none of this ^^^ works, pick the one with the highest score.
+  def UI::give_me_the_answer(d)
+    UI::set_suppress_all_output(true)
+    # TODO account for plurals (maybe do this in the score function?)
+    results = {
+      :with_singletons => {
+        :nyt => [],
+        :dracos => [],
+      },
+      :without_singletons => {
+        :nyt => [],
+        :dracos => [],
+      }
+    }
+    # populate above lists with N elements
+    max_to_get = 2
+    threshold = 60.0
+    print_a_winner = ->(word) { puts "\n\n"; UI::padded_puts("The answer is #{word}."); puts "\n\n"; exit }
+
+    stats_hash1 = Twitter::Query::regular_with_singletons.stats_hash
+    analysis_1 = Fingerprint::fingerprint_analysis(d, stats_hash1, suppress_output: true, dracos_override: true)
+    d1_nyt = analysis_1[:d_nyt]
+    d1_dracos = analysis_1[:d_dracos]
+
+    d1_nyt.each.with_index do |(word, data), i|
+      break if i >= max_to_get
+      results[:with_singletons][:nyt].append({:word => word, :score => data[:nyt_score]})
+    end
+    d1_dracos.each.with_index do |(word, data), i|
+      break if i >= max_to_get
+      results[:with_singletons][:dracos].append({:word => word, :score => data[:dracos_score]})
+    end
+
+    # first choice: NYT with singletons is high enough
+    if results[:with_singletons][:nyt][0][:score] > threshold
+      print_a_winner.call(results[:with_singletons][:nyt][0][:word])
+      return
+    end
+
+    # if dracos is high enough but NYT isn't, the NYT fingerprint was "too big" (and Dracos shines!)
+    if results[:with_singletons][:dracos][0][:score] > threshold
+      print_a_winner.call(results[:with_singletons][:dracos][0][:word])
+      return
+    end
+
+    num_singletons = StatsHash.num_singletons(stats_hash1)
+
+    if num_singletons == 0
+      # re-running wouldn't help, and no clear winner, so pick the highest one
+      print_a_winner.call(
+        [
+          [results[:with_singletons][:nyt][0][:word], results[:with_singletons][:nyt][0][:score]],
+          [results[:with_singletons][:dracos][0][:word], results[:with_singletons][:dracos][0][:score]],
+        ].max_by{|_word, score| score}[0]
+      )
+      return
+    end
+
+    # puts "There were #{num_singletons} singletons (i.e. possible goofballs)"
+
+    stats_hash2 = Twitter::Query::regular.stats_hash
+    analysis_2 = Fingerprint::fingerprint_analysis(d, stats_hash2, suppress_output: true, dracos_override: true)
+    d2_nyt = analysis_2[:d_nyt]
+    d2_dracos = analysis_2[:d_dracos]
+
+    d2_nyt.each.with_index do |(word, data), i|
+      break if i >= max_to_get
+      results[:without_singletons][:nyt].append({:word => word, :score => data[:nyt_score]})
+    end
+
+    d2_dracos.each.with_index do |(word, data), i|
+      break if i >= max_to_get
+      results[:without_singletons][:dracos].append({:word => word, :score => data[:dracos_score]})
+    end
+
+    # NYT
+    if results[:without_singletons][:nyt][0][:score] > threshold
+      print_a_winner.call(results[:without_singletons][:nyt][0][:word])
+      return
+    end
+
+    # Dracos
+    if results[:without_singletons][:dracos][0][:score] > threshold
+      print_a_winner.call(results[:without_singletons][:dracos][0][:word])
+      return
+    end
+
+    # nothing was high enough (sigh!) - pick the highest one
+    print_a_winner.call(
+      [
+        [results[:with_singletons][:nyt][0][:word], results[:with_singletons][:nyt][0][:score]],
+        [results[:with_singletons][:dracos][0][:word], results[:with_singletons][:dracos][0][:score]],
+        [results[:without_singletons][:nyt][0][:word], results[:without_singletons][:nyt][0][:score]],
+        [results[:without_singletons][:dracos][0][:word], results[:without_singletons][:dracos][0][:score]],
+      ].max_by{|_word, score| score}[0]
+    )
+    return
+
+  end
+
   def UI::full_solver(d)
     # TODO add some intelligence to this, so it only returns a single word
+    # - account for plurals
+    # - possible to grade levels of words (based on dictionary dot com?)
+    # - when finished, measure it (without modifying allow or denylists)
     # Only then can it start to be measured
     max_to_print = [UI.prompt_for_input('Enter max to print (default 10): ==> ', false)]
       .map{|user_input| user_input!='' && user_input==user_input.to_i.to_s ? user_input.to_i : 10}[0]
@@ -539,7 +666,8 @@ module UI
 
     query1 = Twitter::Query::regular_with_singletons
     stats_hash1 = query1.stats_hash
-    analysis_1 = Fingerprint::fingerprint_analysis(d, stats_hash1, max_to_print: max_to_print, verbose: verbose)
+    analysis_1 =
+      Fingerprint::fingerprint_analysis(d, stats_hash1, max_to_print: max_to_print, verbose: verbose)[:d_nyt]
     max_score_analysis_1 = analysis_1.max_by{|word, data_hash| data_hash[:nyt_score]}[1][:nyt_score]
 
     if max_score_analysis_1 < 60
@@ -557,7 +685,7 @@ module UI
     if proceed
       query2 = Twitter::Query::regular
       stats_hash2 = query2.stats_hash
-      _analysis_2 = Fingerprint::fingerprint_analysis(d, stats_hash2, max_to_print: max_to_print, verbose: verbose)
+      Fingerprint::fingerprint_analysis(d, stats_hash2, max_to_print: max_to_print, verbose: verbose)
     end
   end
 
@@ -571,7 +699,8 @@ module UI
     query_result = Twitter::Query::regular
     stats_hash = query_result.stats_hash
     a = filter_twitter(d.dup, stats_hash).keys
-    b = Fingerprint::fingerprint_analysis(d.dup, stats_hash, suppress_output: true).keys
+    b = Fingerprint::fingerprint_analysis(
+      d.dup, stats_hash, suppress_output: true, dracos_override: false)[:d_nyt].keys
 
     [
       '',

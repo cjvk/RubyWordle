@@ -200,10 +200,12 @@ module Fingerprint
     (0...5).map{|i| fingerprint["4g.#{i+1}"] || 0}
   end
 
-  def Fingerprint::fingerprint_analysis(d, stats_hash, verbose: 0, max_to_print: 30, suppress_output: false)
+  def Fingerprint::fingerprint_analysis(
+    d, stats_hash, verbose: 0, max_to_print: 30, suppress_output: false, dracos_override: nil)
+
     nyt_fingerprints = load_by_key
 
-    d = d
+    d_nyt = d
       .map{|word, line_num| [word, [[:word, word], [:line_num, line_num]].to_h]}
       .map{|word, data| data[:nyt_fingerprint] = nyt_fingerprints[word]; [word, data]}
       .map{|word, data| data[:nyt_score] = score(word, stats_hash, data[:nyt_fingerprint]); [word, data]}
@@ -222,7 +224,7 @@ module Fingerprint
       UI::padded_puts "There are #{d.length} words remaining. Showing score to a maximum of #{max_to_print}."
       puts ''
 
-      d.each.with_index do |(word, data), i|
+      d_nyt.each.with_index do |(word, data), i|
         break if i >= max_to_print
         UI::padded_puts Internal::score_string(i, word, data[:nyt_score])
         UI::padded_puts Internal::fingerprint_string(word, data[:nyt_fingerprint]) if i < verbose
@@ -235,34 +237,42 @@ module Fingerprint
 
       puts ''
       puts ''
+    end
 
-      if [UI.prompt_for_input('re-run using Dracos score? (y/n) (default n): ==> ', false)]
+    draco_d = {}
+    if dracos_override == nil
+      run_dracos = [UI.prompt_for_input('re-run using Dracos score? (y/n) (default n): ==> ', false)]
         .map{|user_input| ['y', 'n'].include?(user_input) ? user_input : 'n'}[0] == 'y'
-        dracos_fingerprints = load_by_key(filename_key: 'Dracos')
-        draco_d = d
-          .map{|word, data| data[:dracos_fingerprint] = dracos_fingerprints[word]; [word, data]}
-          .map{|word, data| data[:dracos_score] = score(word, stats_hash, data[:dracos_fingerprint]); [word, data]}
-          .sort_by {|word, data| -1 * data[:dracos_score]}
-          .to_h
+    else
+      run_dracos = dracos_override
+    end
+    if run_dracos
+      dracos_fingerprints = load_by_key(filename_key: 'Dracos')
+      draco_d = d_nyt
+        .map{|word, data| data[:dracos_fingerprint] = dracos_fingerprints[word]; [word, data]}
+        .map{|word, data| data[:dracos_score] = score(word, stats_hash, data[:dracos_fingerprint]); [word, data]}
+        .sort_by {|word, data| -1 * data[:dracos_score]}
+        .to_h
 
+      if !suppress_output
         draco_d.each.with_index do |(word, data), i|
           break if i >= max_to_print
           UI::padded_puts Internal::score_string(i, word, data[:dracos_score])
           UI::padded_puts Internal::fingerprint_string(word, data[:dracos_fingerprint]) if i < verbose
         end
-
         puts ''
         while '' != word = UI.prompt_for_input("Enter a word to see its score, or ENTER to continue: ==> ", false) do
           UI::padded_puts Internal::score_string(nil, word, draco_d[word][:dracos_score]) if draco_d.key?(word)
         end
-
         puts ''
         puts ''
-
       end
     end
 
-    d.to_h
+    {
+      :d_nyt => d_nyt,
+      :d_dracos => draco_d,
+    }
   end
 
   # Wordle 447 (theme): 1/1
