@@ -556,89 +556,50 @@ module UI
   # 3. If none of this ^^^ works, pick the one with the highest score.
   def UI::give_me_the_answer(d)
     UI::set_suppress_all_output(true)
-    # TODO account for plurals (maybe do this in the score function?)
-    results = {
-      :with_singletons => {
-        :nyt => [],
-        :dracos => [],
-      },
-      :without_singletons => {
-        :nyt => [],
-        :dracos => [],
-      }
-    }
+    results = {:with_singletons => {}, :without_singletons => {}}
     # populate above lists with N elements
-    max_to_get = 2
+    list_length = 2
     threshold = 60.0
     print_a_winner = ->(word) { puts "\n\n"; UI::padded_puts("The answer is #{word}."); puts "\n\n"; exit }
 
     stats_hash1 = Twitter::Query::regular_with_singletons.stats_hash
     analysis_1 = Fingerprint::fingerprint_analysis(d, stats_hash1, suppress_output: true, dracos_override: true)
-    d1_nyt = analysis_1[:d_nyt]
-    d1_dracos = analysis_1[:d_dracos]
-
-    d1_nyt.each.with_index do |(word, data), i|
-      break if i >= max_to_get
-      results[:with_singletons][:nyt].append({:word => word, :score => data[:nyt_score]})
-    end
-    d1_dracos.each.with_index do |(word, data), i|
-      break if i >= max_to_get
-      results[:with_singletons][:dracos].append({:word => word, :score => data[:dracos_score]})
-    end
+    results[:with_singletons][:nyt] =
+      analysis_1[:d_nyt].map{|word, data| {:word => word, :score => data[:nyt_score]}}[0..list_length-1]
+    results[:with_singletons][:dracos] =
+      analysis_1[:d_dracos].map{|word, data| {:word => word, :score => data[:dracos_score]}}[0..list_length-1]
 
     # first choice: NYT with singletons is high enough
-    if results[:with_singletons][:nyt][0][:score] > threshold
-      print_a_winner.call(results[:with_singletons][:nyt][0][:word])
-      return
-    end
+    print_a_winner.call(
+      results[:with_singletons][:nyt][0][:word]) if results[:with_singletons][:nyt][0][:score] > threshold
 
     # if dracos is high enough but NYT isn't, the NYT fingerprint was "too big" (and Dracos shines!)
-    if results[:with_singletons][:dracos][0][:score] > threshold
-      print_a_winner.call(results[:with_singletons][:dracos][0][:word])
-      return
-    end
+    print_a_winner.call(
+      results[:with_singletons][:dracos][0][:word]) if results[:with_singletons][:dracos][0][:score] > threshold
 
-    num_singletons = StatsHash.num_singletons(stats_hash1)
-
-    if num_singletons == 0
-      # re-running wouldn't help, and no clear winner, so pick the highest one
-      print_a_winner.call(
-        [
-          [results[:with_singletons][:nyt][0][:word], results[:with_singletons][:nyt][0][:score]],
-          [results[:with_singletons][:dracos][0][:word], results[:with_singletons][:dracos][0][:score]],
-        ].max_by{|_word, score| score}[0]
-      )
-      return
-    end
-
-    # puts "There were #{num_singletons} singletons (i.e. possible goofballs)"
+    # if re-running wouldn't help, and there is no clear winner, pick the highest one
+    print_a_winner.call(
+      [
+        [results[:with_singletons][:nyt][0][:word], results[:with_singletons][:nyt][0][:score]],
+        [results[:with_singletons][:dracos][0][:word], results[:with_singletons][:dracos][0][:score]],
+      ].max_by{|_word, score| score}[0]
+    ) if StatsHash.num_singletons(stats_hash1) == 0
 
     stats_hash2 = Twitter::Query::regular.stats_hash
     analysis_2 = Fingerprint::fingerprint_analysis(d, stats_hash2, suppress_output: true, dracos_override: true)
-    d2_nyt = analysis_2[:d_nyt]
-    d2_dracos = analysis_2[:d_dracos]
-
-    d2_nyt.each.with_index do |(word, data), i|
-      break if i >= max_to_get
-      results[:without_singletons][:nyt].append({:word => word, :score => data[:nyt_score]})
-    end
-
-    d2_dracos.each.with_index do |(word, data), i|
-      break if i >= max_to_get
-      results[:without_singletons][:dracos].append({:word => word, :score => data[:dracos_score]})
-    end
+    results[:without_singletons][:nyt] =
+      analysis_2[:d_nyt].map{|word, data| {:word => word, :score => data[:nyt_score]}}[0..list_length-1]
+    results[:without_singletons][:dracos] =
+      analysis_2[:d_dracos].map{|word, data| {:word => word, :score => data[:dracos_score]}}[0..list_length-1]
+    puts results
 
     # NYT
-    if results[:without_singletons][:nyt][0][:score] > threshold
-      print_a_winner.call(results[:without_singletons][:nyt][0][:word])
-      return
-    end
+    print_a_winner.call(
+      results[:without_singletons][:nyt][0][:word]) if results[:without_singletons][:nyt][0][:score] > threshold
 
     # Dracos
-    if results[:without_singletons][:dracos][0][:score] > threshold
-      print_a_winner.call(results[:without_singletons][:dracos][0][:word])
-      return
-    end
+    print_a_winner.call(
+      results[:without_singletons][:dracos][0][:word]) if results[:without_singletons][:dracos][0][:score] > threshold
 
     # nothing was high enough (sigh!) - pick the highest one
     print_a_winner.call(
@@ -649,8 +610,6 @@ module UI
         [results[:without_singletons][:dracos][0][:word], results[:without_singletons][:dracos][0][:score]],
       ].max_by{|_word, score| score}[0]
     )
-    return
-
   end
 
   def UI::full_solver(d)
