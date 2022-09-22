@@ -128,8 +128,11 @@ end
 
 module UI
   @@suppress_all_output = false
-  def UI::set_suppress_all_output(b)
-    @@suppress_all_output = b
+  def UI::suppress_on
+    @@suppress_all_output = true
+  end
+  def UI::suppress_off
+    @@suppress_all_output = false
   end
   def UI::suppress_all_output?
     @@suppress_all_output
@@ -138,12 +141,12 @@ module UI
   LEFT_PADDING_DEFAULT = 20
 
   def UI::padded_puts(s)
-    print ' ' * LEFT_PADDING_DEFAULT if s.length > 0
-    puts s
+    print ' ' * LEFT_PADDING_DEFAULT if s.length > 0 && !suppress_all_output?
+    puts s if !suppress_all_output?
   end
 
   def UI::padded_print(s)
-    print "#{' ' * LEFT_PADDING_DEFAULT}#{s}"
+    print "#{' ' * LEFT_PADDING_DEFAULT}#{s}" if !suppress_all_output?
   end
 
   def UI::pad_right_deprecated(s, desired_length, termination_character: ' ')
@@ -151,6 +154,23 @@ module UI
     termination_character = ' ' if termination_character.length != 1
     s + ' ' * (desired_length-s.length-1) + termination_character
     # ' ' * 100
+  end
+
+  def self.prompt_for_input(input_string, prompt_on_new_line: false)
+    padded_puts input_string if prompt_on_new_line
+    padded_print prompt_on_new_line ? '==> ' : "#{input_string} ==> "
+    [gets.chomp].map{|user_input| exit if user_input == 'exit' || user_input == 'quit'; user_input}[0]
+  end
+
+  def self.prompt_for_numeric_input(input_string, prompt_on_new_line: false, default_value: nil)
+    padded_puts input_string if prompt_on_new_line
+    while true
+      padded_print prompt_on_new_line ? '==> ' : "#{input_string} ==> "
+      user_input = [gets.chomp]
+        .map{|input| exit if input == 'exit' || input == 'quit'; input}
+        .map{|input| input!='' && input==input.to_i.to_s ? input.to_i : default_value}[0]
+      return user_input if user_input != nil
+    end
   end
 
   class UI::Stopwatch
@@ -165,16 +185,6 @@ module UI
     end
   end
 
-  def self.prompt_for_input(input_string, prompt_on_new_line = true)
-    if prompt_on_new_line
-      padded_puts input_string
-      padded_print '==> '
-    else
-      padded_print input_string
-    end
-    [gets.chomp].map{|user_input| exit if user_input == 'exit' || user_input == 'quit'; user_input}[0]
-  end
-
   def self.main_menu(guess, d, show_menu: true)
     main_menu_array = [
       ' ----------------------------------------------------------.',
@@ -186,10 +196,10 @@ module UI
       ' ----------------------------------------------------------/',
     ].map{|s| s.length<60 ? s.pad_right_to_length(60, termination_character: '|') : s}
     if show_menu
-      puts ''
+      UI::padded_puts ''
       main_menu_array.each{|s| padded_puts s}
     end
-    UI.prompt_for_input(' ==> ', false)
+    UI.prompt_for_input('')
   end
 
   def self.play(d)
@@ -238,7 +248,7 @@ module UI
           puts 'Generating fingerprints takes a long time (~20 min).'
           puts 'Typically it is only necessary after re-scraping of NYT,'
           puts 'or if building support for a new fingerprint file.'
-          if UI.prompt_for_input("Type 'I understand' to proceed ==> ", false) == 'I understand'
+          if UI.prompt_for_input("Type 'I understand' to proceed") == 'I understand'
             Fingerprint::regenerate_compress_and_save('REPLACE_ME')
           else
             puts 'Fingerprint generation skipped'
@@ -251,7 +261,7 @@ module UI
           Fingerprint::fingerprint_analysis(d, stats_hash)
           show_main_menu = true
         when 'fingerprint-analysis --verbose'
-          verbose_number = UI.prompt_for_input("Enter number to show in verbose mode: ==> ", false).to_i
+          verbose_number = UI.prompt_for_numeric_input('Enter number to show in verbose mode:')
           query_result = Twitter::Query::regular
           query_result.print_report
           stats_hash = query_result.stats_hash
@@ -285,7 +295,7 @@ module UI
         when '' # pressing enter shouldn't cause "unrecognized input"
         else
           if choice.length == 5
-            response = UI.prompt_for_input('Enter the response (!?-): ==> ', false)
+            response = UI.prompt_for_input('Enter the response (!?-):')
             Filter::filter(d, choice, response)
             break
           else
@@ -297,14 +307,9 @@ module UI
   end
 
   def self.maybe_absence_of_evidence(d, stats_hash)
-    puts ''
-    choice = UI.prompt_for_input('Would you like to make deductions based on absence of evidence? (y/n) ==> ', false)
-    case choice
-    when 'y'
+    UI::padded_puts ''
+    if 'y' == UI.prompt_for_input('Would you like to make deductions based on absence of evidence? (y/n)')
       Commands::penultimate_twitter_absence_of_evidence(d, stats_hash)
-    when 'n'
-    else
-      Alert.alert "unrecognized input (#{choice}), skipping"
     end
   end
 
@@ -337,19 +342,15 @@ module UI
   end
 
   def self.maybe_filter_twitter(d, stats_hash)
-    choice = UI.prompt_for_input 'Would you like to proceed with filtering? (y/n)'
-    case choice
-    when 'y'
-      choice2 = UI.prompt_for_input "There are #{d.size} words remaining. Would you like to see filtering output? (y/n)"
+    if 'y' == choice = UI.prompt_for_input('Would you like to proceed with filtering? (y/n)', prompt_on_new_line: true)
+      choice2 = UI.prompt_for_input(
+        "There are #{d.size} words remaining. Would you like to see filtering output? (y/n)",
+        prompt_on_new_line: true)
       previous_maybe = Debug.maybe?
       Debug.set_maybe(choice2 == 'y')
-
       filter_twitter(d, stats_hash)
-    when 'n'
-    else
-      Alert.alert "unrecognized input (#{choice}), skipping"
+      Debug.set_maybe(previous_maybe)
     end
-    Debug.set_maybe(previous_maybe)
     # caller needs to know whether filtering was done
     choice == 'y'
   end
@@ -401,7 +402,7 @@ module UI
   end
 
   def UI::goofball_analysis
-    wordle_number = UI.prompt_for_input("Enter daily wordle number (to check for goofballs): ==> ", false)
+    wordle_number = UI.prompt_for_numeric_input("Enter daily wordle number (to check for goofballs):")
     Twitter::Configuration.set_wordle_number_override wordle_number
     query_result = Twitter::Query::goofball
     stats_hash = query_result.stats_hash
@@ -522,7 +523,7 @@ module UI
       .each{|el| print_goofball_report_entry.call(el[0], el[1], el[2], el[3], el[4])}
 
     if num_suppressed > 0
-      if 'show' == UI::prompt_for_input("#{num_suppressed} entries suppressed ('show' to display) ==> ", false)
+      if 'show' == UI::prompt_for_input("#{num_suppressed} entries suppressed ('show' to display)")
         puts ''
         answers_and_verdicts
           .map{|el| el} # make a copy
@@ -538,27 +539,11 @@ module UI
     exit
   end
 
-  # NYT w/ singles     : always has a result
-  # Dracos w/ singles  : might not
-  # NYT w/o singles    : always has a result (but might be worse)
-  # Dracos w/o singles : might not have a result
-  # - If NYT top choice isn't very high, could be because the fingerprint is "too big"
-  #   - This is the point of the Dracos result with singletons
-  # - If NYT top choice isn't very high, could be because of a bad result
-  #   - This is the point of querying with singletons removed
-  #
-  # 1. Run query with singletons
-  #    1.1 If NYT top choice is high enough, that's the answer.
-  #    1.2 If NYT top choice is not high enough but dracos is, that's the answer.
-  # 2. If neither was high enough, and if there are singletons to remove, re-run w/o singletons
-  #    2.1 If NYT top choice is high enough, that's the answer.
-  #    2.2 If NYT top choice is not high enough but dracos is, that's the answer.
-  # 3. If none of this ^^^ works, pick the one with the highest score.
   def UI::give_me_the_answer(d)
-    UI::set_suppress_all_output(true)
+    UI::suppress_on
     list_length = 2 # second could be useful to see if there is a "clear winner"
     threshold = 60.0
-    print_a_winner = ->(word) { puts "\n\n"; UI::padded_puts("The answer is #{word}."); puts "\n\n"; exit }
+    print_a_winner = ->(word) {suppress_off; puts "\n\n"; UI::padded_puts("The answer is #{word}.\n\n"); exit }
     maybe_print_a_winner = ->(word, score) { return if score < threshold; print_a_winner.call(word)}
 
     stats_hash1 = Twitter::Query::regular_with_singletons.stats_hash
@@ -570,11 +555,12 @@ module UI
       },
     }
 
-    # first choice NYT, then dracos with its smaller fingerprints, otherwise save top choices and continue
+    # First choice NYT, then dracos with its smaller fingerprints, otherwise save top choices and continue
     maybe_print_a_winner.call(*results[:with_singletons][:nyt][0])
     maybe_print_a_winner.call(*results[:with_singletons][:dracos][0])
     choices = [results[:with_singletons][:nyt][0], results[:with_singletons][:dracos][0]]
 
+    # If neither is high enough, remove potential bad tweets and re-run
     if StatsHash.num_singletons(stats_hash1) > 0
       analysis2 = Fingerprint::fingerprint_analysis(
         d, Twitter::Query::regular.stats_hash, suppress_output: true, dracos_override: true)
@@ -594,40 +580,36 @@ module UI
   end
 
   def UI::full_solver(d)
-    max_to_print = [UI.prompt_for_input('Enter max to print (default 10): ==> ', false)]
-      .map{|user_input| user_input!='' && user_input==user_input.to_i.to_s ? user_input.to_i : 10}[0]
-    verbose = [UI.prompt_for_input('Enter number to print verbose (default 0): ==> ', false)]
-      .map{|user_input| user_input!='' && user_input==user_input.to_i.to_s ? user_input.to_i : 0}[0]
+    max_to_print = UI.prompt_for_numeric_input('Enter max to print (default 10):', default_value: 10)
+    verbose = UI.prompt_for_numeric_input('Enter number to print verbose (default 0):', default_value: 0)
 
-    query1 = Twitter::Query::regular_with_singletons
-    stats_hash1 = query1.stats_hash
+    stats_hash1 = Twitter::Query::regular_with_singletons.stats_hash
     analysis_1 =
       Fingerprint::fingerprint_analysis(d, stats_hash1, max_to_print: max_to_print, verbose: verbose)[:d_nyt]
-    max_score_analysis_1 = analysis_1.max_by{|word, data_hash| data_hash[:nyt_score]}[1][:nyt_score]
+    max_score = analysis_1.map{|word, data_hash| data_hash[:nyt_score]}.max
 
-    if max_score_analysis_1 < 60
-      puts ''
-      UI::padded_puts(
-        "****** Query with singletons produced a max score of only #{'%.1f' % max_score_analysis_1}!")
-      puts ''
-      puts ''
+    if max_score < 80
+      UI::padded_puts ''
+      UI::padded_puts "****** Query with singletons produced a max score of only #{'%.1f' % max_score}!"
+      UI::padded_puts ''
+      UI::padded_puts ''
     end
 
-    num_singletons = StatsHash.num_singletons(stats_hash1)
-    proceed = UI.prompt_for_input(
-      "Re-run with singleton filtering on? (#{num_singletons} singletons) ('y' to proceed) ==> ", false
+    if UI.prompt_for_input(
+      "Re-run with singleton filtering on? (#{StatsHash.num_singletons(stats_hash1)} singletons) ('y' to proceed)"
     ) == 'y'
-    if proceed
-      query2 = Twitter::Query::regular
-      stats_hash2 = query2.stats_hash
-      Fingerprint::fingerprint_analysis(d, stats_hash2, max_to_print: max_to_print, verbose: verbose)
+      Fingerprint::fingerprint_analysis(
+        d,
+        Twitter::Query::regular.stats_hash,
+        max_to_print: max_to_print,
+        verbose: verbose)
     end
   end
 
   def UI::regression_analysis(d)
     six_days_ago = (today_wordle_number.to_i - 6).to_s
     range = "(#{six_days_ago}-#{today_wordle_number})"
-    wordle_number = UI.prompt_for_input("Enter daily wordle number for regression #{range}:==> ", false)
+    wordle_number = UI.prompt_for_input("Enter daily wordle number for regression #{range}:")
     exit if wordle_number.to_i.to_s != wordle_number
     Twitter::Configuration.set_wordle_number_override wordle_number
 
@@ -708,7 +690,7 @@ module Commands
       end
       while true do
         more = [0, new_d.length - ((page_number+1) * page_size)].max
-        user_input = UI.prompt_for_input("Enter a word to see its score, 'next', or (q)uit (#{more} more): ==> ", false)
+        user_input = UI.prompt_for_input("Enter a word to see its score, 'next', or (q)uit (#{more} more):")
         break if (user_input == 'q' || user_input == 'next')
         if new_d.key?(user_input)
           UI::padded_puts(absence_of_evidence_string.call(
@@ -766,28 +748,28 @@ module Commands
     UI::padded_puts '2 greens and 3 yellows (2g3y)'
     UI::padded_puts '1 green and 4 yellows (1g4y)'
     UI::padded_puts '0 greens and 5 yellows (0g5y)'
-    choice = UI.prompt_for_input('==> ', false)
+    choice = UI.prompt_for_input('')
     case choice
     when '4g'
-      gray = UI.prompt_for_input('Enter the position of the gray (1-5): ==> ', false).to_i - 1
-      count = UI.prompt_for_input('Enter the count: ==> ', false).to_i
+      gray = UI.prompt_for_input('Enter the position of the gray (1-5):').to_i - 1
+      count = UI.prompt_for_input('Enter the count:').to_i
       Filter::filter_4g(d, gray, count)
     when '3g1y'
-      yellow = UI.prompt_for_input('Enter the position of the yellow (1-5): ==> ', false).to_i - 1
-      gray = UI.prompt_for_input('Enter the position of the gray (1-5): ==> ', false).to_i - 1
+      yellow = UI.prompt_for_input('Enter the position of the yellow (1-5):').to_i - 1
+      gray = UI.prompt_for_input('Enter the position of the gray (1-5):').to_i - 1
       Filter::filter_3g1y(d, yellow, gray)
     when '3g2y'
-      yellows = UI.prompt_for_input('Enter the positions of the two yellows (1-5): ==> ', false)
+      yellows = UI.prompt_for_input('Enter the positions of the two yellows (1-5):')
       yellow1 = yellows[0].to_i - 1
       yellow2 = yellows[1].to_i - 1
       Filter::filter_3g2y(d, yellow1, yellow2)
     when '2g3y'
-      greens = UI.prompt_for_input('Enter the positions of the two greens (1-5): ==> ', false)
+      greens = UI.prompt_for_input('Enter the positions of the two greens (1-5):')
       green1 = greens[0].to_i - 1
       green2 = greens[1].to_i - 1
       Filter::filter_2g3y(d, green1, green2)
     when '1g4y'
-      green = UI.prompt_for_input('Enter the position of the green (1-5): ==> ', false).to_i - 1
+      green = UI.prompt_for_input('Enter the position of the green (1-5):').to_i - 1
       Filter::filter_1g4y(d, green)
     when '0g5y'
       Filter::filter_0g5y(d)

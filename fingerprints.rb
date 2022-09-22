@@ -214,15 +214,15 @@ module Fingerprint
       .to_h
 
     if !suppress_output
-      puts ''
+      UI::padded_puts ''
       UI::padded_puts '/------------------------------------------------------\\'
       UI::padded_puts "|              Fingerprint analysis report             |"
       UI::padded_puts '\------------------------------------------------------/'
       UI::padded_puts ''
       UI::padded_puts "stats_hash: #{stats_hash}"
-      puts ''
-      UI::padded_puts "There are #{d.length} words remaining. Showing score to a maximum of #{max_to_print}."
-      puts ''
+      UI::padded_puts ''
+      UI::padded_puts "There are #{d_nyt.length} words remaining. Showing score to a maximum of #{max_to_print}."
+      UI::padded_puts ''
 
       d_nyt.each.with_index do |(word, data), i|
         break if i >= max_to_print
@@ -230,23 +230,17 @@ module Fingerprint
         UI::padded_puts Internal::fingerprint_string(word, data[:nyt_fingerprint]) if i < verbose
       end
 
-      puts ''
-      while '' != word = UI.prompt_for_input("Enter a word to see its score, or ENTER to continue: ==> ", false) do
+      UI::padded_puts ''
+      while '' != word = UI.prompt_for_input("Enter a word to see its score, or ENTER to continue:") do
         UI::padded_puts Internal::score_string(nil, word, d[word][:nyt_score]) if d.key?(word)
       end
 
-      puts ''
-      puts ''
+      UI::padded_puts ''
+      UI::padded_puts ''
     end
 
     draco_d = {}
-    if dracos_override == nil
-      run_dracos = [UI.prompt_for_input('re-run using Dracos score? (y/n) (default n): ==> ', false)]
-        .map{|user_input| ['y', 'n'].include?(user_input) ? user_input : 'n'}[0] == 'y'
-    else
-      run_dracos = dracos_override
-    end
-    if run_dracos
+    if dracos_override || UI.prompt_for_input("re-run using Dracos score? ('y' to proceed):") == 'y'
       dracos_fingerprints = load_by_key(filename_key: 'Dracos')
       draco_d = d_nyt
         .map{|word, data| data[:dracos_fingerprint] = dracos_fingerprints[word]; [word, data]}
@@ -261,7 +255,7 @@ module Fingerprint
           UI::padded_puts Internal::fingerprint_string(word, data[:dracos_fingerprint]) if i < verbose
         end
         puts ''
-        while '' != word = UI.prompt_for_input("Enter a word to see its score, or ENTER to continue: ==> ", false) do
+        while '' != word = UI.prompt_for_input("Enter a word to see its score, or ENTER to continue:") do
           UI::padded_puts Internal::score_string(nil, word, draco_d[word][:dracos_score]) if draco_d.key?(word)
         end
         puts ''
