@@ -59,7 +59,7 @@ module Twitter
     @@absence_of_evidence_filename = DRACOS_VALID_WORDLE_WORDS_FILE
 
     #         Uncomment this to query a specific wordle number
-    # @@wordle_number_override = 451
+    # @@wordle_number_override = 459
 
     #         Uncomment this to enable debug printing for a specific tweet_id
     # @@debug_print_tweet_id = '1559163924548915201'
@@ -230,7 +230,7 @@ module Twitter
       end
 
       def print_report
-        wordle_number = user_specified_wordle_number_or_default
+        wordle_number = wordle_number_or_default
         total_guesses_histogram = [0, 0, 0, 0, 0, 0]
         @answers.each{|answer| total_guesses_histogram[answer.num_guesses-1] += 1}
         mean = @answers.map{|answer| answer.num_guesses}.sum.to_f / @answers.length
@@ -332,7 +332,7 @@ module Twitter
     end
 
     def Internal::make_call
-      wordle_number = user_specified_wordle_number_or_default
+      wordle_number = wordle_number_or_default
 
       # check for previously-cached result
       return YAML.load_file(cache_filename(wordle_number)) if File.exist?(cache_filename(wordle_number))

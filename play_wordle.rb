@@ -543,7 +543,13 @@ module UI
     UI::suppress_on
     list_length = 2 # second could be useful to see if there is a "clear winner"
     threshold = 60.0
-    print_a_winner = ->(word) {suppress_off; puts "\n\n"; UI::padded_puts("The answer is #{word}.\n\n\n"); exit }
+    print_a_winner = ->(word) {
+      suppress_off
+      puts "\n\n"
+      UI::padded_puts("The answer to Wordle #{wordle_number_or_default(suppress_output: true)} is #{word}.")
+      puts "\n\n"
+      exit
+    }
     maybe_print_a_winner = ->(word, score) { return if score < threshold; print_a_winner.call(word)}
 
     stats_hash1 = Twitter::Query::regular_with_singletons.stats_hash
