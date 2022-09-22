@@ -62,7 +62,7 @@ module Commands
     list_length = 2 # second could be useful to see if there is a "clear winner"
     threshold = 60.0
     print_a_winner = ->(word) {
-      suppress_off
+      UI::suppress_off
       puts "\n\n"
       UI::padded_puts("The answer to Wordle #{wordle_number_or_default(suppress_output: true)} is #{word}.")
       puts "\n\n"
