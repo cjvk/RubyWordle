@@ -205,6 +205,7 @@ module UI
       'q                  : quit',
       '',
       'twitter            : run Twitter analysis',
+      'goofball           : run goofball analysis (look for impossible tweet authors)',
       'solver             : run (interactive) solver',
       'give me the answer : find top-scoring word and print',
       '',
