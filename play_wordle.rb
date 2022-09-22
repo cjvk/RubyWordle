@@ -2,189 +2,13 @@
 
 require 'yaml'
 require_relative 'constants'
+require_relative 'logging'
 require_relative 'wordle_core'
 require_relative 'twitter'
 require_relative 'fingerprints'
 require_relative 'tests'
 
-DICTIONARY_FILE = DICTIONARY_FILE_LARGE
-
-VALID_WORDLE_WORDS = {}
-def populate_valid_wordle_words(filename=VALID_WORDLE_WORDS_FILE)
-  if !VALID_WORDLE_WORDS.key?(filename)
-    VALID_WORDLE_WORDS[filename] = populate_valid_wordle_words_internal(filename)
-    VALID_WORDLE_WORDS[filename].freeze
-  end
-  VALID_WORDLE_WORDS[filename]
-end
-
-def populate_valid_wordle_words_internal(filename)
-  d = {}
-  File.foreach(filename).with_index do |line, line_num|
-    next if line.start_with?('#')
-    d[line.chomp] = line_num
-  end
-  d
-end
-
-def populate_all_words
-  d = {}
-  File.foreach(DICTIONARY_FILE).with_index do |line, line_num|
-    d[line.chomp] = line_num
-  end
-  ['pinot', 'ramen', 'apage', 'stear', 'stean', 'tased', 'tsade'].each { |word| d[word] = '-1' }
-  d
-end
-
-# A note on "wordle words" that are not "words"
-# I went here: https://github.com/dwyl/english-words, got words_alpha.txt,
-# which _should_ be what I want. Transform and sort the data:
-# cat words_alpha.txt | grep '^\([a-z]\{5\}\)[^a-z]$' | sed 's/^\(.....\).$/\1/' > words_alpha.txt.grep.sed
-# copy valid-wordle-words.txt, remove comments, and sort: valid-wordle-words-words-only.txt.sort
-# comm -13 words_alpha.txt.grep.sed.sort valid-wordle-words-words-only.txt.sort > non-word-valid-wordle-words.txt
-# % head -n 5 non-word-valid-wordle-words.txt
-# aapas
-# aarti
-# abacs
-# abaht
-# abaya
-# Verified many of these are in valid-wordle-words but not in words_alpha
-# % wc -l non-word-valid-wordle-words.txt
-#     4228 non-word-valid-wordle-words.txt
-
-module Alert
-  def self.alert(s)
-    puts "ALERT: #{s}" if !UI::suppress_all_output?
-  end
-  def self.warn(s)
-    puts "WARN: #{s}" if !UI::suppress_all_output?
-  end
-end
-
-module Debug
-  LOG_LEVEL_NONE = 0
-  LOG_LEVEL_TERSE = 1
-  LOG_LEVEL_NORMAL = 2
-  LOG_LEVEL_VERBOSE = 3
-
-  THRESHOLD = LOG_LEVEL_NORMAL
-
-  module Internal
-    @@log_level_to_string = {
-      LOG_LEVEL_NONE => 'none',
-      LOG_LEVEL_TERSE => 'TERSE',
-      LOG_LEVEL_NORMAL => 'NORMAL',
-      LOG_LEVEL_VERBOSE => 'VERBOSE',
-    }
-    def Internal::println(s, log_level)
-      puts s if log_level <= THRESHOLD && !UI::suppress_all_output?
-    end
-    def Internal::decorate(s, log_level)
-      "debug(#{@@log_level_to_string[log_level]}): #{s}"
-    end
-    def Internal::decorate_and_print(s, log_level)
-      Internal::println(Debug::Internal::decorate(s, log_level), log_level)
-    end
-  end
-
-  def self.log_terse(s)
-    Debug::Internal::decorate_and_print(s, LOG_LEVEL_TERSE)
-  end
-  def self.log(s)
-    Debug::Internal::decorate_and_print(s, LOG_LEVEL_NORMAL)
-  end
-  def self.log_verbose(s)
-    Debug::Internal::decorate_and_print(s, LOG_LEVEL_VERBOSE)
-  end
-
-  @@maybe_log = false
-
-  def self.set_maybe(b)
-    @@maybe_log = b
-  end
-  def self.maybe?
-    @@maybe_log
-  end
-  def self.set_maybe_false
-    @@maybe_log = false
-  end
-  def self.maybe_log_terse(s)
-    Debug.log_terse s if @@maybe_log
-  end
-  def self.maybe_log(s)
-    Debug.log s if @@maybe_log
-  end
-  def self.maybe_log_verbose(s)
-    Debug.log_verbose s if @@maybe_log
-  end
-end
-
-class String
-  def pad_right_to_length(desired_length, termination_character: ' ')
-    termination_character = ' ' if termination_character.length != 1
-    self + ' ' * [(desired_length-self.length-1), 0].max + termination_character
-  end
-end
-
 module UI
-  @@suppress_all_output = false
-  def UI::suppress_on
-    @@suppress_all_output = true
-  end
-  def UI::suppress_off
-    @@suppress_all_output = false
-  end
-  def UI::suppress_all_output?
-    @@suppress_all_output
-  end
-  SUPPRESS_ALL_OUTPUT = false
-  LEFT_PADDING_DEFAULT = 20
-
-  def UI::padded_puts(s)
-    print ' ' * LEFT_PADDING_DEFAULT if s.length > 0 && !suppress_all_output?
-    puts s if !suppress_all_output?
-  end
-
-  def UI::padded_print(s)
-    print "#{' ' * LEFT_PADDING_DEFAULT}#{s}" if !suppress_all_output?
-  end
-
-  def UI::pad_right_deprecated(s, desired_length, termination_character: ' ')
-    # use String.pad_right_to_length instead
-    termination_character = ' ' if termination_character.length != 1
-    s + ' ' * (desired_length-s.length-1) + termination_character
-    # ' ' * 100
-  end
-
-  def self.prompt_for_input(input_string, prompt_on_new_line: false)
-    padded_puts input_string if prompt_on_new_line
-    padded_print prompt_on_new_line ? '==> ' : "#{input_string} ==> "
-    [gets.chomp].map{|user_input| exit if user_input == 'exit' || user_input == 'quit'; user_input}[0]
-  end
-
-  def self.prompt_for_numeric_input(input_string, prompt_on_new_line: false, default_value: nil)
-    padded_puts input_string if prompt_on_new_line
-    while true
-      padded_print prompt_on_new_line ? '==> ' : "#{input_string} ==> "
-      user_input = [gets.chomp]
-        .map{|input| exit if input == 'exit' || input == 'quit'; input}
-        .map{|input| input!='' && input==input.to_i.to_s ? input.to_i : default_value}[0]
-      return user_input if user_input != nil
-    end
-  end
-
-  class UI::Stopwatch
-    def initialize
-      @time_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    end
-    def lap
-      Process.clock_gettime(Process::CLOCK_MONOTONIC) - @time_start
-    end
-    def elapsed_time
-      "elapsed_time: #{'%.1f' % lap} seconds"
-    end
-  end
-
   def self.main_menu(guess, d, show_menu: true)
     main_menu_array = [
       ' ----------------------------------------------------------.',
@@ -273,13 +97,13 @@ module UI
         when 'give me the answer'
           give_me_the_answer(d)
         when 'performance'
-          sw = UI::Stopwatch.new
+          sw = Stopwatch.new
           # time_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
           # (0...100).each {|_| Filter::filter_4g(populate_all_words, 2, 1)}
           # (0...100).each {|_| Filter::filter_3g1y(populate_all_words, 1, 2)}
-          # (0...100).each {|i| Filter::filter_3g2y(populate_all_words, 1, 2)}
+          (0...100).each {|i| Filter::filter_3g2y(populate_all_words, 1, 2)}
           # (0...1).each {|_| Filter::filter_2g3y_v3(populate_all_words, 1, 2)}
-          (0...5).each {|_| Filter::filter_2g3y_v2(populate_all_words, 1, 2); puts "#{i}: #{sw.elapsed_time}"}
+          # (0...5).each {|_| Filter::filter_2g3y_v2(populate_all_words, 1, 2); puts "#{i}: #{sw.elapsed_time}"}
           # (0...5).each {|i| Filter::filter_2g3y_v1(populate_all_words, 1, 2); puts "#{i}: #{sw.elapsed_time}"}
           # (0...5).each {|_| Filter::filter_1g4y(populate_all_words, 1); puts "#{i}: #{sw.elapsed_time}"}
           # (0...3).each {|_| Filter::filter_0g5y(populate_all_words); puts "#{i}: #{sw.elapsed_time}"}
@@ -359,13 +183,9 @@ module UI
     # route
     # pride (Alert! Wordle 30 answer!)
     # prize
-    d.each_with_index do |(key, _value), index|
+    d.each_with_index do |(word, _value), index|
       break if max_print && index >= max_print
-      if PreviousWordleSolutions.check_word(key)
-        UI::padded_puts "#{key} (Alert! Wordle #{PreviousWordleSolutions.check_word(key)} answer!)"
-      else
-        UI::padded_puts key
-      end
+      UI::padded_puts "#{word}#{PreviousWordleSolutions.maybe_alert_string(word)}"
     end
     UI::padded_puts "skipping #{d.size-max_print} additional results..." if max_print && d.size > max_print
   end
@@ -378,17 +198,18 @@ module UI
       '|                     Usage                    |',
       '|                                              |',
       '\----------------------------------------------/',
-      'c               : count',
-      'p               : print',
-      'pa              : print all',
-      'hint            : hint',
-      'q               : quit',
+      'c                  : count',
+      'p                  : print',
+      'pa                 : print all',
+      'hint               : hint',
+      'q                  : quit',
       '',
-      'penultimate     : run penultimate-style analysis',
-      'twitter         : run Twitter analysis',
+      'twitter            : run Twitter analysis',
+      'solver             : run (interactive) solver',
+      'give me the answer : find top-scoring word and print',
       '',
-      'dad             : print a dad joke',
-      'help, h         : print this message',
+      'dad                : print a dad joke',
+      'help, h            : print this message',
       '',
     ].each{|s| UI::padded_puts(s)}
   end

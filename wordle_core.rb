@@ -2,6 +2,43 @@
 
 require 'date'
 
+DICTIONARY_FILE = DICTIONARY_FILE_LARGE
+VALID_WORDLE_WORDS = {}
+def populate_valid_wordle_words(filename=VALID_WORDLE_WORDS_FILE)
+  if !VALID_WORDLE_WORDS.key?(filename)
+    VALID_WORDLE_WORDS[filename] = populate_valid_wordle_words_internal(filename)
+    VALID_WORDLE_WORDS[filename].freeze
+  end
+  VALID_WORDLE_WORDS[filename]
+end
+
+def populate_valid_wordle_words_internal(filename)
+  d = {}
+  File.foreach(filename).with_index do |line, line_num|
+    next if line.start_with?('#')
+    d[line.chomp] = line_num
+  end
+  d
+end
+
+def populate_all_words
+  d = {}
+  File.foreach(DICTIONARY_FILE).with_index do |line, line_num|
+    d[line.chomp] = line_num
+  end
+  ['pinot', 'ramen', 'apage', 'stear', 'stean', 'tased', 'tsade'].each { |word| d[word] = '-1' }
+  d
+end
+
+# A note on "wordle words" that are not "words"
+# Got words_alpha.txt from https://github.com/dwyl/english-words, transform & sort:
+# cat words_alpha.txt | grep '^\([a-z]\{5\}\)[^a-z]$' | sed 's/^\(.....\).$/\1/' > words_alpha.txt.grep.sed
+# copy valid-wordle-words.txt, remove comments, and sort: valid-wordle-words-words-only.txt.sort
+# comm -13 words_alpha.txt.grep.sed.sort valid-wordle-words-words-only.txt.sort > non-word-valid-wordle-words.txt
+# Verified first five words (aapas, aarti, abacs, abaht, abaya) are in valid-wordle-words but not in words_alpha
+# % wc -l non-word-valid-wordle-words.txt
+#     4228 non-word-valid-wordle-words.txt
+
 module WordleShareColors
   # Normal mode
   # e.g. https://twitter.com/mobanwar/status/1552908148696129536
