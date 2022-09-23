@@ -7,6 +7,8 @@ DICTIONARY_FILE_NO_PLURALS = "sgb-words-without-plurals-sorted.txt"
 DICTIONARY_FILE = DICTIONARY_FILE_NO_PLURALS
 
 def response(word_const, guess)
+  guess = guess.dup # defensive copying
+  # puts "response() ENTER: word=#{word_const}, guess=#{guess}"
   word = String.new(word_const)
   # Calculate all greens. Clear values in word and guess.
   response = "-----"
@@ -31,16 +33,36 @@ def response(word_const, guess)
       end
     end
   end
+  # puts "response() EXIT: response=#{response}"
   response
 end
 
 def num_remaining_after_five_guesses(word)
   d = populate_all_words
-  filter(d, 'raise', response(word, 'raise'))
-  filter(d, 'clout', response(word, 'clout'))
-  filter(d, 'windy', response(word, 'windy'))
-  filter(d, 'blimp', response(word, 'blimp'))
-  filter(d, 'fight', response(word, 'fight'))
+  # puts "d.size=#{d.size}"
+  # https://www.cbs8.com/article/news/local/zevely-zone/five-magic-words-that-will-solve-wordle/509-fec2b387-5202-4d74-8c47-fde9221a82c1
+  all_guesses = {
+    :mom => ['raise', 'clout', 'windy', 'blimp', 'fight'], # J K Q V X Z (stave-state-stake-skate)
+    :me1 => ['raise', 'clout', 'nymph', 'befog', 'dowak'], # J Q V X Z (jaunt-taunt-vaunt) + 11 other groups
+    :myles_mellor => ['derby', 'flank', 'ghost', 'winch', 'jumps'], # Q V X Z (addle-axled-laded-ladle-laved-lazed)
+    :rick_canedo => ['fight', 'clomp', 'brand', 'jukes', 'woozy'], # Q V X (eater-rater-tater-taxer)
+    :me2 => ['raise', 'clout', 'nymph', 'befog', 'vowed'], # J K Q X Z (eater-taker-tater-taxer)
+    :me3 => ['fight', 'clomp', 'brand', 'jukes', 'viewy'], # Q X Z (eater-rater-tater-taxer)
+    :me4 => ['fight', 'clomp', 'brand', 'jukes', 'wavey'], # Q X Z (eater-rater-tater-taxer)
+    :me5 => ['fight', 'clomp', 'brand', 'juves', 'wonky'], # Q X Z (eater-rater-tater-taxer)
+    :me6 => ['fight', 'clomp', 'brand', 'juves', 'risky'], # Q W X Z (eater-tater-taxer-water)
+    :me7 => ['fight', 'clomp', 'brand', 'juves', 'tryke'], # Q W X Z (added-dazed-waded-waxed)
+  }
+  # best so far: me1, 36 words at 3-level, nothing at 4-level
+  # agree/grave/graze, coded/codex/coxed, diddy/divvy/dizzy, eater/tater/taxer
+  # faded/faxed/fazed, firer/fiver/fixer, jaunt/taunt/vaunt, laded/laved/lazed
+  # paper/parer/paver, rarer/raver/razer, sided/sized/vised, waded/waved/waxed
+
+  guesses = all_guesses[:me1]
+  guesses.each{|guess| filter(d, guess, response(word, guess))}
+  if ['agree', 'coded', 'diddy'].include? word
+    puts "Found #{word}!, d.size=#{d.size}, (#{d.map{|w,_| w}.join(',')})"
+  end
   d.size
 end
 
@@ -65,7 +87,7 @@ def mom_worst_words
   # Note: this function takes ~80 seconds to run
   # for raise-clout-windy-blimp-fight, the worst words have 8 possibilities remaining
   worst_word_lists = [[], [], [], [], [], [], [], [], []]
-  threshold = 2
+  threshold = 3
   all_words = populate_all_words_array
   for word in all_words
   # for i in 0...all_words.length
@@ -204,7 +226,7 @@ def num_green_or_yellow(word, response, letter)
 end
 
 def filter(d, word, response)
-  # puts "d.size: #{d.size()}"
+  # puts "filter(): enter, d.size=#{d.size}, word=#{word}, response=#{response}"
   for i in 0...5
     letter = word[i]
     case response[i]
@@ -218,30 +240,15 @@ def filter(d, word, response)
       raise "unrecognized response character"
     end
   end
+  # puts "d.size(filter end): #{d.size()}"
 end
 
 def run_tests
-  fail if num_green_or_yellow("abcde", "!----", "a") != 1
-  fail if num_green_or_yellow("aaaaa", "!?---", "a") != 2
-  fail if num_green_or_yellow("aaaaa", "??---", "a") != 2
-  fail if num_green_or_yellow("xaaxx", "!!--!", "c") != 0
-  fail if num_green_or_yellow("xaaxx", "?????", "x") != 3
-  fail if num_green_or_yellow("xaaxx", "?????", "a") != 2
-
-  fail if close("aaaaa", "bbbbb")
-  fail if close("aaaaa", "aaabb")
-  fail if close("abcde", "abcde")
-  fail unless close("abcde", "xbcde")
-  fail unless close("abcde", "axcde")
-  fail unless close("abcde", "abxde")
-  fail unless close("abcde", "abcxe")
-  fail unless close("abcde", "abcdx")
-
   fail if response('aaaaa', 'aaaaa') != '!!!!!'
   fail if response('raise', 'saner') != '?!-??'
   fail if response('aabbc', 'abbaa') != '!?!?-'
 
-  # fail if num_remaining_after_five_guesses('tiara') != 1
+  fail if num_remaining_after_five_guesses('agree') != 3
 end
 
 run_tests
