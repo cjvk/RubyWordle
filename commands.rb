@@ -414,4 +414,25 @@ module Commands
       UI::padded_puts "#{word} is a good guess" if count == (top_n - 1)
     end
   end
+
+  def Commands::pick_a_profession
+    color = UI.prompt_for_input('Favorite color (red/blue/green):').downcase
+    food = UI.prompt_for_input('Favorite food (pizza/hamburger):').downcase
+    subject = UI.prompt_for_input('Favorite subject (math/science):').downcase
+    professions = {
+      :red_pizza_math => 'doctor',
+      :red_pizza_science => 'astronaut',
+      :red_hamburger_math => 'olympian',
+      :red_hamburger_science => 'competitive food eater',
+      :blue_pizza_math => 'teacher',
+      :blue_pizza_science => 'professor',
+      :blue_hamburger_math => 'nurse',
+      :blue_hamburger_science => 'senator',
+      :green_pizza_math => 'baseball player',
+      :green_pizza_science => 'Lyft driver',
+      :green_hamburger_math => 'banker',
+      :green_hamburger_science => 'streamer',
+    }
+    puts "Your recommended profession is #{professions[[color, food, subject].join('_').to_sym]}."
+  end
 end

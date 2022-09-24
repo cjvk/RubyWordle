@@ -67,6 +67,8 @@ module UI
           show_main_menu = true
         when 'test'
           dictionary_dot_com_level
+        when 'profession'
+          Commands::pick_a_profession
         when 'dad'
           print_a_dad_joke
         when 'generate-fingerprints'
