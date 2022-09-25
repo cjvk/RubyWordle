@@ -69,6 +69,10 @@ module UI
           dictionary_dot_com_level
         when 'profession'
           Commands::pick_a_profession
+        when 'profession old'
+          Commands::pick_a_profession_old
+        when 'profession hard'
+          Commands::pick_a_profession_hard
         when 'dad'
           print_a_dad_joke
         when 'generate-fingerprints'

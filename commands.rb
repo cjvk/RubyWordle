@@ -416,9 +416,30 @@ module Commands
   end
 
   def Commands::pick_a_profession
-    color = UI.prompt_for_input('Favorite color (red/blue/green):').downcase
-    food = UI.prompt_for_input('Favorite food (pizza/hamburger):').downcase
-    subject = UI.prompt_for_input('Favorite subject (math/science):').downcase
+    valid_entries = {
+      :color => ['red', 'blue', 'green'],
+      :food => ['pizza', 'hamburger'],
+      :subject => ['math', 'science'],
+    }
+    prompts = valid_entries.map{|k, vlist| [k, "Favorite #{k} (#{vlist.join('/')}):"]}.to_h
+    multipliers = {:color => 4, :food => 2, :subject => 1}
+    professions = [
+      'doctor', 'astronaut', 'olympian', 'competitive food eater',
+      'teacher', 'professor', 'nurse', 'senator',
+      'baseball player', 'Lyft driver', 'banker', 'streamer',
+    ]
+    recommended_profession_index = [:color, :food, :subject]
+      .map{|category| [category, UI.prompt_for_input(prompts[category], valid_entries: valid_entries[category])]}
+      .map{|category, user_input| [category, valid_entries[category].index(user_input)]}
+      .map{|category, user_input_index| user_input_index * multipliers[category]}
+      .sum
+    puts "Your recommended profession is #{professions[recommended_profession_index]}."
+  end
+
+  def Commands::pick_a_profession_old
+    color = UI.prompt_for_input('Favorite color (red/blue/green):')
+    food = UI.prompt_for_input('Favorite food (pizza/hamburger):')
+    subject = UI.prompt_for_input('Favorite subject (math/science):')
     professions = {
       :red_pizza_math => 'doctor',
       :red_pizza_science => 'astronaut',
@@ -434,5 +455,30 @@ module Commands
       :green_hamburger_science => 'streamer',
     }
     puts "Your recommended profession is #{professions[[color, food, subject].join('_').to_sym]}."
+  end
+
+  def Commands::pick_a_profession_hard
+    valid_entries = {
+      :color => ['red', 'blue', 'green'],
+      :food => ['pizza', 'hamburger'],
+      :subject => ['math', 'science'],
+      :superhero => ['Superman', 'Wonder Woman', 'Thor', 'She-Hulk', 'Daredevil'],
+      :car => ['Porsche', 'Ferrari', 'Lamborghini'],
+    }
+    prompts = valid_entries.map{|k, vlist| [k, "Favorite #{k} (#{vlist.join('/')}):"]}.to_h
+    multipliers = valid_entries
+      .map.with_index{|(k,_),i| [k, valid_entries.map.with_index{|(_,l),j| j>i ? l.length : 1}.inject(:*)]}
+      .to_h
+    professions = [
+      'doctor', 'astronaut', 'olympian', 'competitive food eater',
+      'teacher', 'professor', 'nurse', 'senator',
+      'baseball player', 'Lyft driver', 'banker', 'streamer',
+    ]
+    recommended_profession_index = [:color, :food, :subject, :superhero, :car]
+      .map{|category| [category, UI.prompt_for_input(prompts[category], valid_entries: valid_entries[category])]}
+      .map{|category, user_input| [category, valid_entries[category].index(user_input)]}
+      .map{|category, user_input_index| user_input_index * multipliers[category]}
+      .sum % professions.length
+    puts "Your recommended profession is #{professions[recommended_profession_index]}."
   end
 end

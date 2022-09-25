@@ -41,10 +41,13 @@ module UI
     print "#{' ' * LEFT_PADDING_DEFAULT}#{s}" if !suppress_all_output?
   end
 
-  def self.prompt_for_input(input_string, prompt_on_new_line: false)
+  def self.prompt_for_input(input_string, prompt_on_new_line: false, valid_entries: nil)
     padded_puts input_string if prompt_on_new_line
-    padded_print prompt_on_new_line ? '==> ' : "#{input_string} ==> "
-    [gets.chomp].map{|user_input| exit if user_input == 'exit' || user_input == 'quit'; user_input}[0]
+    while [padded_print(prompt_on_new_line ? '==> ' : "#{input_string} ==> ")]
+      .map{|_| gets.chomp}
+      .map{|input| exit if ['exit', 'quit'].include? input; input}
+      .map{|input| return input if !valid_entries || valid_entries.include?(input); input}
+    end
   end
 
   def self.prompt_for_numeric_input(input_string, prompt_on_new_line: false, default_value: nil)
