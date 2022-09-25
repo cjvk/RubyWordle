@@ -422,7 +422,10 @@ module Commands
       :subject => ['math', 'science'],
     }
     prompts = valid_entries.map{|k, vlist| [k, "Favorite #{k} (#{vlist.join('/')}):"]}.to_h
-    multipliers = {:color => 4, :food => 2, :subject => 1}
+    # below works because the overall product is 12
+    multipliers = valid_entries
+      .map.with_index{|(k,_),i| [k, valid_entries.map.with_index{|(_,l),j| j>i ? l.length : 1}.inject(:*)]}
+      .to_h # {:color => 4, :food => 2, :subject => 1}
     professions = [
       'doctor', 'astronaut', 'olympian', 'competitive food eater',
       'teacher', 'professor', 'nurse', 'senator',
@@ -436,7 +439,7 @@ module Commands
     puts "Your recommended profession is #{professions[recommended_profession_index]}."
   end
 
-  def Commands::pick_a_profession_old
+  def Commands::pick_a_profession_simple
     color = UI.prompt_for_input('Favorite color (red/blue/green):')
     food = UI.prompt_for_input('Favorite food (pizza/hamburger):')
     subject = UI.prompt_for_input('Favorite subject (math/science):')
@@ -457,7 +460,7 @@ module Commands
     puts "Your recommended profession is #{professions[[color, food, subject].join('_').to_sym]}."
   end
 
-  def Commands::pick_a_profession_hard
+  def Commands::pick_a_profession_hard(pks: nil)
     valid_entries = {
       :color => ['red', 'blue', 'green'],
       :food => ['pizza', 'hamburger'],
@@ -466,19 +469,54 @@ module Commands
       :car => ['Porsche', 'Ferrari', 'Lamborghini'],
     }
     prompts = valid_entries.map{|k, vlist| [k, "Favorite #{k} (#{vlist.join('/')}):"]}.to_h
-    multipliers = valid_entries
-      .map.with_index{|(k,_),i| [k, valid_entries.map.with_index{|(_,l),j| j>i ? l.length : 1}.inject(:*)]}
-      .to_h
+    # The general case of multipliers is hard
+    multipliers = {:color => 7, :food => 11, :subject => 13, :superhero => 17, :car => 23} # [13-18]
+    multipliers = {:color => 1, :food => 1, :subject => 1, :superhero => 1, :car => 4} # [14-16]
+    multipliers = {:color => 1, :food => 1, :subject => 1, :superhero => 1, :car => 1} # [0-34] (!)
+    multipliers = {:color => 4, :food => 2, :subject => 1, :superhero => 2, :car => 1} # [15-15] (!)
     professions = [
       'doctor', 'astronaut', 'olympian', 'competitive food eater',
       'teacher', 'professor', 'nurse', 'senator',
       'baseball player', 'Lyft driver', 'banker', 'streamer',
     ]
     recommended_profession_index = [:color, :food, :subject, :superhero, :car]
-      .map{|category| [category, UI.prompt_for_input(prompts[category], valid_entries: valid_entries[category])]}
+      .map{|sym| [sym, (pks && pks[sym]) || UI.prompt_for_input(prompts[sym], valid_entries: valid_entries[sym])]}
       .map{|category, user_input| [category, valid_entries[category].index(user_input)]}
       .map{|category, user_input_index| user_input_index * multipliers[category]}
       .sum % professions.length
-    puts "Your recommended profession is #{professions[recommended_profession_index]}."
+    puts "Your recommended profession is #{professions[recommended_profession_index]}." if pks == nil
+    professions[recommended_profession_index]
+  end
+
+  def Commands::pick_a_profession_hard_test
+    professions = {}
+    valid_entries = {
+      :color => ['red', 'blue', 'green'],
+      :food => ['pizza', 'hamburger'],
+      :subject => ['math', 'science'],
+      :superhero => ['Superman', 'Wonder Woman', 'Thor', 'She-Hulk', 'Daredevil'],
+      :car => ['Porsche', 'Ferrari', 'Lamborghini'],
+    }
+    valid_entries[:color].each do |color|
+      valid_entries[:food].each do |food|
+        valid_entries[:subject].each do |subject|
+          valid_entries[:superhero].each do |superhero|
+            valid_entries[:car].each do |car|
+              choices = {
+                :color => color,
+                :food => food,
+                :subject => subject,
+                :superhero => superhero,
+                :car => car,
+              }
+              profession = pick_a_profession_hard(pks: choices)
+              professions[profession] = 0 if !professions.key?(profession)
+              professions[profession] += 1
+            end
+          end
+        end
+      end
+    end
+    puts professions
   end
 end

@@ -67,12 +67,14 @@ module UI
           show_main_menu = true
         when 'test'
           dictionary_dot_com_level
-        when 'profession'
+        when 'pick a profession'
           Commands::pick_a_profession
-        when 'profession old'
-          Commands::pick_a_profession_old
-        when 'profession hard'
+        when 'pick a profession simple'
+          Commands::pick_a_profession_simple
+        when 'pick a profession hard'
           Commands::pick_a_profession_hard
+        when 'profession test'
+          Commands::pick_a_profession_hard_test
         when 'dad'
           print_a_dad_joke
         when 'generate-fingerprints'
