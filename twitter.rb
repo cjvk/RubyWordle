@@ -62,7 +62,8 @@ module Twitter
     # @@wordle_number_override = 459
 
     #         Uncomment this to enable debug printing for a specific tweet_id
-    # @@debug_print_tweet_id = '1559163924548915201'
+    # @@debug_print_tweet_id = '1574673055346925568'
+    # @@debug_print_tweet_id = '1574751210959032320'
 
     #         Uncomment to enable printing of ALL penultimate which match this pattern
     # @@print_this_penultimate_pattern = 'wgggw' # use normalized colors (g/y/w)
@@ -439,12 +440,14 @@ module Twitter
             wordle_begin_pattern_length = wordle_number.to_i < 1000 ? 14 : 15
             # typically 2 newline characters
             wordle_squares_begin = wordle_begin_index + wordle_begin_pattern_length + 2
-            Debug.maybe_log "wordle_squares_begin = #{wordle_squares_begin}"
             first_non_wordle_character = text.index(WordleShareColors::NON_WORDLE_CHARACTERS, wordle_squares_begin)
             Debug.maybe_log "wordle_begin_index=#{wordle_begin_index}"
+            Debug.maybe_log "wordle_squares_begin = #{wordle_squares_begin}"
             Debug.maybe_log "first_non_wordle_character=#{first_non_wordle_character}"
             if first_non_wordle_character != nil
               text = text[wordle_begin_index..first_non_wordle_character - 1]
+            else
+              text = text[wordle_begin_index..]
             end
 
             # determine mode

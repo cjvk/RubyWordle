@@ -42,6 +42,7 @@ module Fingerprint
 
   module Internal
     def Internal::score_string(i, word, score)
+      puts "-------- i=#{i}, word=#{word}, score=#{score}"
       maybe_alert = PreviousWordleSolutions.maybe_alert_string(word)
       i == nil ?
         "#{word} has a score of #{'%.1f' % score}#{maybe_alert}" :
@@ -232,7 +233,7 @@ module Fingerprint
 
       UI::padded_puts ''
       while '' != word = UI.prompt_for_input("Enter a word to see its score, or ENTER to continue:") do
-        UI::padded_puts Internal::score_string(nil, word, d[word][:nyt_score]) if d.key?(word)
+        UI::padded_puts Internal::score_string(nil, word, d_nyt[word][:nyt_score]) if d_nyt.key?(word)
       end
 
       UI::padded_puts ''

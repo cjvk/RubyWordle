@@ -422,10 +422,7 @@ module Commands
       :subject => ['math', 'science'],
     }
     prompts = valid_entries.map{|k, vlist| [k, "Favorite #{k} (#{vlist.join('/')}):"]}.to_h
-    # below works because the overall product is 12
-    multipliers = valid_entries
-      .map.with_index{|(k,_),i| [k, valid_entries.map.with_index{|(_,l),j| j>i ? l.length : 1}.inject(:*)]}
-      .to_h # {:color => 4, :food => 2, :subject => 1}
+    multipliers = {:color => 4, :food => 2, :subject => 1}
     professions = [
       'doctor', 'astronaut', 'olympian', 'competitive food eater',
       'teacher', 'professor', 'nurse', 'senator',
@@ -470,10 +467,7 @@ module Commands
     }
     prompts = valid_entries.map{|k, vlist| [k, "Favorite #{k} (#{vlist.join('/')}):"]}.to_h
     # The general case of multipliers is hard
-    multipliers = {:color => 7, :food => 11, :subject => 13, :superhero => 17, :car => 23} # [13-18]
-    multipliers = {:color => 1, :food => 1, :subject => 1, :superhero => 1, :car => 4} # [14-16]
-    multipliers = {:color => 1, :food => 1, :subject => 1, :superhero => 1, :car => 1} # [0-34] (!)
-    multipliers = {:color => 4, :food => 2, :subject => 1, :superhero => 2, :car => 1} # [15-15] (!)
+    multipliers = {:color => 4, :food => 2, :subject => 1, :superhero => 1, :car => 1} # [15-15]
     professions = [
       'doctor', 'astronaut', 'olympian', 'competitive food eater',
       'teacher', 'professor', 'nurse', 'senator',
