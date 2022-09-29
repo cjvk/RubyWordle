@@ -37,7 +37,7 @@ module Commands
     stats_hash1 = Twitter::Query::regular_with_singletons.stats_hash
     analysis_1 =
       Fingerprint::fingerprint_analysis(d, stats_hash1, max_to_print: max_to_print, verbose: verbose)[:d_nyt]
-    max_score = analysis_1.map{|word, data_hash| data_hash[:nyt_score]}.max
+    max_score = analysis_1.map{|word, data_hash| data_hash[:nyt_score]}.max || 0
 
     if max_score < 80
       UI::padded_puts ''
@@ -72,6 +72,7 @@ module Commands
 
     stats_hash1 = Twitter::Query::regular_with_singletons.stats_hash
     analysis1 = Fingerprint::fingerprint_analysis(d, stats_hash1, suppress_output: true, dracos_override: true)
+
     results = {
       :with_singletons => {
         :nyt => analysis1[:d_nyt].map{|word,data| [word, data[:nyt_score]]}[0..list_length-1],
@@ -80,9 +81,13 @@ module Commands
     }
 
     # First choice NYT, then dracos with its smaller fingerprints, otherwise save top choices and continue
-    maybe_print_a_winner.call(*results[:with_singletons][:nyt][0])
-    maybe_print_a_winner.call(*results[:with_singletons][:dracos][0])
-    choices = [results[:with_singletons][:nyt][0], results[:with_singletons][:dracos][0]]
+    if analysis1[:d_nyt].size > 0
+      maybe_print_a_winner.call(*results[:with_singletons][:nyt][0])
+      maybe_print_a_winner.call(*results[:with_singletons][:dracos][0])
+      choices = [results[:with_singletons][:nyt][0], results[:with_singletons][:dracos][0]]
+    else
+      choices = []
+    end
 
     # If neither is high enough, remove potential bad tweets and re-run
     if StatsHash.num_singletons(stats_hash1) > 0
