@@ -59,7 +59,7 @@ module Twitter
     @@absence_of_evidence_filename = DRACOS_VALID_WORDLE_WORDS_FILE
 
     #         Uncomment this to query a specific wordle number
-    # @@wordle_number_override = 459
+    # @@wordle_number_override = 454
 
     #         Uncomment this to enable debug printing for a specific tweet_id
     # @@debug_print_tweet_id = '1574673055346925568'

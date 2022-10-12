@@ -66,9 +66,9 @@ module Commands
       puts "\n\n"
       UI::padded_puts("The answer to Wordle #{wordle_number_or_default(suppress_output: true)} is #{word}.")
       puts "\n\n"
-      exit
+      true
     }
-    maybe_print_a_winner = ->(word, score) { return if score < threshold; print_a_winner.call(word)}
+    maybe_print_a_winner = ->(word, score) { return false if score < threshold; print_a_winner.call(word)}
 
     stats_hash1 = Twitter::Query::regular_with_singletons.stats_hash
     analysis1 = Fingerprint::fingerprint_analysis(d, stats_hash1, suppress_output: true, dracos_override: true)
@@ -82,8 +82,8 @@ module Commands
 
     # First choice NYT, then dracos with its smaller fingerprints, otherwise save top choices and continue
     if analysis1[:d_nyt].size > 0
-      maybe_print_a_winner.call(*results[:with_singletons][:nyt][0])
-      maybe_print_a_winner.call(*results[:with_singletons][:dracos][0])
+      return if maybe_print_a_winner.call(*results[:with_singletons][:nyt][0])
+      return if maybe_print_a_winner.call(*results[:with_singletons][:dracos][0])
       choices = [results[:with_singletons][:nyt][0], results[:with_singletons][:dracos][0]]
     else
       choices = []
@@ -99,8 +99,8 @@ module Commands
       }
 
       # NYT, dracos, save top choices
-      maybe_print_a_winner.call(*results[:without_singletons][:nyt][0])
-      maybe_print_a_winner.call(*results[:without_singletons][:dracos][0])
+      return if maybe_print_a_winner.call(*results[:without_singletons][:nyt][0])
+      return if maybe_print_a_winner.call(*results[:without_singletons][:dracos][0])
       choices.append(*[results[:without_singletons][:nyt][0], results[:without_singletons][:dracos][0]])
     end
 

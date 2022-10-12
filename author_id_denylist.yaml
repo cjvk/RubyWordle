@@ -24,6 +24,12 @@
   analysis: Wordle 444 (taunt), 3g1y.yellow1.white3, ()
   verdict: deny # Definite Goofball!
 
+- name: inamy45
+  author_id: 4728764066
+  tweet: https://twitter.com/inamy45/status/1577248297542029312
+  analysis: Wordle 472 (bough), 3g1y.yellow1.white2, ()
+  verdict: deny # Definite Goofball!
+
 - name: ka_ta_ck
   author_id: 112974516
   tweet: https://twitter.com/ka_ta_ck/status/1565696152011386881
