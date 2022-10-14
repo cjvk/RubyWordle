@@ -168,6 +168,9 @@ module Tests
     fail unless PreviousWordleSolutions.maybe_alert_string('Hello World!') == ''
     fail unless PreviousWordleSolutions.maybe_alert_string('cigar') ==
       ' -------- Alert! Wordle 0 solution was cigar --------'
+
+    fail unless scrabble_score('queen') == 14
+    fail unless scrabble_score('abcdefghijklmnopqrstuvwxyz') == 87
   end
 end
 

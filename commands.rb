@@ -412,11 +412,25 @@ module Commands
 
     # for all remaining words, they are a great guess if all of the "top N" characters are contained
     # and they are a "good" guess if all but one of the top N characters occur
-    d.each do |word, line_num|
-      count = 0
-      top_n_dict.each {|c, num_occurrences| count = count + 1 if word[c]}
-      UI::padded_puts "#{word} is a GREAT guess" if count == top_n
-      UI::padded_puts "#{word} is a good guess" if count == (top_n - 1)
+    # avoid repeated letters, lower scrabble score is better
+    max_to_print = 30
+    great_guesses = d.dup
+      .map{|word, _line_num| [word, word.chars.sort.join.squeeze.count(top_n_dict.keys.join())]}
+      .delete_if{|word, top_n_count| top_n_count != top_n}
+      .map{|word, _| word}
+      .sort_by{|word, _| [5 - word.chars.sort.join.squeeze.size, scrabble_score(word)]}
+      .to_a
+    great_guesses[0...max_to_print].each{|word| UI::padded_puts "#{word} is a GREAT guess"}
+
+    if great_guesses.size < max_to_print
+      remaining_to_print = max_to_print - great_guesses.size
+      good_guesses = d.dup
+        .map{|word, _line_num| [word, word.chars.sort.join.squeeze.count(top_n_dict.keys.join())]}
+        .delete_if{|word, top_n_count| top_n_count != top_n-1}
+        .map{|word, _| word}
+        .sort_by{|word, _| [5 - word.chars.sort.join.squeeze.size, scrabble_score(word)]}
+        .to_a
+      good_guesses[0...remaining_to_print].each{|word| UI::padded_puts "#{word} is a GOOD guess"}
     end
   end
 

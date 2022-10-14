@@ -315,6 +315,18 @@ def num_green_or_yellow(word, response, letter)
   return num_green_or_yellow
 end
 
+def scrabble_score(word)
+  scrabble_letter_scores = [
+    ['a', 1], ['f', 4], ['k', 5], ['p', 3], ['u', 1],
+    ['b', 3], ['g', 2], ['l', 1], ['q', 10], ['v', 4],
+    ['c', 3], ['h', 4], ['m', 3], ['r', 1], ['w', 4],
+    ['d', 2], ['i', 1], ['n', 1], ['s', 1], ['x', 8],
+    ['e', 1], ['j', 8], ['o', 1], ['t', 1], ['y', 4], ['z', 10],
+  ].to_h
+
+  word.chars.map{|c| scrabble_letter_scores[c]}.sum
+end
+
 module PreviousWordleSolutions
   @@previous_wordle_solutions = nil
 
