@@ -315,7 +315,7 @@ def num_green_or_yellow(word, response, letter)
   return num_green_or_yellow
 end
 
-def scrabble_score(word)
+def scrabble_score_old(word)
   scrabble_letter_scores = [
     ['a', 1], ['f', 4], ['k', 5], ['p', 3], ['u', 1],
     ['b', 3], ['g', 2], ['l', 1], ['q', 10], ['v', 4],
@@ -323,7 +323,22 @@ def scrabble_score(word)
     ['d', 2], ['i', 1], ['n', 1], ['s', 1], ['x', 8],
     ['e', 1], ['j', 8], ['o', 1], ['t', 1], ['y', 4], ['z', 10],
   ].to_h
+  word.chars.map{|c| scrabble_letter_scores[c]}.sum
+end
 
+def scrabble_score(word)
+  scrabble_letter_scores = [
+    [1, 'aeioulnstr'],
+    [2, 'dg'],
+    [3, 'bcmp'],
+    [4, 'fhvwy'],
+    [5, 'k'],
+    [8, 'jx'],
+    [10, 'qz'],
+  ]
+    .map{|score, letters| letters.chars.map{|letter| [letter, score]}}
+    .flatten(1)
+    .to_h
   word.chars.map{|c| scrabble_letter_scores[c]}.sum
 end
 
