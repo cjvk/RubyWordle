@@ -73,6 +73,8 @@ module Commands
     stats_hash1 = Twitter::Query::regular_with_singletons.stats_hash
     analysis1 = Fingerprint::fingerprint_analysis(d, stats_hash1, suppress_output: true, dracos_override: true)
 
+    # TODO Wordle 478 had six words all get a score of 100 (ilium/enjoy/knoll/jujus/excel/quaff)
+    # Consider further: previous solution, repeated letters, "grade level", lower scrabble score
     results = {
       :with_singletons => {
         :nyt => analysis1[:d_nyt].map{|word,data| [word, data[:nyt_score]]}[0..list_length-1],

@@ -484,3 +484,4 @@ valid
 ionic # Wordle 480, 10/12/2022
 equal
 floor
+catch
