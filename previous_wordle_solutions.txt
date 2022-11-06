@@ -485,3 +485,24 @@ ionic # Wordle 480, 10/12/2022
 equal
 floor
 catch
+spade
+stein
+exist
+quirk
+denim
+grove
+spiel # Wordle 490, 10/22/2022
+mummy
+fault
+foggy
+flout
+carry
+sneak
+libel
+waltz
+aptly
+piney # Wordle 500, 11/1/2022
+inept
+aloud
+photo
+dream

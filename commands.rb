@@ -57,7 +57,118 @@ module Commands
     end
   end
 
+  # TODO Wordle 478 had six words all get a score of 100 (ilium/enjoy/knoll/jujus/excel/quaff)
+  # Consider further: previous solution, repeated letters, "grade level", lower scrabble score
   def Commands::give_me_the_answer(d)
+    give_me_the_answer_1 d
+  end
+
+  def Commands::give_me_the_answer_2(d)
+    # improvements: eliminate previous solutions, tiebreak on repeated letters & lower scrabble score
+    UI::suppress_on
+    list_length = 5
+    print_a_winner = ->(word) {
+      UI::suppress_off
+      puts "\n\n"
+      UI::padded_puts("The answer to Wordle #{wordle_number_or_default(suppress_output: true)} is #{word}.")
+      puts "\n\n"
+      true
+    }
+
+    stats_hash1 = Twitter::Query::regular_with_singletons.stats_hash
+    analysis1 = Fingerprint::fingerprint_analysis(d, stats_hash1, suppress_output: true, dracos_override: true)
+
+    dup_discount = ->(word, score) {
+      score * [0.2, 0.4, 0.6, 1.0, 1.0][word.chars.uniq.length-1]
+    }
+
+    # These are sorted by score only - make following refinements:
+    # - eliminate previous solutions (considered backward from current wordle number)
+    # - sort by lower scrabble score
+    # - (future) sort by repeated letters?
+    # - (future) eliminate (or drastically discount) plurals?
+    results = {
+      :with_singletons => {
+        :nyt => analysis1[:d_nyt]
+          .delete_if{|word, _| PreviousWordleSolutions.occurred_before(word)}
+          .map{|word, data| data[:modified_nyt_score] = dup_discount.call(word, data[:nyt_score]); [word, data]}
+          .map{|word, data| data[:modified_nyt_score] *= 0.5 if plural?(word); [word, data]}
+          .sort_by{|word, data| [-1 * data[:modified_nyt_score], scrabble_score(word)]}
+          .map{|word, data| [word, data[:modified_nyt_score]]}[0..list_length-1],
+        :dracos => analysis1[:d_dracos]
+          .delete_if{|word, _| PreviousWordleSolutions.occurred_before(word)}
+          .map{|word, data| data[:modified_dracos_score] = dup_discount.call(word, data[:dracos_score]); [word, data]}
+          .map{|word, data| data[:modified_dracos_score] *= 0.5 if plural?(word); [word, data]}
+          .sort_by{|word, data| [-1 * data[:modified_dracos_score], scrabble_score(word)]}
+          .map{|word, data| [word, data[:modified_dracos_score]]}[0..list_length-1],
+      },
+    }
+    puts results
+
+    append_first_element_if_positive_score = ->(array_to_append, data_array) {
+      if data_array.size > 0 && data_array[0][1] > 0
+        array_to_append.append(data_array[0])
+      end
+    }
+    choices = []
+    append_first_element_if_positive_score.call(choices, results[:with_singletons][:nyt])
+    append_first_element_if_positive_score.call(choices, results[:with_singletons][:dracos])
+    puts "choices = #{choices}"
+
+    # Remove potential bad tweets and re-run
+    if StatsHash.num_singletons(stats_hash1) > 0
+      analysis2 = Fingerprint::fingerprint_analysis(
+        d, stats_hash2 = Twitter::Query::regular.stats_hash, suppress_output: true, dracos_override: true)
+
+      results[:without_singletons] = {
+        :nyt => analysis2[:d_nyt]
+          .delete_if{|word, _| PreviousWordleSolutions.occurred_before(word)}
+          .map{|word, data| data[:modified_nyt_score] = dup_discount.call(word, data[:nyt_score]); [word, data]}
+          .map{|word, data| data[:modified_nyt_score] *= 0.5 if plural?(word); [word, data]}
+          .sort_by{|word, data| [-1 * data[:modified_nyt_score], scrabble_score(word)]}
+          .map{|word, data| [word, data[:modified_nyt_score]]}[0..list_length-1],
+        :dracos => analysis2[:d_dracos]
+          .delete_if{|word, _| PreviousWordleSolutions.occurred_before(word)}
+          .map{|word, data| data[:modified_dracos_score] = dup_discount.call(word, data[:dracos_score]); [word, data]}
+          .map{|word, data| data[:modified_dracos_score] *= 0.5 if plural?(word); [word, data]}
+          .sort_by{|word, data| [-1 * data[:modified_dracos_score], scrabble_score(word)]}
+          .map{|word, data| [word, data[:modified_dracos_score]]}[0..list_length-1],
+      }
+
+      choices.append(*[results[:without_singletons][:nyt][0], results[:without_singletons][:dracos][0]])
+    end
+    puts results
+    puts "choices = #{choices}"
+
+    # debugging
+    while true do
+      puts ''
+      print 'Enter a word to see its score, or ENTER to continue: ==> '
+      user_input_word = gets.chomp
+      break if '' == user_input_word
+      exit if 'quit' == user_input_word || 'exit' == user_input_word
+      puts ''
+      puts "stats_hash1: #{stats_hash1}"
+      puts ''
+      puts "analysis1, NYT, #{user_input_word}: #{analysis1[:d_nyt][user_input_word]}"
+      puts ''
+      puts "analysis1, Dracos, #{user_input_word}: #{analysis1[:d_dracos][user_input_word]}"
+      if stats_hash2
+        puts ''
+        puts "stats_hash2: #{stats_hash2}"
+        puts ''
+        puts "analysis2, NYT, #{user_input_word}: #{analysis2[:d_nyt][user_input_word]}"
+        puts ''
+        puts "analysis2, Dracos, #{user_input_word}: #{analysis2[:d_dracos][user_input_word]}"
+      end
+    end
+
+    # nothing was high enough (sigh!) - pick the best choice
+    print_a_winner.call(choices.max_by{|word, score| [score, -1 * scrabble_score(word)]}[0])
+  end
+
+  def Commands::give_me_the_answer_1(d)
+    # frozen on 10/26/2022
     UI::suppress_on
     list_length = 2 # second could be useful to see if there is a "clear winner"
     threshold = 60.0
@@ -73,8 +184,6 @@ module Commands
     stats_hash1 = Twitter::Query::regular_with_singletons.stats_hash
     analysis1 = Fingerprint::fingerprint_analysis(d, stats_hash1, suppress_output: true, dracos_override: true)
 
-    # TODO Wordle 478 had six words all get a score of 100 (ilium/enjoy/knoll/jujus/excel/quaff)
-    # Consider further: previous solution, repeated letters, "grade level", lower scrabble score
     results = {
       :with_singletons => {
         :nyt => analysis1[:d_nyt].map{|word,data| [word, data[:nyt_score]]}[0..list_length-1],
@@ -113,10 +222,8 @@ module Commands
   def Commands::goofball_analysis
     wordle_number = UI.prompt_for_numeric_input("Enter daily wordle number (to check for goofballs):")
     Twitter::Configuration.set_wordle_number_override wordle_number
-    query_result = Twitter::Query::goofball
-    stats_hash = query_result.stats_hash
-    answers = query_result.answers
-    wordle_number_solution = PreviousWordleSolutions.lookup_by_number wordle_number
+    stats_hash, answers = Twitter::Query::goofball.stats_hash_and_answers
+    solution = PreviousWordleSolutions.lookup_by_number wordle_number
 
     singleton_keys = []
     stats_hash
@@ -146,31 +253,19 @@ module Commands
       count = name == '4g' ? key[5].to_i : 0
       all_words = populate_valid_wordle_words
       if interestingness == InterestingWordleResponses::WORDLE_4G
-        # special handling for 4g: Find actual high-water-mark, see if the reported
-        # count is reasonable. Will need to know the words too.
+        # special handling for 4g: Find actual high-water-mark, see if the reported count is reasonable
         gray_index = subname[0].to_i - 1
         valid_alternatives = ALPHABET
-          .map{|c| Filter::replace_ith_letter(wordle_number_solution, gray_index, c)}
-          .delete_if {|word_to_check| word_to_check == wordle_number_solution || !all_words.key?(word_to_check)}
+          .map{|c| Filter::replace_ith_letter(solution, gray_index, c)}
+          .delete_if {|word_to_check| word_to_check == solution || !all_words.key?(word_to_check)}
         is_goofball = (count > valid_alternatives.length)
 
-        if is_goofball
-          title = valid_alternatives.length == 0 ? 'Definite Goofball!' : 'Possible Goofball'
-        else
-          title = 'Not a Goofball'
-        end
+        title = !is_goofball ? 'Not a Goofball' :
+          (valid_alternatives.length == 0 ? 'Definite Goofball!' : 'Possible Goofball')
       else
         # Everything besides 4g: Go through all available words, see what words get that match.
-        # In principle, this is very similar to Filter::filter_4g et al.
-        # have: wordle_number_solution, penultimate
-        # puts "non-4g analysis: wordle_number_solution=#{wordle_number_solution}, penultimate=#{penultimate}"
         valid_alternatives = []
-        all_words.each do |key, _value|
-          actual_wordle_response = wordle_response(key, wordle_number_solution)
-          if actual_wordle_response == penultimate
-            valid_alternatives.append key
-          end
-        end
+        all_words.each{|key, _| valid_alternatives.append(key) if penultimate == wordle_response(key, solution)}
         is_goofball = valid_alternatives.length == 0
         title = is_goofball ? 'Definite Goofball!' : 'Not a Goofball'
       end
@@ -186,7 +281,7 @@ module Commands
 
     print_goofball_report_entry = ->(answer, key, reasoning, verdict, title) {
       nm = wordle_number
-      sn = wordle_number_solution
+      sn = solution
       aid = answer.author_id
 
       # Goofball report

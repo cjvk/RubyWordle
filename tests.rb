@@ -169,8 +169,16 @@ module Tests
     fail unless PreviousWordleSolutions.maybe_alert_string('cigar') ==
       ' -------- Alert! Wordle 0 solution was cigar --------'
 
+    # scrabble score
     fail unless scrabble_score('queen') == 14
     fail unless scrabble_score('abcdefghijklmnopqrstuvwxyz') == 87
+
+    # plurals
+    fail unless plural?('goats') == true
+    fail unless plural?('floss') == false
+    fail unless plural?('aptly') == false
+    fail unless plural?('ovens') == true
+    fail unless plural?('boxes') == false # it is not perfect
   end
 end
 

@@ -59,7 +59,7 @@ module Twitter
     @@absence_of_evidence_filename = DRACOS_VALID_WORDLE_WORDS_FILE
 
     #         Uncomment this to query a specific wordle number
-    # @@wordle_number_override = 454
+    # @@wordle_number_override = 500
 
     #         Uncomment this to enable debug printing for a specific tweet_id
     # @@debug_print_tweet_id = '1574673055346925568'
@@ -226,6 +226,10 @@ module Twitter
         @stats_hash
       end
 
+      def stats_hash_and_answers
+        [@stats_hash, @answers]
+      end
+
       def call_stats
         @call_stats
       end
@@ -237,6 +241,7 @@ module Twitter
         mean = @answers.map{|answer| answer.num_guesses}.sum.to_f / @answers.length
         mode_value = total_guesses_histogram.max
         mode = total_guesses_histogram.find_index(mode_value) + 1
+        lucky_ones = total_guesses_histogram[0]
         num_interesting = @stats_hash.map{|_, value| value}.sum
         num_skipped = @call_stats[:denylisted] + @call_stats[:retweets]
         incorrect_percentage = @call_stats[:failures]*100/(@answers.length.to_f+@call_stats[:failures])
@@ -257,6 +262,7 @@ module Twitter
           "#{@call_stats[:failures]} incorrect (#{'%.2f' % incorrect_percentage}% failure)",
           "#{'%.2f' % mean}: Average number of guesses",
           "#{mode}: Most common number of guesses (#{mode_value} times)",
+          "#{lucky_ones}: Number of people who guessed in 1",
           "#{num_interesting}/#{@answers.length()} are interesting",
           '',
         ].each{|s| UI.padded_puts(s)}

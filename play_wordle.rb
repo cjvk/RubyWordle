@@ -105,6 +105,10 @@ module UI
           show_main_menu = true
         when 'give me the answer'
           Commands::give_me_the_answer(d)
+        when 'gmta1'
+          Commands::give_me_the_answer_1(d)
+        when 'gmta2'
+          Commands::give_me_the_answer_2(d)
         when 'performance'
           sw = Stopwatch.new
           # time_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)

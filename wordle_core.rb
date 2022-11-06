@@ -342,6 +342,17 @@ def scrabble_score(word)
   word.chars.map{|c| scrabble_letter_scores[c]}.sum
 end
 
+PROBABLE_PLURALS = {}
+def plural?(word)
+  if PROBABLE_PLURALS.empty?
+    File.foreach(DICTIONARY_FILE_LIKELY_PLURALS).with_index do |line, line_num|
+      PROBABLE_PLURALS[line.chomp] = line_num
+    end
+    PROBABLE_PLURALS.freeze
+  end
+  PROBABLE_PLURALS.key? word
+end
+
 module PreviousWordleSolutions
   @@previous_wordle_solutions = nil
 
@@ -363,6 +374,11 @@ module PreviousWordleSolutions
 
   def self.check_word(word)
     PreviousWordleSolutions.all_solutions[word]
+  end
+
+  def self.occurred_before(word)
+    PreviousWordleSolutions.all_solutions[word] != nil &&
+      PreviousWordleSolutions.all_solutions[word] < wordle_number_or_default(suppress_output: true).to_i
   end
 
   def self.lookup_by_number(n)

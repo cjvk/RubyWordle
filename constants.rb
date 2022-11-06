@@ -4,6 +4,7 @@
 # The purpose of this file is the universe of solutions
 DICTIONARY_FILE_LARGE = 'sgb-words.txt'
 DICTIONARY_FILE_SMALL = 'sgb-words-small.txt'
+DICTIONARY_FILE_LIKELY_PLURALS = 'sgb-words-plurals-sorted.txt'
 
 # produced via scrape_nyt.rb: the universe of legal guesses
 VALID_WORDLE_WORDS_FILE = 'valid-wordle-words.txt'
