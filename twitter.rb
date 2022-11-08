@@ -66,7 +66,7 @@ module Twitter
     # @@debug_print_tweet_id = '1574751210959032320'
 
     #         Uncomment to enable printing of ALL penultimate which match this pattern
-    # @@print_this_penultimate_pattern = 'wgggw' # use normalized colors (g/y/w)
+    # @@print_this_penultimate_pattern = 'wyggg' # use normalized colors (g/y/w)
 
     #         Uncomment to enable printing of ALL answers which match this key
     # @@print_answers_matching_this_key = '4g.5.5'
@@ -105,16 +105,17 @@ module Twitter
       defined?(@@print_answers_matching_this_key) ? @@print_answers_matching_this_key : nil
     end
     def self.author_id_denylist
-      YAML.load_file('author_id_denylist.yaml')
-        .map{|el| raise "problem!" if el['verdict'] != 'deny'; el}
-        .map{|el| [el['author_id'].to_s, el['name']]}
-        .to_h
+      self._author_id_list('author_id_denylist.yaml', 'deny')
     end
     def self.author_id_allowlist
-      YAML.load_file('author_id_allowlist.yaml')
-        .map{|el| raise "problem!" if el['verdict'] != 'allow'; el}
-        .map{|el| [el['author_id'].to_s, el['name']]}
-        .to_h
+      self._author_id_list('author_id_allowlist.yaml', 'allow')
+    end
+    def self._author_id_list(filename, expected_verdict)
+      seen_ids = {}
+      YAML.load_file(filename)
+        .map{|el| raise "problem!" if el['verdict'] != expected_verdict; [el, el['author_id']]}
+        .map{|el, aid| raise "dupe! (#{aid})" if seen_ids.key?(aid); seen_ids[aid] = 0; el}
+        .map{|el| [el['author_id'].to_s, el['name']]}.to_h
     end
   end
 
@@ -272,6 +273,9 @@ module Twitter
         UI.padded_puts '----------------------------------------'
         puts ''
 
+        # @answers.each{|answer| answer.pp if answer.num_guesses == 1}
+        # @answers.each{|ans| UI::padded_puts "1-tweet: #{ans.tweet_url}" if ans.num_guesses == 1}
+
         if Configuration.print_answers_matching_this_key != nil
           matching_key = Configuration.print_answers_matching_this_key
           UI::padded_puts "Printing all answers matching key #{matching_key}"
@@ -303,6 +307,14 @@ module Twitter
       # Note that any modification to the answers will be reflected in both places
       answers = make_call_return_value[:answers].dup
       call_stats = make_call_return_value[:call_stats].dup
+
+      # Moved this here so as to also print for cached results
+      answers.each do |answer|
+        if answer.num_guesses != 1 && answer.penultimate == Configuration.print_this_penultimate_pattern
+          UI::padded_puts "answer matches #{Configuration.print_this_penultimate_pattern}"
+          answer.pp
+        end
+      end
 
       # check the denylist if so instructed
       answers = answers.delete_if{|ans| Configuration.author_id_denylist.include?(ans.author_id)} if check_denylist
@@ -423,6 +435,11 @@ module Twitter
             next if !Twitter::is_probably_a_wordle_post?(text, wordle_number)
             Debug.maybe_log 'is probably a wordle post!'
 
+            # skip wordle.wekele.com
+            if text.include?('wordle.wekele.com')
+              Debug.log_verbose "skipping tweet (wekele) (#{Answer.tweet_url id, username}) (author_id=#{author_id})"
+            end
+
             # determine how many guesses they took
             # because text is "probably a wordle post", it should match
             num_guesses = text.match(/Wordle #{wordle_number} ([1-6X])\/6/)
@@ -481,15 +498,6 @@ module Twitter
             if guess_array.length() != num_guesses
               Alert.alert "guess array not correct length! (#{Answer.tweet_url id, username}) (author_id=#{author_id})"
               next
-            end
-
-            if guess_array[guess_array.length()-2] == Configuration.print_this_penultimate_pattern
-              Debug.log '-------- TEXT: BEGIN     --------'
-              Debug.log text
-              Debug.log '-------- TEXT: END       --------'
-              Debug.log '-------- RESULT: BEGIN   --------'
-              Debug.log result
-              Debug.log '-------- RESULT: END     --------'
             end
 
             answers.append(Twitter::Answer.new(guess_array, id, author_id, username))

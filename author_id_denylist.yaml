@@ -6,6 +6,12 @@
   analysis: Wordle 433 (irony), 4g.3.1, ()
   verdict: deny # Definite Goofball!
 
+- name: dammiLoh
+  author_id: 220043584
+  tweet: https://twitter.com/dammiLoh/status/1589521025133420546
+  analysis: Wordle 506 (begin), 3g1y.yellow2.white1, ()
+  verdict: deny # Definite Goofball!
+
 - name: FergalSweeney
   author_id: 2742981849
   tweet: https://twitter.com/FergalSweeney/status/1563808124817100801
@@ -30,10 +36,28 @@
   analysis: Wordle 472 (bough), 3g1y.yellow1.white2, ()
   verdict: deny # Definite Goofball!
 
+- name: Johno1961
+  author_id: 30627384
+  tweet: https://twitter.com/Johno1961/status/1589589226479583233
+  analysis: Wordle 506 (begin), 4g.1.1, ()
+  verdict: deny # Definite Goofball!
+
+- name: julesdoyle
+  author_id: 15476623
+  tweet: https://twitter.com/julesdoyle/status/1589591309865598976
+  analysis: Wordle 506 (begin), 3g1y.yellow2.white1, ()
+  verdict: deny # Definite Goofball!
+
 - name: ka_ta_ck
   author_id: 112974516
   tweet: https://twitter.com/ka_ta_ck/status/1565696152011386881
   analysis: Wordle 440 (charm), 3g1y.yellow1.white5, ()
+  verdict: deny # Definite Goofball!
+
+- name: kamemex
+  author_id: 192623930
+  tweet: https://twitter.com/kamemex/status/1589662951245774849
+  analysis: Wordle 506 (begin), 4g.1.3, ()
   verdict: deny # Definite Goofball!
 
 - name: LoveSkate_Love
@@ -54,6 +78,12 @@
   analysis: Wordle 444 (taunt), 3g2y.yellow23, ()
   verdict: deny # Definite Goofball!
 
+- name: MsLadyRover
+  author_id: 494730830
+  tweet: https://twitter.com/MsLadyRover/status/1589633144193441794
+  analysis: Wordle 506 (begin), 3g1y.yellow2.white1, ()
+  verdict: deny # Definite Goofball!
+
 - name: naganotoshi3687
   author_id: 177226123
   tweet: https://twitter.com/naganotoshi3687/status/1567362368912654337
@@ -64,6 +94,12 @@
   author_id: 1135429500
   tweet: https://twitter.com/newskin111/status/1574673055346925568
   analysis: Wordle 465 (soggy), 4g.5.1, ()
+  verdict: deny # Definite Goofball!
+
+- name: omek123
+  author_id: 24580706
+  tweet: https://twitter.com/omek123/status/1589567236720713728
+  analysis: Wordle 506 (begin), 3g1y.yellow2.white1, ()
   verdict: deny # Definite Goofball!
 
 - name: polterguyst
@@ -82,6 +118,18 @@
   author_id: 308900763
   tweet: https://twitter.com/RepublicanDalek/status/1565005705727410178
   analysis: Wordle 438 (prize), 4g.3.1, ()
+  verdict: deny # Definite Goofball!
+
+- name: scorsby
+  author_id: 151901112
+  tweet: https://twitter.com/scorsby/status/1589536538043768832
+  analysis: Wordle 506 (begin), 4g.1.1, ()
+  verdict: deny # Definite Goofball!
+
+- name: takamin_jp
+  author_id: 38896843
+  tweet: https://twitter.com/takamin_jp/status/1589615975326187520
+  analysis: Wordle 506 (begin), 4g.1.1, ()
   verdict: deny # Definite Goofball!
 
 - name: tmVRlXtrkCvqvfA

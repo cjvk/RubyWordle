@@ -179,6 +179,10 @@ module Tests
     fail unless plural?('aptly') == false
     fail unless plural?('ovens') == true
     fail unless plural?('boxes') == false # it is not perfect
+
+    # allowlist & denylist, dup checking
+    fail unless Twitter::Configuration.author_id_allowlist
+    fail unless Twitter::Configuration.author_id_denylist
   end
 end
 
