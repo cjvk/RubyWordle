@@ -120,10 +120,22 @@
   analysis: Wordle 438 (prize), 4g.3.1, ()
   verdict: deny # Definite Goofball!
 
+- name: SamR33v3s
+  author_id: 64515383
+  tweet: https://twitter.com/SamR33v3s/status/1589994368597110786
+  analysis: Wordle 507 (spell), 4g.1.1, ()
+  verdict: deny # Definite Goofball!
+
 - name: scorsby
   author_id: 151901112
   tweet: https://twitter.com/scorsby/status/1589536538043768832
   analysis: Wordle 506 (begin), 4g.1.1, ()
+  verdict: deny # Definite Goofball!
+
+- name: spcock
+  author_id: 280879276
+  tweet: https://twitter.com/spcock/status/1589995261354708993
+  analysis: Wordle 507 (spell), 4g.1.1, ()
   verdict: deny # Definite Goofball!
 
 - name: takamin_jp

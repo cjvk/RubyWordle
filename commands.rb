@@ -57,7 +57,6 @@ module Commands
     end
   end
 
-  # TODO Wordle 478 had six words all get a score of 100 (ilium/enjoy/knoll/jujus/excel/quaff)
   # Consider further: previous solution, repeated letters, "grade level", lower scrabble score
   def Commands::give_me_the_answer(d)
     give_me_the_answer_1 d
@@ -65,6 +64,7 @@ module Commands
 
   def Commands::give_me_the_answer_2(d)
     # improvements: eliminate previous solutions, tiebreak on repeated letters & lower scrabble score
+    # to wit: Wordle 478 had six words all get a score of 100 (ilium/enjoy/knoll/jujus/excel/quaff)
     UI::suppress_on
     list_length = 5
     print_a_winner = ->(word) {

@@ -506,3 +506,6 @@ inept
 aloud
 photo
 dream
+stale
+begin
+spell

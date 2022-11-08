@@ -66,7 +66,7 @@ module Twitter
     # @@debug_print_tweet_id = '1574751210959032320'
 
     #         Uncomment to enable printing of ALL penultimate which match this pattern
-    # @@print_this_penultimate_pattern = 'wyggg' # use normalized colors (g/y/w)
+    # @@print_this_penultimate_pattern = 'wgggg' # use normalized colors (g/y/w)
 
     #         Uncomment to enable printing of ALL answers which match this key
     # @@print_answers_matching_this_key = '4g.5.5'
