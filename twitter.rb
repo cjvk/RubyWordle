@@ -66,7 +66,7 @@ module Twitter
     # @@debug_print_tweet_id = '1574751210959032320'
 
     #         Uncomment to enable printing of ALL penultimate which match this pattern
-    # @@print_this_penultimate_pattern = 'wgggg' # use normalized colors (g/y/w)
+    # @@print_this_penultimate_pattern = 'ggggw' # use normalized colors (g/y/w)
 
     #         Uncomment to enable printing of ALL answers which match this key
     # @@print_answers_matching_this_key = '4g.5.5'
@@ -145,7 +145,7 @@ module Twitter
       UI::padded_puts "tweet: #{tweet_url}"
       UI::padded_puts "author_id: #{author_id}"
       UI::padded_puts "key: #{@key}"
-      puts ''
+      UI::padded_puts ''
     end
     def matches_key(key)
       @is_interesting != nil && @is_interesting && @key == key
@@ -438,6 +438,7 @@ module Twitter
             # skip wordle.wekele.com
             if text.include?('wordle.wekele.com')
               Debug.log_verbose "skipping tweet (wekele) (#{Answer.tweet_url id, username}) (author_id=#{author_id})"
+              next
             end
 
             # determine how many guesses they took

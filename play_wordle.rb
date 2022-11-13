@@ -9,6 +9,8 @@ require_relative 'twitter'
 require_relative 'fingerprints'
 require_relative 'tests'
 
+# TODO "give me the answer" should query for a number (like goofball)
+
 module UI
   def self.main_menu(guess, d, show_menu: true)
     main_menu_array = [
@@ -106,9 +108,25 @@ module UI
         when 'give me the answer'
           Commands::give_me_the_answer(d)
         when 'gmta1'
-          Commands::give_me_the_answer_1(d)
+          Commands::give_me_the_answer_1(
+            d,
+            wordle_number_or_default(suppress_output: true)
+          )
         when 'gmta2'
-          Commands::give_me_the_answer_2(d)
+          Commands::give_me_the_answer_2(
+            d,
+            wordle_number_or_default(suppress_output: true)
+          )
+        when 'gmta1-regression'
+          (500..501).each do |wordle_number|
+            Twitter::Configuration.set_wordle_number_override wordle_number
+            Commands::give_me_the_answer_1(d, wordle_number)
+          end
+        when 'gmta2-regression'
+          (500..501).each do |wordle_number|
+            Twitter::Configuration.set_wordle_number_override wordle_number
+            Commands::give_me_the_answer_2(d, wordle_number)
+          end
         when 'performance'
           sw = Stopwatch.new
           # time_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)

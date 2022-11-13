@@ -12,6 +12,12 @@
   analysis: Wordle 506 (begin), 3g1y.yellow2.white1, ()
   verdict: deny # Definite Goofball!
 
+- name: dogmaisabitch
+  author_id: 1300054238
+  tweet: https://twitter.com/dogmaisabitch/status/1590362889587609600
+  analysis: Wordle 508 (rainy), 4g.1.1, ()
+  verdict: deny # Definite Goofball!
+
 - name: FergalSweeney
   author_id: 2742981849
   tweet: https://twitter.com/FergalSweeney/status/1563808124817100801
@@ -60,6 +66,12 @@
   analysis: Wordle 506 (begin), 4g.1.3, ()
   verdict: deny # Definite Goofball!
 
+- name: kel_ryder7
+  author_id: 290532475
+  tweet: https://twitter.com/kel_ryder7/status/1591712738711158784
+  analysis: Wordle 512 (inane), 4g.1.1, ()
+  verdict: deny # Definite Goofball!
+
 - name: LoveSkate_Love
   author_id: 799098238548643841
   tweet: https://twitter.com/LoveSkate_Love/status/1564238522487574529
@@ -72,10 +84,22 @@
   analysis: Wordle 440 (charm), 4g.2.1, ()
   verdict: deny # Definite Goofball!
 
+- name: mistresscurvy
+  author_id: 76246452
+  tweet: https://twitter.com/mistresscurvy/status/1590362118402211841
+  analysis: Wordle 508 (rainy), 4g.1.1, ()
+  verdict: deny # Definite Goofball!
+
 - name: momoxpii
   author_id: 1328227476984762368
   tweet: https://twitter.com/momoxpii/status/1567643038297587712
   analysis: Wordle 444 (taunt), 3g2y.yellow23, ()
+  verdict: deny # Definite Goofball!
+
+- name: Mos_Muffins
+  author_id: 376984420
+  tweet: https://twitter.com/Mos_Muffins/status/1590367305573101569
+  analysis: Wordle 508 (rainy), 1g4y.green1, ()
   verdict: deny # Definite Goofball!
 
 - name: MsLadyRover
@@ -138,10 +162,28 @@
   analysis: Wordle 507 (spell), 4g.1.1, ()
   verdict: deny # Definite Goofball!
 
+- name: stephenleary
+  author_id: 14890693
+  tweet: https://twitter.com/stephenleary/status/1591860752272482305
+  analysis: Wordle 512 (inane), 4g.5.1, ()
+  verdict: deny # Definite Goofball!
+
+- name: swonderfan
+  author_id: 248318956
+  tweet: https://twitter.com/swonderfan/status/1591858811442274304
+  analysis: Wordle 512 (inane), 4g.1.2, ()
+  verdict: deny # Definite Goofball!
+
 - name: takamin_jp
   author_id: 38896843
   tweet: https://twitter.com/takamin_jp/status/1589615975326187520
   analysis: Wordle 506 (begin), 4g.1.1, ()
+  verdict: deny # Definite Goofball!
+
+- name: teknikolour
+  author_id: 18574829
+  tweet: https://twitter.com/teknikolour/status/1590412421419728896
+  analysis: Wordle 508 (rainy), 4g.1.1, ()
   verdict: deny # Definite Goofball!
 
 - name: tmVRlXtrkCvqvfA

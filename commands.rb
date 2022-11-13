@@ -59,10 +59,16 @@ module Commands
 
   # Consider further: previous solution, repeated letters, "grade level", lower scrabble score
   def Commands::give_me_the_answer(d)
-    give_me_the_answer_1 d
+    wordle_number_default_value = today_wordle_number
+    wordle_number = UI.prompt_for_numeric_input(
+      "Enter daily wordle number (default #{wordle_number_default_value}):",
+      default_value: wordle_number_default_value
+    )
+    Twitter::Configuration.set_wordle_number_override wordle_number
+    give_me_the_answer_1(d, wordle_number)
   end
 
-  def Commands::give_me_the_answer_2(d)
+  def Commands::give_me_the_answer_2(d, wordle_number)
     # improvements: eliminate previous solutions, tiebreak on repeated letters & lower scrabble score
     # to wit: Wordle 478 had six words all get a score of 100 (ilium/enjoy/knoll/jujus/excel/quaff)
     UI::suppress_on
@@ -70,7 +76,7 @@ module Commands
     print_a_winner = ->(word) {
       UI::suppress_off
       puts "\n\n"
-      UI::padded_puts("The answer to Wordle #{wordle_number_or_default(suppress_output: true)} is #{word}.")
+      UI::padded_puts("The answer to Wordle #{wordle_number} is #{word}.")
       puts "\n\n"
       true
     }
@@ -167,7 +173,7 @@ module Commands
     print_a_winner.call(choices.max_by{|word, score| [score, -1 * scrabble_score(word)]}[0])
   end
 
-  def Commands::give_me_the_answer_1(d)
+  def Commands::give_me_the_answer_1(d, wordle_number)
     # frozen on 10/26/2022
     UI::suppress_on
     list_length = 2 # second could be useful to see if there is a "clear winner"
@@ -175,7 +181,7 @@ module Commands
     print_a_winner = ->(word) {
       UI::suppress_off
       puts "\n\n"
-      UI::padded_puts("The answer to Wordle #{wordle_number_or_default(suppress_output: true)} is #{word}.")
+      UI::padded_puts("The answer to Wordle #{wordle_number} is #{word}.")
       puts "\n\n"
       true
     }
@@ -229,6 +235,7 @@ module Commands
     stats_hash
       .map{|k, v| answers.each{|ans| singleton_keys.append([k, ans]) if ans.matches_key(k)} if v == 1; [k, v]}
       .map{|k, v| answers.each{|ans| singleton_keys.append([k, ans]) if ans.matches_key(k)} if v == 2; [k, v]}
+      .map{|k, v| answers.each{|ans| singleton_keys.append([k, ans]) if ans.matches_key(k)} if v == 3; [k, v]}
       .map{|k, _| answers.each{|ans| ans.pp if ans.matches_key(k)} if k=='4g.5.1' && false} # debug printing
 
     [
@@ -276,8 +283,9 @@ module Commands
       answers_and_verdicts.append(
         [answer, key, reasoning, verdict, title]
       )
-
     end
+
+    answers_and_verdicts = answers_and_verdicts.sort_by {|_, _, _, _, title| title}
 
     print_goofball_report_entry = ->(answer, key, reasoning, verdict, title) {
       nm = wordle_number
