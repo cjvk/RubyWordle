@@ -514,3 +514,12 @@ unite
 medal # Wordle 510, 11/11/2022
 valet
 inane
+maple
+snarl
+baker
+there
+glyph
+avert
+brave
+axiom # Wordle 520, 11/21/2022
+prime

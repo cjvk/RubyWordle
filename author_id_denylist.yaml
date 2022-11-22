@@ -1,9 +1,21 @@
 ---
 
+- name: Boombiezzz
+  author_id: 2938242200
+  tweet: https://twitter.com/Boombiezzz/status/1593620180823048192
+  analysis: Wordle 517 (glyph), 4g.1.2, ()
+  verdict: deny # Definite Goofball!
+
 - name: chryo29t
   author_id: 140922619
   tweet: https://twitter.com/chryo29t/status/1563129697382195200
   analysis: Wordle 433 (irony), 4g.3.1, ()
+  verdict: deny # Definite Goofball!
+
+- name: chuckfromNO
+  author_id: 65658716
+  tweet: https://twitter.com/chuckfromNO/status/1593621888177033216
+  analysis: Wordle 517 (glyph), 4g.1.2, ()
   verdict: deny # Definite Goofball!
 
 - name: dammiLoh
@@ -16,6 +28,12 @@
   author_id: 1300054238
   tweet: https://twitter.com/dogmaisabitch/status/1590362889587609600
   analysis: Wordle 508 (rainy), 4g.1.1, ()
+  verdict: deny # Definite Goofball!
+
+- name: fatimap72
+  author_id: 47993321
+  tweet: https://twitter.com/fatimap72/status/1593619615220842496
+  analysis: Wordle 517 (glyph), 4g.1.1, ()
   verdict: deny # Definite Goofball!
 
 - name: FergalSweeney
@@ -70,6 +88,12 @@
   author_id: 290532475
   tweet: https://twitter.com/kel_ryder7/status/1591712738711158784
   analysis: Wordle 512 (inane), 4g.1.1, ()
+  verdict: deny # Definite Goofball!
+
+- name: lorigspeaks
+  author_id: 923836281087434752
+  tweet: https://twitter.com/lorigspeaks/status/1593623500186599427
+  analysis: Wordle 517 (glyph), 4g.1.1, ()
   verdict: deny # Definite Goofball!
 
 - name: LoveSkate_Love
@@ -136,6 +160,12 @@
   author_id: 960524838585683974
   tweet: https://twitter.com/r_a_poe/status/1567207086320230402
   analysis: Wordle 444 (taunt), 4g.5.3, ()
+  verdict: deny # Definite Goofball!
+
+- name: Redwinenbooks
+  author_id: 157013999
+  tweet: https://twitter.com/Redwinenbooks/status/1593620003881820160
+  analysis: Wordle 517 (glyph), 4g.1.1, ()
   verdict: deny # Definite Goofball!
 
 - name: RepublicanDalek

@@ -68,7 +68,148 @@ module Commands
     give_me_the_answer_1(d, wordle_number)
   end
 
+  def Commands::give_me_the_answer_1(d, wordle_number)
+    _give_me_the_answer(
+      d,
+      wordle_number_or_default(suppress_output: true),
+      list_length: 2,
+      terse_printing: true,
+      threshold: 60.0)
+  end
+
   def Commands::give_me_the_answer_2(d, wordle_number)
+    _give_me_the_answer(
+      d,
+      wordle_number_or_default(suppress_output: true),
+      list_length: 5,
+      terse_printing: true,
+      discount_duplicates: true,
+      eliminate_previous_solutions: true,
+      discount_plurals: true,
+      scrabble_sort: true,
+      interactive: false)
+  end
+
+  def Commands::_give_me_the_answer(d, wordle_number,
+                                   list_length: 2,
+                                   terse_printing: false,
+                                   threshold: nil,
+                                   discount_duplicates: false,
+                                   eliminate_previous_solutions: false,
+                                   discount_plurals: false,
+                                   scrabble_sort: false,
+                                   interactive: false)
+    UI::suppress_on
+    print_a_winner = ->(word) {
+      UI::suppress_off
+      puts "\n\n" if !terse_printing
+      UI::padded_puts("The answer to Wordle #{wordle_number} is #{word}.")
+      puts "\n\n" if !terse_printing
+      true
+    }
+    maybe_print_a_winner = ->(word, score) {
+      return false if threshold.nil? || score < threshold
+      # return false if (!threshold.nil? && (score < threshold));
+      print_a_winner.call(word)
+    }
+
+    stats_hash1 = Twitter::Query::regular_with_singletons.stats_hash
+    analysis1 = Fingerprint::fingerprint_analysis(d, stats_hash1, suppress_output: true, dracos_override: true)
+
+    if discount_duplicates
+      dup_discount = ->(word, score) {
+        score * [0.2, 0.4, 0.6, 1.0, 1.0][word.chars.uniq.length-1]
+      }
+    else
+      dup_discount = ->(word, score) { score }
+    end
+
+    results = {
+      :with_singletons => {
+        :nyt => analysis1[:d_nyt]
+          .delete_if{|word, _| eliminate_previous_solutions && PreviousWordleSolutions.occurred_before(word)}
+          .map{|word, data| data[:modified_nyt_score] = dup_discount.call(word, data[:nyt_score]); [word, data]}
+          .map{|word, data| data[:modified_nyt_score] *= 0.5 if discount_plurals && plural?(word); [word, data]}
+          .sort_by.with_index{|(word, data), i| [-1 * data[:modified_nyt_score], scrabble_sort ? scrabble_score(word) : 0, i]}
+          .map{|word, data| [word, data[:modified_nyt_score]]}[0..list_length-1],
+        :dracos => analysis1[:d_dracos]
+          .delete_if{|word, _| eliminate_previous_solutions && PreviousWordleSolutions.occurred_before(word)}
+          .map{|word, data| data[:modified_dracos_score] = dup_discount.call(word, data[:dracos_score]); [word, data]}
+          .map{|word, data| data[:modified_dracos_score] *= 0.5 if discount_plurals && plural?(word); [word, data]}
+          .sort_by.with_index{|(word, data), i| [-1 * data[:modified_dracos_score], scrabble_sort ? scrabble_score(word) : 0, i]}
+          .map{|word, data| [word, data[:modified_dracos_score]]}[0..list_length-1],
+      },
+    }
+
+    # threshold is checked inside maybe
+    return if analysis1[:d_nyt].size > 0 && maybe_print_a_winner.call(*results[:with_singletons][:nyt][0])
+    return if analysis1[:d_dracos].size > 0 && maybe_print_a_winner.call(*results[:with_singletons][:dracos][0])
+
+    # save choices
+    append_first_element_if_positive_score = ->(array_to_append, data_array) {
+      if data_array.size > 0 && data_array[0][1] > 0
+        array_to_append.append(data_array[0])
+      end
+    }
+    choices = []
+    append_first_element_if_positive_score.call(choices, results[:with_singletons][:nyt])
+    append_first_element_if_positive_score.call(choices, results[:with_singletons][:dracos])
+
+    # Remove potential bad tweets and re-run
+    if StatsHash.num_singletons(stats_hash1) > 0
+      analysis2 = Fingerprint::fingerprint_analysis(
+        d, stats_hash2 = Twitter::Query::regular.stats_hash, suppress_output: true, dracos_override: true)
+
+      results[:without_singletons] = {
+        :nyt => analysis2[:d_nyt]
+          .delete_if{|word, _| eliminate_previous_solutions && PreviousWordleSolutions.occurred_before(word)}
+          .map{|word, data| data[:modified_nyt_score] = dup_discount.call(word, data[:nyt_score]); [word, data]}
+          .map{|word, data| data[:modified_nyt_score] *= 0.5 if discount_plurals && plural?(word); [word, data]}
+          .sort_by.with_index{|(word, data), i| [-1 * data[:modified_nyt_score], scrabble_sort ? scrabble_score(word) : 0, i]}
+          .map{|word, data| [word, data[:modified_nyt_score]]}[0..list_length-1],
+        :dracos => analysis2[:d_dracos]
+          .delete_if{|word, _| eliminate_previous_solutions && PreviousWordleSolutions.occurred_before(word)}
+          .map{|word, data| data[:modified_dracos_score] = dup_discount.call(word, data[:dracos_score]); [word, data]}
+          .map{|word, data| data[:modified_dracos_score] *= 0.5 if discount_plurals && plural?(word); [word, data]}
+          .sort_by.with_index{|(word, data), i| [-1 * data[:modified_dracos_score], scrabble_sort ? scrabble_score(word) : 0, i]}
+          .map{|word, data| [word, data[:modified_dracos_score]]}[0..list_length-1],
+      }
+
+      return if maybe_print_a_winner.call(*results[:without_singletons][:nyt][0])
+      return if maybe_print_a_winner.call(*results[:without_singletons][:dracos][0])
+
+      choices.append(*[results[:without_singletons][:nyt][0], results[:without_singletons][:dracos][0]])
+    end
+
+    if interactive
+      while true do
+        puts ''
+        print 'Enter a word to see its score, or ENTER to continue: ==> '
+        user_input_word = gets.chomp
+        break if '' == user_input_word
+        exit if 'quit' == user_input_word || 'exit' == user_input_word
+        puts ''
+        puts "stats_hash1: #{stats_hash1}"
+        puts ''
+        puts "analysis1, NYT, #{user_input_word}: #{analysis1[:d_nyt][user_input_word]}"
+        puts ''
+        puts "analysis1, Dracos, #{user_input_word}: #{analysis1[:d_dracos][user_input_word]}"
+        if stats_hash2
+          puts ''
+          puts "stats_hash2: #{stats_hash2}"
+          puts ''
+          puts "analysis2, NYT, #{user_input_word}: #{analysis2[:d_nyt][user_input_word]}"
+          puts ''
+          puts "analysis2, Dracos, #{user_input_word}: #{analysis2[:d_dracos][user_input_word]}"
+        end
+      end
+    end
+
+    # nothing was high enough (sigh!) - pick the best choice
+    print_a_winner.call(choices.max_by{|word, score| [score, scrabble_sort ? -1 * scrabble_score(word) : 0]}[0])
+  end
+
+  def Commands::give_me_the_answer_2_deprecated(d, wordle_number)
     # improvements: eliminate previous solutions, tiebreak on repeated letters & lower scrabble score
     # to wit: Wordle 478 had six words all get a score of 100 (ilium/enjoy/knoll/jujus/excel/quaff)
     UI::suppress_on
@@ -99,17 +240,16 @@ module Commands
           .delete_if{|word, _| PreviousWordleSolutions.occurred_before(word)}
           .map{|word, data| data[:modified_nyt_score] = dup_discount.call(word, data[:nyt_score]); [word, data]}
           .map{|word, data| data[:modified_nyt_score] *= 0.5 if plural?(word); [word, data]}
-          .sort_by{|word, data| [-1 * data[:modified_nyt_score], scrabble_score(word)]}
+          .sort_by.with_index{|(word, data), i| [-1 * data[:modified_nyt_score], scrabble_score(word), i]}
           .map{|word, data| [word, data[:modified_nyt_score]]}[0..list_length-1],
         :dracos => analysis1[:d_dracos]
           .delete_if{|word, _| PreviousWordleSolutions.occurred_before(word)}
           .map{|word, data| data[:modified_dracos_score] = dup_discount.call(word, data[:dracos_score]); [word, data]}
           .map{|word, data| data[:modified_dracos_score] *= 0.5 if plural?(word); [word, data]}
-          .sort_by{|word, data| [-1 * data[:modified_dracos_score], scrabble_score(word)]}
+          .sort_by.with_index{|(word, data), i| [-1 * data[:modified_dracos_score], scrabble_score(word), i]}
           .map{|word, data| [word, data[:modified_dracos_score]]}[0..list_length-1],
       },
     }
-    puts results
 
     append_first_element_if_positive_score = ->(array_to_append, data_array) {
       if data_array.size > 0 && data_array[0][1] > 0
@@ -119,7 +259,6 @@ module Commands
     choices = []
     append_first_element_if_positive_score.call(choices, results[:with_singletons][:nyt])
     append_first_element_if_positive_score.call(choices, results[:with_singletons][:dracos])
-    puts "choices = #{choices}"
 
     # Remove potential bad tweets and re-run
     if StatsHash.num_singletons(stats_hash1) > 0
@@ -131,20 +270,18 @@ module Commands
           .delete_if{|word, _| PreviousWordleSolutions.occurred_before(word)}
           .map{|word, data| data[:modified_nyt_score] = dup_discount.call(word, data[:nyt_score]); [word, data]}
           .map{|word, data| data[:modified_nyt_score] *= 0.5 if plural?(word); [word, data]}
-          .sort_by{|word, data| [-1 * data[:modified_nyt_score], scrabble_score(word)]}
+          .sort_by.with_index{|(word, data), i| [-1 * data[:modified_nyt_score], scrabble_score(word), i]}
           .map{|word, data| [word, data[:modified_nyt_score]]}[0..list_length-1],
         :dracos => analysis2[:d_dracos]
           .delete_if{|word, _| PreviousWordleSolutions.occurred_before(word)}
           .map{|word, data| data[:modified_dracos_score] = dup_discount.call(word, data[:dracos_score]); [word, data]}
           .map{|word, data| data[:modified_dracos_score] *= 0.5 if plural?(word); [word, data]}
-          .sort_by{|word, data| [-1 * data[:modified_dracos_score], scrabble_score(word)]}
+          .sort_by.with_index{|(word, data), i| [-1 * data[:modified_dracos_score], scrabble_score(word), i]}
           .map{|word, data| [word, data[:modified_dracos_score]]}[0..list_length-1],
       }
 
       choices.append(*[results[:without_singletons][:nyt][0], results[:without_singletons][:dracos][0]])
     end
-    puts results
-    puts "choices = #{choices}"
 
     # debugging
     while true do
@@ -173,7 +310,7 @@ module Commands
     print_a_winner.call(choices.max_by{|word, score| [score, -1 * scrabble_score(word)]}[0])
   end
 
-  def Commands::give_me_the_answer_1(d, wordle_number)
+  def Commands::give_me_the_answer_1_deprecated(d, wordle_number)
     # frozen on 10/26/2022
     UI::suppress_on
     list_length = 2 # second could be useful to see if there is a "clear winner"
@@ -196,6 +333,7 @@ module Commands
         :dracos => analysis1[:d_dracos].map{|word,data| [word, data[:dracos_score]]}[0..list_length-1],
       },
     }
+    # puts results
 
     # First choice NYT, then dracos with its smaller fingerprints, otherwise save top choices and continue
     if analysis1[:d_nyt].size > 0
@@ -205,6 +343,7 @@ module Commands
     else
       choices = []
     end
+    # puts "choices=#{choices}"
 
     # If neither is high enough, remove potential bad tweets and re-run
     if StatsHash.num_singletons(stats_hash1) > 0
@@ -214,11 +353,13 @@ module Commands
         :nyt => analysis2[:d_nyt].map{|word,data| [word, data[:nyt_score]]}[0..list_length-1],
         :dracos => analysis2[:d_dracos].map{|word,data| [word, data[:dracos_score]]}[0..list_length-1],
       }
+      # puts results
 
       # NYT, dracos, save top choices
       return if maybe_print_a_winner.call(*results[:without_singletons][:nyt][0])
       return if maybe_print_a_winner.call(*results[:without_singletons][:dracos][0])
       choices.append(*[results[:without_singletons][:nyt][0], results[:without_singletons][:dracos][0]])
+      # puts "choices=#{choices}"
     end
 
     # nothing was high enough (sigh!) - pick the best choice
