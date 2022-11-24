@@ -112,15 +112,17 @@ module UI
         when 'gmta2'
           Commands::give_me_the_answer_2(d, wordle_number_or_default(suppress_output: true))
         when 'gmta-regression'
-          # (449..480).each do |wordle_number| # no issues
-          (481..521).each do |wordle_number|
+          (449..449).each do |wordle_number| # no issues
+          # (449..521).each do |wordle_number|
             Twitter::Configuration.set_wordle_number_override wordle_number
             puts 'GMTA1:'
-            Commands::give_me_the_answer_1_deprecated(d, wordle_number)
+            # Commands::give_me_the_answer_1_deprecated(d, wordle_number)
             Commands::give_me_the_answer_1(d, wordle_number)
             puts 'GMTA2:'
-            Commands::give_me_the_answer_2_deprecated(d, wordle_number)
+            # Commands::give_me_the_answer_2_deprecated(d, wordle_number)
             Commands::give_me_the_answer_2(d, wordle_number)
+            puts 'GMTA3:'
+            Commands::give_me_the_answer_3(d, wordle_number)
           end
         when 'performance'
           sw = Stopwatch.new

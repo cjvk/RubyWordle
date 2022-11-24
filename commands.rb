@@ -65,16 +65,17 @@ module Commands
       default_value: wordle_number_default_value
     )
     Twitter::Configuration.set_wordle_number_override wordle_number
-    give_me_the_answer_1(d, wordle_number)
+    give_me_the_answer_1(d, wordle_number, terse_printing: false)
   end
 
-  def Commands::give_me_the_answer_1(d, wordle_number)
+  def Commands::give_me_the_answer_1(d, wordle_number, terse_printing: true)
     _give_me_the_answer(
       d,
       wordle_number_or_default(suppress_output: true),
       list_length: 2,
-      terse_printing: true,
-      threshold: 60.0)
+      terse_printing: terse_printing,
+      threshold: 60.0,
+      interactive: false)
   end
 
   def Commands::give_me_the_answer_2(d, wordle_number)
@@ -83,7 +84,20 @@ module Commands
       wordle_number_or_default(suppress_output: true),
       list_length: 5,
       terse_printing: true,
-      discount_duplicates: true,
+      discount_duplicates: [0.2, 0.4, 0.6, 1.0, 1.0],
+      eliminate_previous_solutions: true,
+      discount_plurals: true,
+      scrabble_sort: true,
+      interactive: false)
+  end
+
+  def Commands::give_me_the_answer_3(d, wordle_number)
+    _give_me_the_answer(
+      d,
+      wordle_number_or_default(suppress_output: true),
+      list_length: 5,
+      terse_printing: true,
+      discount_duplicates: nil,
       eliminate_previous_solutions: true,
       discount_plurals: true,
       scrabble_sort: true,
@@ -94,11 +108,12 @@ module Commands
                                    list_length: 2,
                                    terse_printing: false,
                                    threshold: nil,
-                                   discount_duplicates: false,
+                                   discount_duplicates: nil,
                                    eliminate_previous_solutions: false,
                                    discount_plurals: false,
                                    scrabble_sort: false,
                                    interactive: false)
+    print_verbose = false
     UI::suppress_on
     print_a_winner = ->(word) {
       UI::suppress_off
@@ -118,7 +133,7 @@ module Commands
 
     if discount_duplicates
       dup_discount = ->(word, score) {
-        score * [0.2, 0.4, 0.6, 1.0, 1.0][word.chars.uniq.length-1]
+        score * discount_duplicates[word.chars.uniq.length-1]
       }
     else
       dup_discount = ->(word, score) { score }
@@ -140,6 +155,7 @@ module Commands
           .map{|word, data| [word, data[:modified_dracos_score]]}[0..list_length-1],
       },
     }
+    puts results if print_verbose
 
     # threshold is checked inside maybe
     return if analysis1[:d_nyt].size > 0 && maybe_print_a_winner.call(*results[:with_singletons][:nyt][0])
@@ -154,6 +170,7 @@ module Commands
     choices = []
     append_first_element_if_positive_score.call(choices, results[:with_singletons][:nyt])
     append_first_element_if_positive_score.call(choices, results[:with_singletons][:dracos])
+    puts "choices=#{choices}" if print_verbose
 
     # Remove potential bad tweets and re-run
     if StatsHash.num_singletons(stats_hash1) > 0
@@ -174,11 +191,13 @@ module Commands
           .sort_by.with_index{|(word, data), i| [-1 * data[:modified_dracos_score], scrabble_sort ? scrabble_score(word) : 0, i]}
           .map{|word, data| [word, data[:modified_dracos_score]]}[0..list_length-1],
       }
+      puts results if print_verbose
 
       return if maybe_print_a_winner.call(*results[:without_singletons][:nyt][0])
       return if maybe_print_a_winner.call(*results[:without_singletons][:dracos][0])
 
       choices.append(*[results[:without_singletons][:nyt][0], results[:without_singletons][:dracos][0]])
+      puts "choices=#{choices}" if print_verbose
     end
 
     if interactive
