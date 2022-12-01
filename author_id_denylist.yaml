@@ -18,10 +18,28 @@
   analysis: Wordle 517 (glyph), 4g.1.2, ()
   verdict: deny # Definite Goofball!
 
+- name: CurtisCChen
+  author_id: 594967815
+  tweet: https://twitter.com/CurtisCChen/status/1596052540264960000
+  analysis: Wordle 524 (itchy), 4g.4.1, ()
+  verdict: deny # Definite Goofball!
+
 - name: dammiLoh
   author_id: 220043584
   tweet: https://twitter.com/dammiLoh/status/1589521025133420546
   analysis: Wordle 506 (begin), 3g1y.yellow2.white1, ()
+  verdict: deny # Definite Goofball!
+
+- name: DavidGinsburg
+  author_id: 19690815
+  tweet: https://twitter.com/DavidGinsburg/status/1596316263902773253
+  analysis: Wordle 524 (itchy), 4g.1.1, ()
+  verdict: deny # Definite Goofball!
+
+- name: dmckendree
+  author_id: 251438342
+  tweet: https://twitter.com/dmckendree/status/1596302893896044544
+  analysis: Wordle 524 (itchy), 4g.1.1, ()
   verdict: deny # Definite Goofball!
 
 - name: dogmaisabitch
@@ -90,6 +108,12 @@
   analysis: Wordle 512 (inane), 4g.1.1, ()
   verdict: deny # Definite Goofball!
 
+- name: Lebanexican
+  author_id: 174481378
+  tweet: https://twitter.com/Lebanexican/status/1596309867165196289
+  analysis: Wordle 524 (itchy), 4g.4.2, ()
+  verdict: deny # Definite Goofball!
+
 - name: lorigspeaks
   author_id: 923836281087434752
   tweet: https://twitter.com/lorigspeaks/status/1593623500186599427
@@ -148,6 +172,12 @@
   author_id: 24580706
   tweet: https://twitter.com/omek123/status/1589567236720713728
   analysis: Wordle 506 (begin), 3g1y.yellow2.white1, ()
+  verdict: deny # Definite Goofball!
+
+- name: poetinpinkshoes
+  author_id: 104860861
+  tweet: https://twitter.com/poetinpinkshoes/status/1596312835377827841
+  analysis: Wordle 524 (itchy), 4g.4.1, ()
   verdict: deny # Definite Goofball!
 
 - name: polterguyst
@@ -246,6 +276,12 @@
   author_id: 122248029
   tweet: https://twitter.com/visakrish/status/1563814700462514176
   analysis: Wordle 435 (GAUZE), 4g.2.1, ()
+  verdict: deny # Definite Goofball!
+
+- name: YorkshiresBelle
+  author_id: 834154145863065602
+  tweet: https://twitter.com/YorkshiresBelle/status/1596235892078714881
+  analysis: Wordle 524 (itchy), 4g.4.3, ()
   verdict: deny # Definite Goofball!
 
 - name: 6wordle
