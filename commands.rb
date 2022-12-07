@@ -88,7 +88,8 @@ module Commands
       eliminate_previous_solutions: true,
       discount_plurals: true,
       scrabble_sort: true,
-      interactive: false)
+      interactive: false,
+      print_verbose: false)
   end
 
   def Commands::give_me_the_answer_3(d, wordle_number)
@@ -112,8 +113,8 @@ module Commands
                                    eliminate_previous_solutions: false,
                                    discount_plurals: false,
                                    scrabble_sort: false,
-                                   interactive: false)
-    print_verbose = false
+                                   interactive: false,
+                                   print_verbose: false)
     UI::suppress_on
     print_a_winner = ->(word) {
       UI::suppress_off
@@ -124,7 +125,6 @@ module Commands
     }
     maybe_print_a_winner = ->(word, score) {
       return false if threshold.nil? || score < threshold
-      # return false if (!threshold.nil? && (score < threshold));
       print_a_winner.call(word)
     }
 

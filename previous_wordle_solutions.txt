@@ -536,3 +536,5 @@ chafe
 torso
 adore
 woken
+amber
+joust

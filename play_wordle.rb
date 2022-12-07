@@ -9,7 +9,7 @@ require_relative 'twitter'
 require_relative 'fingerprints'
 require_relative 'tests'
 
-# TODO "give me the answer" should query for a number (like goofball)
+# TODO consider an alternative universe of solutions besides sgb-words.txt
 
 module UI
   def self.main_menu(guess, d, show_menu: true)
@@ -112,16 +112,15 @@ module UI
         when 'gmta2'
           Commands::give_me_the_answer_2(d, wordle_number_or_default(suppress_output: true))
         when 'gmta-regression'
-          (449..449).each do |wordle_number| # no issues
-          # (449..521).each do |wordle_number|
+          index_start=449
+          index_end=449
+          (index_start..index_end).each do |wordle_number| # no issues
             Twitter::Configuration.set_wordle_number_override wordle_number
-            puts 'GMTA1:'
-            # Commands::give_me_the_answer_1_deprecated(d, wordle_number)
+            print 'GMTA1:'
             Commands::give_me_the_answer_1(d, wordle_number)
-            puts 'GMTA2:'
-            # Commands::give_me_the_answer_2_deprecated(d, wordle_number)
+            print 'GMTA2:'
             Commands::give_me_the_answer_2(d, wordle_number)
-            puts 'GMTA3:'
+            print 'GMTA3:'
             Commands::give_me_the_answer_3(d, wordle_number)
           end
         when 'performance'
