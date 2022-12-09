@@ -39,6 +39,16 @@ end
 # % wc -l non-word-valid-wordle-words.txt
 #     4228 non-word-valid-wordle-words.txt
 
+module Wekele
+  DOWN_ARROW = "\u{2B07}"
+  UP_ARROW = "\u{2B06}"
+  SEPARATOR = "\u{FE0F}"
+  SPACE = " "
+
+  FIVE_DOWN_ARROWS = /(#{DOWN_ARROW}#{SEPARATOR}#{SPACE}){4}#{DOWN_ARROW}/
+  FIVE_UP_ARROWS = /(#{UP_ARROW}#{SEPARATOR}#{SPACE}){4}#{UP_ARROW}/
+end
+
 module WordleShareColors
   # Normal mode
   # e.g. https://twitter.com/mobanwar/status/1552908148696129536

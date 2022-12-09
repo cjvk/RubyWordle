@@ -62,11 +62,10 @@ module Twitter
     # @@wordle_number_override = 500
 
     #         Uncomment this to enable debug printing for a specific tweet_id
-    # @@debug_print_tweet_id = '1574673055346925568'
-    # @@debug_print_tweet_id = '1574751210959032320'
+    # @@debug_print_tweet_id = '1601052561213386752'
 
     #         Uncomment to enable printing of ALL penultimate which match this pattern
-    # @@print_this_penultimate_pattern = 'wgggg' # use normalized colors (g/y/w)
+    # @@print_this_penultimate_pattern = 'gwggg' # use normalized colors (g/y/w)
 
     #         Uncomment to enable printing of ALL answers which match this key
     # @@print_answers_matching_this_key = '4g.5.5'
@@ -436,8 +435,12 @@ module Twitter
             Debug.maybe_log 'is probably a wordle post!'
 
             # skip wordle.wekele.com
-            if text.include?('wordle.wekele.com')
-              Debug.log_verbose "skipping tweet (wekele) (#{Answer.tweet_url id, username}) (author_id=#{author_id})"
+            # Searching for 'wordle.wekele.com' does not work, as while the browser shows it,
+            # the API returns the link itself, which is a t.co-style shortened URL
+            if (!text.index(Wekele::FIVE_DOWN_ARROWS).nil? && !text.index(Wekele::FIVE_UP_ARROWS).nil?) ||
+                text.include?('wordle.wekele.com')
+              # change to log_verbose if wekele is as chatty as retweets
+              Debug.log "skipping tweet (wekele) (#{Answer.tweet_url id, username}) (author_id=#{author_id})"
               next
             end
 
