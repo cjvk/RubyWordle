@@ -78,6 +78,12 @@
   analysis: Wordle 472 (bough), 3g1y.yellow1.white2, ()
   verdict: deny # Definite Goofball!
 
+- name: JodyCollins
+  author_id: 15449933
+  tweet: https://twitter.com/JodyCollins/status/1602309626812301313
+  analysis: Wordle 541 (apply), 4g.1.1, ()
+  verdict: deny # Definite Goofball!
+
 - name: Johno1961
   author_id: 30627384
   tweet: https://twitter.com/Johno1961/status/1589589226479583233
@@ -172,6 +178,12 @@
   author_id: 24580706
   tweet: https://twitter.com/omek123/status/1589567236720713728
   analysis: Wordle 506 (begin), 3g1y.yellow2.white1, ()
+  verdict: deny # Definite Goofball!
+
+- name: PaulDePaola
+  author_id: 23611749
+  tweet: https://twitter.com/PaulDePaola/status/1602313207653203971
+  analysis: Wordle 541 (apply), 4g.1.1, ()
   verdict: deny # Definite Goofball!
 
 - name: poetinpinkshoes

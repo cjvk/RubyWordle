@@ -540,3 +540,7 @@ amber
 joust
 infer
 braid
+knock
+naive # Wordle 540, 12/11/2022
+apply
+spoke

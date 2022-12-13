@@ -56,7 +56,7 @@ module UI
       padded_print prompt_on_new_line ? '==> ' : "#{input_string} ==> "
       user_input = [gets.chomp]
         .map{|input| exit if input == 'exit' || input == 'quit'; input}
-        .map{|input| input==input.to_i.to_s ? input.to_i : default_value}[0]
+        .map{|input| input==input.to_i.to_s ? input.to_i : default_value.to_i}[0]
       return user_input if user_input != nil
     end
   end

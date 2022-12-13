@@ -386,7 +386,11 @@ module Commands
   end
 
   def Commands::goofball_analysis
-    wordle_number = UI.prompt_for_numeric_input("Enter daily wordle number (to check for goofballs):")
+    wordle_number_default_value = today_wordle_number
+    wordle_number = UI.prompt_for_numeric_input(
+      "Enter daily wordle number, to check for goofballs (default #{wordle_number_default_value}):",
+      default_value: wordle_number_default_value
+    )
     Twitter::Configuration.set_wordle_number_override wordle_number
     stats_hash, answers = Twitter::Query::goofball.stats_hash_and_answers
     solution = PreviousWordleSolutions.lookup_by_number wordle_number
