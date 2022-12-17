@@ -36,6 +36,12 @@
   analysis: Wordle 524 (itchy), 4g.1.1, ()
   verdict: deny # Definite Goofball!
 
+- name: dcast94
+  author_id: 197464823
+  tweet: https://twitter.com/dcast94/status/1601731997780647937
+  analysis: Wordle 539 (knock), 4g.2.1, ()
+  verdict: deny # Definite Goofball!
+
 - name: dmckendree
   author_id: 251438342
   tweet: https://twitter.com/dmckendree/status/1596302893896044544
@@ -46,6 +52,12 @@
   author_id: 1300054238
   tweet: https://twitter.com/dogmaisabitch/status/1590362889587609600
   analysis: Wordle 508 (rainy), 4g.1.1, ()
+  verdict: deny # Definite Goofball!
+
+- name: eramp76
+  author_id: 60738889
+  tweet: https://twitter.com/eramp76/status/1603063405585518592
+  analysis: Wordle 543 (usual), 4g.1.1, ()
   verdict: deny # Definite Goofball!
 
 - name: fatimap72
@@ -180,6 +192,12 @@
   analysis: Wordle 506 (begin), 3g1y.yellow2.white1, ()
   verdict: deny # Definite Goofball!
 
+- name: paulajmoore
+  author_id: 32441357
+  tweet: https://twitter.com/paulajmoore/status/1603788400284368897
+  analysis: Wordle 545 (probe), 4g.1.1, ()
+  verdict: deny # Definite Goofball!
+
 - name: PaulDePaola
   author_id: 23611749
   tweet: https://twitter.com/PaulDePaola/status/1602313207653203971
@@ -202,6 +220,12 @@
   author_id: 960524838585683974
   tweet: https://twitter.com/r_a_poe/status/1567207086320230402
   analysis: Wordle 444 (taunt), 4g.5.3, ()
+  verdict: deny # Definite Goofball!
+
+- name: redlegtigger
+  author_id: 178362901
+  tweet: https://twitter.com/redlegtigger/status/1603067956296093696
+  analysis: Wordle 543 (usual), 4g.4.1, ()
   verdict: deny # Definite Goofball!
 
 - name: Redwinenbooks
