@@ -112,16 +112,25 @@ module UI
         when 'gmta2'
           Commands::give_me_the_answer_2(d, wordle_number_or_default(suppress_output: true))
         when 'gmta-regression'
-          index_start=449
-          index_end=449
-          (index_start..index_end).each do |wordle_number| # no issues
+          control_switch = UI.prompt_for_input('Enter numbers to regress (e.g. "123")')
+          index_start = UI.prompt_for_numeric_input('Enter starting index')
+          index_end = UI.prompt_for_numeric_input('Enter ending index (inclusive)')
+          index_max = today_wordle_number.to_i
+          [
+            index_start > index_end,
+            (index_start < 449 or index_start > index_max),
+            (index_end < 449 or index_end > index_max),
+          ]
+            .filter{|b| b}
+            .each{|b| puts "Start or end index failed validation (#{index_start}, #{index_end})"; exit}
+          (index_start..index_end).each do |wordle_number|
             Twitter::Configuration.set_wordle_number_override wordle_number
-            print 'GMTA1:'
-            Commands::give_me_the_answer_1(d, wordle_number)
-            print 'GMTA2:'
-            Commands::give_me_the_answer_2(d, wordle_number)
-            print 'GMTA3:'
-            Commands::give_me_the_answer_3(d, wordle_number)
+            print 'GMTA1:' if control_switch.include? '1'
+            Commands::give_me_the_answer_1(d, wordle_number) if control_switch.include? '1'
+            print 'GMTA2:' if control_switch.include? '2'
+            Commands::give_me_the_answer_2(d, wordle_number) if control_switch.include? '2'
+            print 'GMTA3:' if control_switch.include? '3'
+            Commands::give_me_the_answer_3(d, wordle_number) if control_switch.include? '3'
           end
         when 'performance'
           sw = Stopwatch.new
