@@ -552,3 +552,4 @@ taper
 slate
 third
 lunar # Wordle 550, 12/21/2022
+excel
