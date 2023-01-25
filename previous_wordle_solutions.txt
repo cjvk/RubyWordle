@@ -1,4 +1,5 @@
 # All Wordle answers, taken from https://www.rockpapershotgun.com/wordle-past-answers
+# Alternate site: https://wordfinder.yourdictionary.com/wordle/answers/
 # This file supports comments, the first character must be '#'
 # Anything else is parsed as a word, first five characters only
 cigar # Wordle 0, 6/19/2021
@@ -568,3 +569,22 @@ antic
 layer
 sleek
 belie
+lemon
+opera
+pixie
+grimy # Wordle 570, 1/10/2023
+sedan
+leapt
+human
+koala
+spire
+frock
+adopt
+chard
+mucky
+alter # Wordle 580, 1/20/2023
+blurb
+matey
+elude
+count
+maize

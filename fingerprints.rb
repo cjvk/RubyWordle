@@ -272,8 +272,9 @@ module Fingerprint
 
   def Fingerprint::score(candidate_word, stats_hash, fingerprint)
     previous_maybe = Debug.maybe?
-    # Debug.set_maybe(candidate_word == 'corns')
+    # Debug.set_maybe(candidate_word == 'error' || candidate_word == 'which')
     Debug.maybe_log 'score: ENTER'
+    Debug.maybe_log "candidate_word=#{candidate_word}"
     Debug.maybe_log "stats_hash=#{stats_hash}"
     statshash = StatsHash.new(stats_hash)
     max_4gs_from_twitter = statshash.max_4gs # [1, 2, 0, 0, 1]
@@ -312,7 +313,7 @@ module Fingerprint
       return -1 if twitter_value > count
     end
 
-    # At this point, all keys (short keys) from transformed-stats-hash (tsm)
+    # At this point, all keys (short keys) from transformed-stats-hash (tsh)
     # are also in fingerprint - otherwise would have exited early.
 
     # Second pass
@@ -320,7 +321,6 @@ module Fingerprint
     scores = {}
 
     # pct_keys
-    # pct_keys = stats_hash.length.to_f / fingerprint.length.to_f
     Debug.maybe_log ''
     Debug.maybe_log 'stats_hash'
     Debug.maybe_log stats_hash
@@ -328,11 +328,14 @@ module Fingerprint
     Debug.maybe_log 'tsh'
     Debug.maybe_log tsh
     Debug.maybe_log ''
-    # pct_keys = stats_hash.length.to_f / fingerprint.length.to_f
-    pct_keys = tsh.length.to_f / fingerprint.length.to_f
-    pct_keys_score = pct_keys * 100
-    scores[:pct_keys] = pct_keys_score
-    # cjvk
+    if fingerprint.length == 0
+      # if fingerprint is empty, so is tsh
+      scores[:pct_keys] = 100.0
+    else
+      pct_keys = tsh.length.to_f / fingerprint.length.to_f
+      pct_keys_score = pct_keys * 100
+      scores[:pct_keys] = pct_keys_score
+    end
 
     # distance_4g
     # - worse to get 0/1 than 1/2

@@ -10,6 +10,7 @@ require_relative 'fingerprints'
 require_relative 'tests'
 
 # TODO consider an alternative universe of solutions besides sgb-words.txt
+# TODO description of objects, with examples (e.g. StatsHash, transformed_stats_hash)
 
 module UI
   def self.main_menu(guess, d, show_menu: true)
