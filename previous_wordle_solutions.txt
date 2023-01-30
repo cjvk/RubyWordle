@@ -588,3 +588,8 @@ matey
 elude
 count
 maize
+beefy
+worry
+flirt
+fishy
+crave # Wordle 590, 1/30/2023
