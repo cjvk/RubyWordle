@@ -598,3 +598,6 @@ scold
 shirk
 tasty
 unlit
+dance
+ninth
+apple
